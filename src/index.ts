@@ -1,6 +1,6 @@
 import { CONFIG } from './config';
 import { newPg, newRedis } from './pkg';
-import Fastify from 'fastify';
+import Fastify, { RawRequestDefaultExpression } from 'fastify';
 import { RoutesController } from './api/rest/routes';
 
 console.log(CONFIG);
@@ -11,9 +11,17 @@ const run = async () => {
     logger: {
       base: null,
     },
+    genReqId: (() => {
+      let i = 0;
+      return () => `${Date.now()}${i++}`;
+    })(),
   });
 
   new RoutesController({ fastify });
+  fastify.addHook('onSend', (request, reply, payload, done) => {
+    reply.header('X-Request-ID', request.id);
+    done(null, payload);
+  });
 
   fastify.listen({ port: CONFIG.server.port }, (error, address) => {
     if (error) throw error;
