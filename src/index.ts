@@ -8,7 +8,9 @@ console.log(CONFIG);
 const run = async () => {
   const [redis, pg] = await Promise.all([newRedis(CONFIG.redis), newPg(CONFIG.postgres)]);
   const fastify = Fastify({
-    logger: true,
+    logger: {
+      base: null,
+    },
   });
 
   new RoutesController({ fastify });
