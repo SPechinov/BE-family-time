@@ -1,7 +1,7 @@
 import { CONFIG } from './config';
 import { newPg, newRedis } from './pkg';
-import Fastify, { RawRequestDefaultExpression } from 'fastify';
-import { RoutesController } from './api/rest/routes';
+import Fastify from 'fastify';
+import { CompositeAuth } from './composites';
 
 console.log(CONFIG);
 
@@ -17,11 +17,20 @@ const run = async () => {
     })(),
   });
 
-  new RoutesController({ fastify });
+  fastify.decorate('redis', redis);
+  fastify.decorate('pg', pg);
+
   fastify.addHook('onSend', (request, reply, payload, done) => {
     reply.header('X-Request-ID', request.id);
     done(null, payload);
   });
+
+  fastify.register(
+    (instance) => {
+      new CompositeAuth({ fastify: instance });
+    },
+    { prefix: '/api' },
+  );
 
   fastify.listen({ port: CONFIG.server.port }, (error, address) => {
     if (error) throw error;
