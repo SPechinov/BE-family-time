@@ -1,21 +1,12 @@
 import { CONFIG } from './config';
-import { newPg, newRedis } from './pkg';
-import Fastify from 'fastify';
+import { newPg, newRedis, newFastify } from './pkg';
 import { CompositeAuth } from './composites';
 
 console.log(CONFIG);
 
 const run = async () => {
   const [redis, pg] = await Promise.all([newRedis(CONFIG.redis), newPg(CONFIG.postgres)]);
-  const fastify = Fastify({
-    logger: {
-      base: null,
-    },
-    genReqId: (() => {
-      let i = 0;
-      return () => `${Date.now()}${i++}`;
-    })(),
-  });
+  const fastify = newFastify();
 
   fastify.decorate('redis', redis);
   fastify.decorate('pg', pg);
