@@ -8,11 +8,6 @@ const run = async () => {
   const [redis, pg] = await Promise.all([newRedis(CONFIG.redis), newPg(CONFIG.postgres)]);
   const fastify = newFastify();
 
-  fastify.addHook('onSend', (request, reply, payload, done) => {
-    reply.header('X-Request-ID', request.id);
-    done(null, payload);
-  });
-
   fastify.register(
     (instance) => {
       new CompositeAuth({ fastify: instance });
