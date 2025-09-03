@@ -1,6 +1,7 @@
 import { CONFIG } from './config';
 import { newPg, newRedis } from './pkg';
 import Fastify from 'fastify';
+import { RoutesController } from './api/rest/routes';
 
 console.log(CONFIG);
 
@@ -9,6 +10,8 @@ const run = async () => {
   const fastify = Fastify({
     logger: true,
   });
+
+  new RoutesController({ fastify });
 
   fastify.listen({ port: CONFIG.server.port }, (error, address) => {
     if (error) throw error;
