@@ -7,11 +7,11 @@ CREATE TABLE IF NOT EXISTS users (
     email_searchable BYTEA,
     phone_encrypted BYTEA,
     phone_searchable BYTEA,
-    password BYTEA NOT NULL,
+    password BYTEA,
     first_name VARCHAR(50) NOT NULL,
     last_name VARCHAR(50),
     created_at TIMESTAMP DEFAULT NOW(),
-    updated_at TIMESTAMP DEFAULT NOW(),
+    updated_at TIMESTAMP DEFAULT NOW()
     );
 
 CREATE UNIQUE INDEX IF NOT EXISTS uid_users_id ON users (id);
