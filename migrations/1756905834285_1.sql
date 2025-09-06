@@ -2,7 +2,7 @@
 CREATE EXTENSION IF NOT EXISTS "uuid-ossp";
 
 CREATE TABLE IF NOT EXISTS users (
-                                     id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
     email_encrypted BYTEA,
     email_searchable BYTEA,
     phone_encrypted BYTEA,
@@ -12,7 +12,6 @@ CREATE TABLE IF NOT EXISTS users (
     last_name VARCHAR(50),
     created_at TIMESTAMP DEFAULT NOW(),
     updated_at TIMESTAMP DEFAULT NOW(),
-    deleted_at TIMESTAMP
     );
 
 CREATE UNIQUE INDEX IF NOT EXISTS uid_users_id ON users (id);
