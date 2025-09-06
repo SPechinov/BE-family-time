@@ -1,5 +1,5 @@
 import { FastifyInstance } from 'fastify';
-import { REGISTRATION_BEGIN_SCHEMA } from './schemas';
+import { SCHEMA_REGISTRATION_BEGIN } from './schemas';
 
 export class AuthRoutesController {
   #fastify: FastifyInstance;
@@ -10,12 +10,8 @@ export class AuthRoutesController {
   }
 
   #register() {
-    this.#fastify.post(
-      '/registration-begin',
-      { schema: { body: REGISTRATION_BEGIN_SCHEMA } },
-      async (request, reply) => {
-        return { hello: 'world' };
-      },
-    );
+    this.#fastify.post('/registration-begin', { schema: SCHEMA_REGISTRATION_BEGIN }, async (request, reply) => {
+      return { hello: 'world' };
+    });
   }
 }

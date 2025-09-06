@@ -1,5 +1,13 @@
 import { z } from 'zod';
+import { FastifySchema } from 'fastify';
+import { getDefaultResponse } from '../../pkg';
 
-export const REGISTRATION_BEGIN_SCHEMA = z.object({
-  email: z.string().max(32).describe('Some description for username'),
-});
+export const SCHEMA_REGISTRATION_BEGIN: FastifySchema = {
+  body: z.object({
+    email: z.email().nonempty().describe('Email address'),
+  }),
+  response: {
+    ...getDefaultResponse(),
+    200: z.null(),
+  },
+};

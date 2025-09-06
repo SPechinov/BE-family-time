@@ -1,10 +1,18 @@
-import Fastify from 'fastify';
+import Fastify, { FastifyError, FastifyReply, FastifyRequest } from 'fastify';
 import formBody from '@fastify/formbody';
-import { jsonSchemaTransform, serializerCompiler, validatorCompiler } from 'fastify-type-provider-zod';
+import {
+  isResponseSerializationError,
+  jsonSchemaTransform,
+  serializerCompiler,
+  validatorCompiler,
+} from 'fastify-type-provider-zod';
 import fastifySwagger from '@fastify/swagger';
 import fastifySwaggerUi from '@fastify/swagger-ui';
+import { errorHandler } from '../api/rest/pkg';
 
-export const newFastify = () => {
+export const newFastify = (props: {
+  errorHandler: (error: FastifyError, request: FastifyRequest, reply: FastifyReply) => void;
+}) => {
   const fastify = Fastify({
     logger: {
       base: null,
@@ -24,6 +32,8 @@ export const newFastify = () => {
     reply.header('X-Request-ID', request.id);
     done(null, payload);
   });
+
+  fastify.setErrorHandler(errorHandler);
 
   fastify.register(fastifySwagger, {
     openapi: {
