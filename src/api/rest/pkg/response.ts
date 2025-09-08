@@ -9,7 +9,7 @@ const DEFAULT_ERROR = Object.freeze({
 export const RESPONSE_422 = z.object({
   ...DEFAULT_ERROR,
   statusCode: z.literal(422),
-  isValidationError: z.literal(true)
+  isValidationError: z.literal(true),
 });
 
 export const RESPONSE_500 = z.object({
@@ -17,7 +17,7 @@ export const RESPONSE_500 = z.object({
   statusCode: z.literal(500),
 });
 
-export const getDefaultResponse = () => {
+export const getDefaultSchemaResponse = () => {
   return {
     422: RESPONSE_422,
     500: RESPONSE_500,
