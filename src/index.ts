@@ -11,7 +11,7 @@ const run = async () => {
 
   fastify.register(
     (instance) => {
-      new CompositeAuth({ fastify: instance });
+      new CompositeAuth({ fastify: instance, pool: pg });
     },
     { prefix: '/api' },
   );
