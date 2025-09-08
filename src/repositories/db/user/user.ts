@@ -1,4 +1,4 @@
-import { IUserRepository } from '../../../domain/repositories';
+import { IUserRepository } from '../../../domain/repositories/db';
 import { Pool } from 'pg';
 
 export class UserRepository implements IUserRepository {

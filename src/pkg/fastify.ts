@@ -1,6 +1,6 @@
 import Fastify, { FastifyError, FastifyReply, FastifyRequest } from 'fastify';
 import formBody from '@fastify/formbody';
-import { jsonSchemaTransform, serializerCompiler, validatorCompiler } from 'fastify-type-provider-zod';
+import { jsonSchemaTransform, serializerCompiler, validatorCompiler, ZodTypeProvider } from 'fastify-type-provider-zod';
 import fastifySwagger from '@fastify/swagger';
 import fastifySwaggerUi from '@fastify/swagger-ui';
 import { errorHandler } from '../api/rest/pkg';
@@ -44,5 +44,5 @@ export const newFastify = (props: {
     routePrefix: '/docs',
   });
 
-  return fastify.withTypeProvider();
+  return fastify;
 };
