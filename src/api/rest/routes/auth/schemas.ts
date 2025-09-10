@@ -1,5 +1,5 @@
 import { z } from 'zod';
-import { getDefaultSchemaResponse } from '../../pkg';
+import { getDefaultSchemaResponse } from '@/api/rest/pkg';
 
 export const SCHEMA_REGISTRATION_START = {
   body: z.object({

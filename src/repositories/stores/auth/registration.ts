@@ -1,8 +1,8 @@
-import { IAuthRegistrationStore } from '../../../domain/repositories/stores';
-import { REDIS_SUCCESS_RESPONSE, RedisClient } from '../../../pkg';
-import { UserContactsPlainEntity } from '../../../domain/entities';
-import { CONFIG } from '../../../config';
-import { ServerError } from '../../../api/rest/errors';
+import { IAuthRegistrationStore } from '@/domain/repositories/stores';
+import { REDIS_SUCCESS_RESPONSE, RedisClient } from '@/pkg';
+import { UserContactsPlainEntity } from '@/domain/entities';
+import { CONFIG } from '@/config';
+import { ServerError } from '@/api/rest/errors';
 
 const ERRORS = Object.freeze({
   FAILED_TO_SAVE_REGISTRATION_CODE: 'Failed to save registration code',

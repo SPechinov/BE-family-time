@@ -1,4 +1,4 @@
-import { UserContactsPlainEntity } from '../../../entities';
+import { UserContactsPlainEntity } from '@/domain/entities';
 
 export interface IAuthRegistrationStore {
   saveRegistrationCode(props: { userContactsPlain: UserContactsPlainEntity; code: string }): Promise<void>;
