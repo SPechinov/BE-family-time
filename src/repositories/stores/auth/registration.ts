@@ -33,9 +33,8 @@ export class AuthRegistrationStore implements IAuthRegistrationStore {
   }
 
   #validateCode(code: string) {
-    if (code.trim().length !== CONFIG.codesLength.registration) {
-      throw new ServerError({ message: ERRORS.INVALID_CODE_LENGTH });
-    }
+    if (code.trim().length === CONFIG.codesLength.registration) return;
+    throw new ServerError({ message: ERRORS.INVALID_CODE_LENGTH });
   }
 
   #buildRedisKey(props: { userContactsPlain: UserContactsPlainEntity }): string {
