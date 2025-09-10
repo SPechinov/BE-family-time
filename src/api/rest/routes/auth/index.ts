@@ -1,7 +1,8 @@
 import { FastifyInstance } from 'fastify';
 import { ZodTypeProvider } from 'fastify-type-provider-zod';
 import { SCHEMA_REGISTRATION_START } from './schemas';
-import { IAuthUseCases } from '../../../../domain/useCases';
+import { IAuthUseCases } from '@/domain/useCases';
+import { UserContactsPlainEntity } from '@/domain/entities';
 
 export class AuthRoutesController {
   #fastify: FastifyInstance;
@@ -20,8 +21,10 @@ export class AuthRoutesController {
         schema: SCHEMA_REGISTRATION_START,
       },
       async (request, reply) => {
-        console.log(request.body.email);
-        return null;
+        await this.#authUseCases.registrationBegin({
+          userContactsPlain: new UserContactsPlainEntity({ email: request.body.email }),
+        });
+        reply.status(200).send();
       },
     );
   }

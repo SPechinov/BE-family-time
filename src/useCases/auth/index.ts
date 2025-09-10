@@ -1,6 +1,7 @@
 import { IAuthUseCases } from '@/domain/useCases';
 import { IUserRepository } from '@/domain/repositories/db';
 import { IAuthRegistrationStore } from '@/domain/repositories/stores';
+import { UserContactsPlainEntity } from '@/domain/entities';
 
 export class AuthUseCases implements IAuthUseCases {
   #userRepository: IUserRepository;
@@ -9,5 +10,9 @@ export class AuthUseCases implements IAuthUseCases {
   constructor(props: { userRepository: IUserRepository; authRegistrationStore: IAuthRegistrationStore }) {
     this.#userRepository = props.userRepository;
     this.#authRegistrationStore = props.authRegistrationStore;
+  }
+
+  registrationBegin(props: { userContactsPlain: UserContactsPlainEntity }): Promise<void> {
+    return Promise.resolve();
   }
 }

@@ -7,6 +7,6 @@ export const SCHEMA_REGISTRATION_START = {
   }),
   response: {
     ...getDefaultSchemaResponse(),
-    200: z.null(),
+    200: z.undefined(),
   },
 };
