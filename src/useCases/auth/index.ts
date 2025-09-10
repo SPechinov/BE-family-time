@@ -1,6 +1,6 @@
-import { IAuthUseCases } from '../../domain/useCases';
-import { IUserRepository } from '../../domain/repositories/db';
-import { IAuthRegistrationStore } from '../../domain/repositories/stores';
+import { IAuthUseCases } from '@/domain/useCases';
+import { IUserRepository } from '@/domain/repositories/db';
+import { IAuthRegistrationStore } from '@/domain/repositories/stores';
 
 export class AuthUseCases implements IAuthUseCases {
   #userRepository: IUserRepository;
