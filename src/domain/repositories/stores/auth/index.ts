@@ -1,0 +1,1 @@
+export { IAuthRegistrationStore } from './registration';

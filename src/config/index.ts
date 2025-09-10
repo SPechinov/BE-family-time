@@ -12,6 +12,12 @@ const ConfigSchema = z.object({
   redis: z.object({
     uri: z.string(),
   }),
+  ttls: z.object({
+    registrationSec: z.number(),
+  }),
+  codesLength: z.object({
+    registration: z.number(),
+  }),
 });
 
 const loadFile = (uri: string) => {

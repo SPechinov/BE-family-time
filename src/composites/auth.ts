@@ -3,13 +3,14 @@ import { AuthRoutesController } from '../api/rest';
 import { AuthUseCases } from '../useCases/auth';
 import { UserRepository } from '../repositories/db';
 import { Pool } from 'pg';
-import { AuthStore } from '../repositories/stores/Auth';
+import { RedisClient } from '../pkg';
+import { AuthRegistrationStore } from '../repositories/stores';
 
 export class CompositeAuth {
-  constructor(props: { fastify: FastifyInstance; pool: Pool }) {
+  constructor(props: { fastify: FastifyInstance; pool: Pool; redis: RedisClient }) {
     const userRepository = new UserRepository({ pool: props.pool });
-    const authStore = new AuthStore();
-    const authUseCases = new AuthUseCases({ userRepository, authStore });
+    const authRegistrationStore = new AuthRegistrationStore({ redis: props.redis });
+    const authUseCases = new AuthUseCases({ userRepository, authRegistrationStore });
 
     props.fastify.register(
       (instance) => {

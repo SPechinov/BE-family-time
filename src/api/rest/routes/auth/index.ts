@@ -1,6 +1,6 @@
 import { FastifyInstance } from 'fastify';
 import { ZodTypeProvider } from 'fastify-type-provider-zod';
-import { SCHEMA_REGISTRATION_BEGIN } from './schemas';
+import { SCHEMA_REGISTRATION_START } from './schemas';
 import { IAuthUseCases } from '../../../../domain/useCases';
 
 export class AuthRoutesController {
@@ -15,9 +15,9 @@ export class AuthRoutesController {
 
   #register() {
     this.#fastify.withTypeProvider<ZodTypeProvider>().post(
-      '/registration-begin',
+      '/registration-start',
       {
-        schema: SCHEMA_REGISTRATION_BEGIN,
+        schema: SCHEMA_REGISTRATION_START,
       },
       async (request, reply) => {
         console.log(request.body.email);

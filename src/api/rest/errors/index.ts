@@ -1,5 +1,5 @@
 export class ServerError extends Error {
-  constructor() {
-    super();
+  constructor(props: { message: string }) {
+    super(props.message);
   }
 }
