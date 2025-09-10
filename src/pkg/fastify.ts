@@ -11,6 +11,7 @@ export const newFastify = (props: {
   const fastify = Fastify({
     logger: {
       base: null,
+      level: 'debug',
     },
     genReqId: (() => {
       let i = 0;

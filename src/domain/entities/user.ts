@@ -32,6 +32,10 @@ export class UserContactsPlainEntity {
   get phone() {
     return this.#phone;
   }
+
+  getContact() {
+    return this.#email ?? this.#phone;
+  }
 }
 
 export class UserContactsHashedEntity extends UserContactsPlainEntity {}
@@ -43,16 +47,16 @@ export class UserContactsDecryptedEntity extends UserContactsPlainEntity {}
 export class UserPlainCreateEntity {
   readonly #personalInfo: UserPersonalInfoEntity;
   readonly #contacts: UserContactsPlainEntity;
-  readonly #password?: string;
+  readonly #passwordPlain?: string;
 
   constructor(props: {
     personalInfo: UserPersonalInfoEntity;
     contacts: UserContactsPlainEntity;
-    password?: string;
+    passwordPlain?: string;
   }) {
     this.#personalInfo = props.personalInfo;
     this.#contacts = props.contacts;
-    this.#password = props.password;
+    this.#passwordPlain = props.passwordPlain;
   }
 
   get personalInfo() {
@@ -63,8 +67,8 @@ export class UserPlainCreateEntity {
     return this.#contacts;
   }
 
-  get password() {
-    return this.#password;
+  get passwordPlain() {
+    return this.#passwordPlain;
   }
 }
 
