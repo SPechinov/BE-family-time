@@ -1,7 +1,7 @@
 import { IAuthUseCases } from '@/domain/useCases';
 import { IUserRepository } from '@/domain/repositories/db';
 import { IAuthRegistrationStore } from '@/domain/repositories/stores';
-import { UserContactsPlainEntity, UserPlainCreateEntity } from '@/domain/entities';
+import { UserContactsPlainEntity, UserCreateEntity, UserPlainCreateEntity } from '@/domain/entities';
 import { ErrorInvalidCode, generateNumericCode } from '@/pkg';
 import { CONFIG } from '@/config';
 import { FastifyBaseLogger } from 'fastify';
