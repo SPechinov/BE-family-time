@@ -1,5 +1,5 @@
 import crypto from 'crypto';
-import { ICryptoService } from '@/domain/services';
+import { ICryptoCredentialsService } from '@/domain/services';
 import { CONFIG } from '@/config';
 import { ServerError } from '@/api/rest/errors';
 
@@ -7,7 +7,7 @@ const ALGORITHM = 'aes-256-gcm';
 const KEY_LENGTH = 32;
 const IV_LENGTH = 16;
 
-export class CryptoService implements ICryptoService {
+export class CryptoCredentialsService implements ICryptoCredentialsService {
   encryptEmail(email: string): string {
     const normalizedEmail = email.toLowerCase().trim();
     return this.encrypt(normalizedEmail);

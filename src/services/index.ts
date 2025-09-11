@@ -1,2 +1,2 @@
 export * from './hash';
-export * from './crypto';
+export * from './cryptoCredentials';

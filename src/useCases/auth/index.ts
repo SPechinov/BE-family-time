@@ -11,22 +11,22 @@ import {
 import { ErrorInvalidCode, generateNumericCode } from '@/pkg';
 import { CONFIG } from '@/config';
 import { FastifyBaseLogger } from 'fastify';
-import { ICryptoService, IHashService } from '@/domain/services';
+import { ICryptoCredentialsService, IHashService } from '@/domain/services';
 
 export class AuthUseCases implements IAuthUseCases {
   #hashService: IHashService;
-  #cryptoService: ICryptoService;
+  #cryptoCredentialsService: ICryptoCredentialsService;
   #userRepository: IUserRepository;
   #authRegistrationStore: IAuthRegistrationStore;
 
   constructor(props: {
     hashService: IHashService;
-    cryptoService: ICryptoService;
+    cryptoCredentialsService: ICryptoCredentialsService;
     userRepository: IUserRepository;
     authRegistrationStore: IAuthRegistrationStore;
   }) {
     this.#hashService = props.hashService;
-    this.#cryptoService = props.cryptoService;
+    this.#cryptoCredentialsService = props.cryptoCredentialsService;
     this.#userRepository = props.userRepository;
     this.#authRegistrationStore = props.authRegistrationStore;
   }
@@ -67,10 +67,10 @@ export class AuthUseCases implements IAuthUseCases {
 
     const contactsEncrypted = new UserContactsEncryptedEntity({
       email: props.userPlainCreateEntity.contacts.email
-        ? this.#cryptoService.encryptEmail(props.userPlainCreateEntity.contacts.email)
+        ? this.#cryptoCredentialsService.encryptEmail(props.userPlainCreateEntity.contacts.email)
         : undefined,
       phone: props.userPlainCreateEntity.contacts.phone
-        ? this.#cryptoService.encryptPhone(props.userPlainCreateEntity.contacts.phone)
+        ? this.#cryptoCredentialsService.encryptPhone(props.userPlainCreateEntity.contacts.phone)
         : undefined,
     });
 
