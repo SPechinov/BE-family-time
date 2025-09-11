@@ -30,7 +30,7 @@ export class AuthRoutesController {
         request.log.info(request.body);
         await this.#authUseCases.registrationBegin({
           logger: request.log,
-          userContactsPlainEntity: new UserContactsPlainEntity({ email: request.body.email }),
+          userContactsPlainEntity: new UserContactsPlainEntity({ email: request.body.email.trim() }),
         });
         reply.status(200).send();
       },
@@ -41,8 +41,8 @@ export class AuthRoutesController {
         logger: request.log,
         code: request.body.code,
         userPlainCreateEntity: new UserPlainCreateEntity({
-          contacts: new UserContactsPlainEntity({ email: request.body.email }),
-          personalInfo: new UserPersonalInfoEntity({ firstName: request.body.firstName }),
+          contacts: new UserContactsPlainEntity({ email: request.body.email.trim() }),
+          personalInfo: new UserPersonalInfoEntity({ firstName: request.body.firstName.trim() }),
           passwordPlain: request.body.password,
         }),
       });

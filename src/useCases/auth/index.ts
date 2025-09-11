@@ -1,16 +1,32 @@
 import { IAuthUseCases } from '@/domain/useCases';
 import { IUserRepository } from '@/domain/repositories/db';
 import { IAuthRegistrationStore } from '@/domain/repositories/stores';
-import { UserContactsPlainEntity, UserCreateEntity, UserPlainCreateEntity } from '@/domain/entities';
+import {
+  UserContactsEncryptedEntity,
+  UserContactsHashedEntity,
+  UserContactsPlainEntity,
+  UserCreateEntity,
+  UserPlainCreateEntity,
+} from '@/domain/entities';
 import { ErrorInvalidCode, generateNumericCode } from '@/pkg';
 import { CONFIG } from '@/config';
 import { FastifyBaseLogger } from 'fastify';
+import { ICryptoService, IHashService } from '@/domain/services';
 
 export class AuthUseCases implements IAuthUseCases {
+  #hashService: IHashService;
+  #cryptoService: ICryptoService;
   #userRepository: IUserRepository;
   #authRegistrationStore: IAuthRegistrationStore;
 
-  constructor(props: { userRepository: IUserRepository; authRegistrationStore: IAuthRegistrationStore }) {
+  constructor(props: {
+    hashService: IHashService;
+    cryptoService: ICryptoService;
+    userRepository: IUserRepository;
+    authRegistrationStore: IAuthRegistrationStore;
+  }) {
+    this.#hashService = props.hashService;
+    this.#cryptoService = props.cryptoService;
     this.#userRepository = props.userRepository;
     this.#authRegistrationStore = props.authRegistrationStore;
   }
@@ -39,6 +55,31 @@ export class AuthUseCases implements IAuthUseCases {
     }
 
     props.logger.debug('code compare success, saving user');
+
+    const contactsHashed = new UserContactsHashedEntity({
+      email: props.userPlainCreateEntity.contacts.email
+        ? this.#hashService.hashEmail(props.userPlainCreateEntity.contacts.email)
+        : undefined,
+      phone: props.userPlainCreateEntity.contacts.phone
+        ? this.#hashService.hashPhone(props.userPlainCreateEntity.contacts.phone)
+        : undefined,
+    });
+
+    const contactsEncrypted = new UserContactsEncryptedEntity({
+      email: props.userPlainCreateEntity.contacts.email
+        ? this.#cryptoService.encryptEmail(props.userPlainCreateEntity.contacts.email)
+        : undefined,
+      phone: props.userPlainCreateEntity.contacts.phone
+        ? this.#cryptoService.encryptPhone(props.userPlainCreateEntity.contacts.phone)
+        : undefined,
+    });
+
+    const userCreateEntity = new UserCreateEntity({
+      personalInfo: props.userPlainCreateEntity.personalInfo,
+      contactsHashed,
+      contactsEncrypted,
+      passwordHashed: props.userPlainCreateEntity.passwordPlain,
+    });
 
     return Promise.resolve();
   }

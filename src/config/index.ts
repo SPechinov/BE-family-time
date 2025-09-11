@@ -18,6 +18,10 @@ const ConfigSchema = z.object({
   codesLength: z.object({
     registration: z.number(),
   }),
+  salts: z.object({
+    hashCredentials: z.string().min(1),
+    cryptoCredentials: z.string().min(1),
+  }),
 });
 
 const loadFile = (uri: string) => {
