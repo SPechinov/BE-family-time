@@ -88,6 +88,9 @@ export class AuthUseCases implements IAuthUseCases {
       passwordHashed,
     });
 
+    const createdUser = await this.#userRepository.create(userCreateEntity);
+    props.logger.debug(`user saved, id: ${createdUser.id}`);
+
     return Promise.resolve();
   }
 }

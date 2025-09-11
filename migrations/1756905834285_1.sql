@@ -4,10 +4,10 @@ CREATE EXTENSION IF NOT EXISTS "uuid-ossp";
 CREATE TABLE IF NOT EXISTS users (
     id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
     email_encrypted BYTEA,
-    email_searchable BYTEA,
+    email_hashed BYTEA,
     phone_encrypted BYTEA,
-    phone_searchable BYTEA,
-    password BYTEA,
+    phone_hashed BYTEA,
+    password_hashed BYTEA,
     first_name VARCHAR(50) NOT NULL,
     last_name VARCHAR(50),
     created_at TIMESTAMP DEFAULT NOW(),
@@ -15,8 +15,8 @@ CREATE TABLE IF NOT EXISTS users (
     );
 
 CREATE UNIQUE INDEX IF NOT EXISTS uid_users_id ON users (id);
-CREATE INDEX IF NOT EXISTS uid_users_email_searchable ON users (email_searchable);
-CREATE INDEX IF NOT EXISTS uid_users_phone_searchable ON users (phone_searchable);
+CREATE INDEX IF NOT EXISTS uid_users_email_hashed ON users (email_hashed);
+CREATE INDEX IF NOT EXISTS uid_users_phone_hashed ON users (phone_hashed);
 
 CREATE OR REPLACE FUNCTION update_updated_at_column()
 RETURNS TRIGGER AS $$
@@ -36,8 +36,8 @@ CREATE TRIGGER update_users_updated_at
 -- Down Migration
 DROP TRIGGER IF EXISTS update_users_updated_at ON users;
 DROP FUNCTION IF EXISTS update_updated_at_column();
-DROP INDEX IF EXISTS uid_users_phone_searchable;
-DROP INDEX IF EXISTS uid_users_email_searchable;
+DROP INDEX IF EXISTS uid_users_phone_hashed;
+DROP INDEX IF EXISTS uid_users_email_hashed;
 DROP INDEX IF EXISTS uid_users_id;
 DROP TABLE IF EXISTS users;
 DROP EXTENSION IF EXISTS "uuid-ossp";

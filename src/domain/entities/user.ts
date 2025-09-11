@@ -131,8 +131,8 @@ export class UserFindEntity {
 export class UserEntity {
   readonly #id: string;
   readonly #personalInfo: UserPersonalInfoEntity;
-  readonly #contactsEncrypted?: UserContactsEncryptedEntity;
-  readonly #contactsHashed?: UserContactsHashedEntity;
+  readonly #contactsEncrypted: UserContactsEncryptedEntity;
+  readonly #contactsHashed: UserContactsHashedEntity;
   readonly #passwordHashed?: string;
   readonly #updatedAt: Date;
   readonly #createdAt: Date;
@@ -140,8 +140,8 @@ export class UserEntity {
   constructor(props: {
     id: string;
     personalInfo: UserPersonalInfoEntity;
-    contactsEncrypted?: UserContactsEncryptedEntity;
-    contactsHashed?: UserContactsHashedEntity;
+    contactsEncrypted: UserContactsEncryptedEntity;
+    contactsHashed: UserContactsHashedEntity;
     passwordHashed?: string;
     updatedAt: Date;
     createdAt: Date;
