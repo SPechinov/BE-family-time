@@ -11,21 +11,21 @@ import {
 import { ErrorInvalidCode, generateNumericCode } from '@/pkg';
 import { CONFIG } from '@/config';
 import { FastifyBaseLogger } from 'fastify';
-import { ICryptoCredentialsService, IHashService } from '@/domain/services';
+import { ICryptoCredentialsService, IHashCredentialsService } from '@/domain/services';
 
 export class AuthUseCases implements IAuthUseCases {
-  #hashService: IHashService;
+  #hashCredentialsService: IHashCredentialsService;
   #cryptoCredentialsService: ICryptoCredentialsService;
   #userRepository: IUserRepository;
   #authRegistrationStore: IAuthRegistrationStore;
 
   constructor(props: {
-    hashService: IHashService;
+    hashCredentialsService: IHashCredentialsService;
     cryptoCredentialsService: ICryptoCredentialsService;
     userRepository: IUserRepository;
     authRegistrationStore: IAuthRegistrationStore;
   }) {
-    this.#hashService = props.hashService;
+    this.#hashCredentialsService = props.hashCredentialsService;
     this.#cryptoCredentialsService = props.cryptoCredentialsService;
     this.#userRepository = props.userRepository;
     this.#authRegistrationStore = props.authRegistrationStore;
@@ -58,10 +58,10 @@ export class AuthUseCases implements IAuthUseCases {
 
     const contactsHashed = new UserContactsHashedEntity({
       email: props.userPlainCreateEntity.contacts.email
-        ? this.#hashService.hashEmail(props.userPlainCreateEntity.contacts.email)
+        ? this.#hashCredentialsService.hashEmail(props.userPlainCreateEntity.contacts.email)
         : undefined,
       phone: props.userPlainCreateEntity.contacts.phone
-        ? this.#hashService.hashPhone(props.userPlainCreateEntity.contacts.phone)
+        ? this.#hashCredentialsService.hashPhone(props.userPlainCreateEntity.contacts.phone)
         : undefined,
     });
 

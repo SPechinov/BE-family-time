@@ -1,10 +1,10 @@
 import crypto from 'crypto';
-import { IHashService } from '@/domain/services';
+import { IHashCredentialsService } from '@/domain/services';
 import { CONFIG } from '@/config';
 
 const HASH_ALGORITHM = 'sha512';
 
-export class HashService implements IHashService {
+export class HashCredentialsService implements IHashCredentialsService {
   hashEmail(email: string) {
     const normalizedEmail = email.toLowerCase().trim();
     return crypto
