@@ -5,7 +5,7 @@ import { UserRepository } from '@/repositories/db';
 import { AuthRegistrationStore } from '@/repositories/stores';
 import { AuthUseCases } from '@/useCases/auth';
 import { AuthRoutesController } from '@/api/rest';
-import { CryptoCredentialsService, HashCredentialsService } from '@/services';
+import { CryptoCredentialsService, HashCredentialsService, HashPasswordService } from '@/services';
 
 export class CompositeAuth {
   constructor(props: { fastify: FastifyInstance; pool: Pool; redis: RedisClient }) {
@@ -13,11 +13,14 @@ export class CompositeAuth {
     const authRegistrationStore = new AuthRegistrationStore({ redis: props.redis });
     const hashCredentialsService = new HashCredentialsService();
     const cryptoCredentialsService = new CryptoCredentialsService();
+    const hashPasswordService = new HashPasswordService();
+
     const authUseCases = new AuthUseCases({
-      userRepository,
-      authRegistrationStore,
       hashCredentialsService,
       cryptoCredentialsService,
+      hashPasswordService,
+      authRegistrationStore,
+      userRepository,
     });
 
     props.fastify.register(

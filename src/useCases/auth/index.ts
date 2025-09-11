@@ -11,22 +11,25 @@ import {
 import { ErrorInvalidCode, generateNumericCode } from '@/pkg';
 import { CONFIG } from '@/config';
 import { FastifyBaseLogger } from 'fastify';
-import { ICryptoCredentialsService, IHashCredentialsService } from '@/domain/services';
+import { ICryptoCredentialsService, IHashCredentialsService, IHashPasswordService } from '@/domain/services';
 
 export class AuthUseCases implements IAuthUseCases {
   #hashCredentialsService: IHashCredentialsService;
   #cryptoCredentialsService: ICryptoCredentialsService;
+  #hashPasswordService: IHashPasswordService;
   #userRepository: IUserRepository;
   #authRegistrationStore: IAuthRegistrationStore;
 
   constructor(props: {
     hashCredentialsService: IHashCredentialsService;
     cryptoCredentialsService: ICryptoCredentialsService;
+    hashPasswordService: IHashPasswordService;
     userRepository: IUserRepository;
     authRegistrationStore: IAuthRegistrationStore;
   }) {
     this.#hashCredentialsService = props.hashCredentialsService;
     this.#cryptoCredentialsService = props.cryptoCredentialsService;
+    this.#hashPasswordService = props.hashPasswordService;
     this.#userRepository = props.userRepository;
     this.#authRegistrationStore = props.authRegistrationStore;
   }
@@ -74,11 +77,15 @@ export class AuthUseCases implements IAuthUseCases {
         : undefined,
     });
 
+    const passwordHashed = props.userPlainCreateEntity.passwordPlain
+      ? this.#hashPasswordService.hashPassword(props.userPlainCreateEntity.passwordPlain)
+      : undefined;
+
     const userCreateEntity = new UserCreateEntity({
       personalInfo: props.userPlainCreateEntity.personalInfo,
       contactsHashed,
       contactsEncrypted,
-      passwordHashed: props.userPlainCreateEntity.passwordPlain,
+      passwordHashed,
     });
 
     return Promise.resolve();
