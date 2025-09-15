@@ -64,8 +64,8 @@ export class UsersRepository implements IUsersRepository {
       contactsHashed,
       contactsEncrypted,
       passwordHashed: row.password_hashed?.toString('utf-8'),
-      createdAt: new Date(),
-      updatedAt: new Date(),
+      createdAt: row.created_at,
+      updatedAt: row.updated_at,
     });
   }
 }
