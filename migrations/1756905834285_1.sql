@@ -15,8 +15,8 @@ CREATE TABLE IF NOT EXISTS users (
     );
 
 CREATE UNIQUE INDEX IF NOT EXISTS uid_users_id ON users (id);
-CREATE INDEX IF NOT EXISTS uid_users_email_hashed ON users (email_hashed);
-CREATE INDEX IF NOT EXISTS uid_users_phone_hashed ON users (phone_hashed);
+CREATE UNIQUE INDEX IF NOT EXISTS uid_users_email_hashed ON users (email_hashed) WHERE email_hashed IS NOT NULL;
+CREATE UNIQUE INDEX IF NOT EXISTS uid_users_phone_hashed ON users (phone_hashed) WHERE phone_hashed IS NOT NULL;
 
 CREATE OR REPLACE FUNCTION update_updated_at_column()
 RETURNS TRIGGER AS $$
