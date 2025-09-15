@@ -1,5 +1,5 @@
 import { Pool } from 'pg';
-import { IUserRepository } from '@/domain/repositories/db';
+import { IUsersRepository } from '@/domain/repositories/db';
 import {
   UserContactsEncryptedEntity,
   UserContactsHashedEntity,
@@ -10,7 +10,7 @@ import {
 import { ServerError } from '@/api/rest/errors';
 import { IUserRowData } from './types';
 
-export class UserRepository implements IUserRepository {
+export class UsersRepository implements IUsersRepository {
   #pool: Pool;
 
   constructor(props: { pool: Pool }) {

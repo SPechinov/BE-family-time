@@ -1,3 +1,3 @@
-export * from './hashCredentials';
-export * from './cryptoCredentials';
+export * from './crypto';
+export * from './hash';
 export * from './hashPassword';

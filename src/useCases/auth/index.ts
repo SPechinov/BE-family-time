@@ -1,37 +1,18 @@
 import { IAuthUseCases } from '@/domain/useCases';
-import { IUserRepository } from '@/domain/repositories/db';
 import { IAuthRegistrationStore } from '@/domain/repositories/stores';
-import {
-  UserContactsEncryptedEntity,
-  UserContactsHashedEntity,
-  UserContactsPlainEntity,
-  UserCreateEntity,
-  UserPlainCreateEntity,
-} from '@/domain/entities';
+import { UserContactsPlainEntity, UserPlainCreateEntity } from '@/domain/entities';
 import { ErrorInvalidCode, generateNumericCode } from '@/pkg';
 import { CONFIG } from '@/config';
 import { FastifyBaseLogger } from 'fastify';
-import { ICryptoCredentialsService, IHashCredentialsService, IHashPasswordService } from '@/domain/services';
+import { IUserService } from '@/domain/services';
 
 export class AuthUseCases implements IAuthUseCases {
-  #hashCredentialsService: IHashCredentialsService;
-  #cryptoCredentialsService: ICryptoCredentialsService;
-  #hashPasswordService: IHashPasswordService;
-  #userRepository: IUserRepository;
   #authRegistrationStore: IAuthRegistrationStore;
+  #usersService: IUserService;
 
-  constructor(props: {
-    hashCredentialsService: IHashCredentialsService;
-    cryptoCredentialsService: ICryptoCredentialsService;
-    hashPasswordService: IHashPasswordService;
-    userRepository: IUserRepository;
-    authRegistrationStore: IAuthRegistrationStore;
-  }) {
-    this.#hashCredentialsService = props.hashCredentialsService;
-    this.#cryptoCredentialsService = props.cryptoCredentialsService;
-    this.#hashPasswordService = props.hashPasswordService;
-    this.#userRepository = props.userRepository;
+  constructor(props: { authRegistrationStore: IAuthRegistrationStore; usersService: IUserService }) {
     this.#authRegistrationStore = props.authRegistrationStore;
+    this.#usersService = props.usersService;
   }
 
   async registrationBegin(props: { userContactsPlainEntity: UserContactsPlainEntity; logger: FastifyBaseLogger }) {
@@ -59,36 +40,7 @@ export class AuthUseCases implements IAuthUseCases {
 
     props.logger.debug('code compare success, saving user');
 
-    const contactsHashed = new UserContactsHashedEntity({
-      email: props.userPlainCreateEntity.contacts.email
-        ? this.#hashCredentialsService.hashEmail(props.userPlainCreateEntity.contacts.email)
-        : undefined,
-      phone: props.userPlainCreateEntity.contacts.phone
-        ? this.#hashCredentialsService.hashPhone(props.userPlainCreateEntity.contacts.phone)
-        : undefined,
-    });
-
-    const contactsEncrypted = new UserContactsEncryptedEntity({
-      email: props.userPlainCreateEntity.contacts.email
-        ? this.#cryptoCredentialsService.encryptEmail(props.userPlainCreateEntity.contacts.email)
-        : undefined,
-      phone: props.userPlainCreateEntity.contacts.phone
-        ? this.#cryptoCredentialsService.encryptPhone(props.userPlainCreateEntity.contacts.phone)
-        : undefined,
-    });
-
-    const passwordHashed = props.userPlainCreateEntity.passwordPlain
-      ? this.#hashPasswordService.hashPassword(props.userPlainCreateEntity.passwordPlain)
-      : undefined;
-
-    const userCreateEntity = new UserCreateEntity({
-      personalInfo: props.userPlainCreateEntity.personalInfo,
-      contactsHashed,
-      contactsEncrypted,
-      passwordHashed,
-    });
-
-    const createdUser = await this.#userRepository.create(userCreateEntity);
+    const createdUser = await this.#usersService.create({ userPlainCreateEntity: props.userPlainCreateEntity });
     props.logger.debug(`user saved, id: ${createdUser.id}`);
 
     return Promise.resolve();

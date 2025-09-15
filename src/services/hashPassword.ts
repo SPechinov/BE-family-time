@@ -1,6 +1,5 @@
 import crypto from 'crypto';
 import { IHashPasswordService } from '@/domain/services';
-import { CONFIG } from '@/config';
 
 const HASH_ALGORITHM = 'sha512';
 const ITERATIONS = 100000;

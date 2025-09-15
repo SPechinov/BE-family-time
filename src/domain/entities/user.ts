@@ -21,8 +21,8 @@ export class UserContactsPlainEntity {
   readonly #phone?: string;
 
   constructor(props: { email?: string; phone?: string }) {
-    this.#email = props.email;
-    this.#phone = props.phone;
+    this.#email = props.email ? this.#normalizeEmail(props.email) : undefined;
+    this.#phone = props.phone ? this.#normalizePhone(props.phone) : undefined;
   }
 
   get email() {
@@ -35,6 +35,14 @@ export class UserContactsPlainEntity {
 
   getContact() {
     return this.#email ?? this.#phone;
+  }
+
+  #normalizeEmail(email: string) {
+    return email.toLowerCase().trim();
+  }
+
+  #normalizePhone(phone: string) {
+    return phone.replace(/\D/g, '');
   }
 }
 
@@ -111,10 +119,7 @@ export class UserFindEntity {
   readonly #id?: string;
   readonly #contactsHashed?: UserContactsHashedEntity;
 
-  constructor(props: {
-    id?: string;
-    contactsHashed?: UserContactsHashedEntity;
-  }) {
+  constructor(props: { id?: string; contactsHashed?: UserContactsHashedEntity }) {
     this.#id = props.id;
     this.#contactsHashed = props.contactsHashed;
   }

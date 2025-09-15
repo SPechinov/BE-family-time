@@ -1,32 +1,14 @@
 import crypto from 'crypto';
-import { ICryptoCredentialsService } from '@/domain/services';
 import { CONFIG } from '@/config';
 import { ServerError } from '@/api/rest/errors';
+import { ICryptoService } from '@/domain/services';
 
 const ALGORITHM = 'aes-256-gcm';
 const KEY_LENGTH = 32;
 const IV_LENGTH = 16;
 
-export class CryptoCredentialsService implements ICryptoCredentialsService {
-  encryptEmail(email: string): string {
-    const normalizedEmail = email.toLowerCase().trim();
-    return this.encrypt(normalizedEmail);
-  }
-
-  decryptEmail(encryptedEmail: string): string {
-    return this.decrypt(encryptedEmail);
-  }
-
-  encryptPhone(phone: string): string {
-    const normalizedPhone = phone.replace(/\D/g, '');
-    return this.encrypt(normalizedPhone);
-  }
-
-  decryptPhone(encryptedPhone: string): string {
-    return this.decrypt(encryptedPhone);
-  }
-
-  private encrypt(text: string): string {
+export class CryptoService implements ICryptoService {
+  encrypt(text: string): string {
     const key = this.deriveKey(CONFIG.salts.cryptoCredentials);
     const iv = crypto.randomBytes(IV_LENGTH);
 
@@ -40,7 +22,7 @@ export class CryptoCredentialsService implements ICryptoCredentialsService {
     return `${iv.toString('hex')}:${tag.toString('hex')}:${encrypted}`;
   }
 
-  private decrypt(encryptedText: string): string {
+  decrypt(encryptedText: string): string {
     const [ivHex, tagHex, encrypted] = encryptedText.split(':');
 
     if (!ivHex || !tagHex || !encrypted) {
