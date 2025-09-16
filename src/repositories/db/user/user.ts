@@ -5,9 +5,9 @@ import {
   UserContactsHashedEntity,
   UserCreateEntity,
   UserEntity,
+  UserFindEntity,
   UserPersonalInfoEntity,
 } from '@/domain/entities';
-import { ServerError } from '@/api/rest/errors';
 import { IUserRowData } from './types';
 
 export class UsersRepository implements IUsersRepository {
@@ -41,8 +41,48 @@ export class UsersRepository implements IUsersRepository {
     ]);
 
     const row = result.rows?.[0];
-    if (!row) throw new ServerError({ message: 'User not created' });
+    if (!row) throw new Error('User not created');
 
+    return this.#buildUserEntity(row);
+  }
+
+  async findOne(userFindEntity: UserFindEntity) {
+    let query = 'SELECT * FROM users';
+    const conditions: string[] = [];
+    const values: (string | Buffer)[] = [];
+    let valueIndex = 1;
+
+    if (userFindEntity.id !== undefined) {
+      conditions.push(`id = $${valueIndex}`);
+      values.push(userFindEntity.id);
+      valueIndex++;
+    }
+
+    if (userFindEntity.contactsHashed?.email !== undefined) {
+      conditions.push(`email_hashed = $${valueIndex}`);
+      values.push(Buffer.from(userFindEntity.contactsHashed.email, 'utf-8'));
+      valueIndex++;
+    }
+
+    if (userFindEntity.contactsHashed?.phone !== undefined) {
+      conditions.push(`phone_hashed = $${valueIndex}`);
+      values.push(Buffer.from(userFindEntity.contactsHashed.phone, 'utf-8'));
+      valueIndex++;
+    }
+
+    if (conditions.length === 0) {
+      throw new Error('Invalid find params');
+    }
+
+    query += ' WHERE ' + conditions.join(' AND ');
+
+    const result = await this.#pool.query<IUserRowData>(query, values);
+    const row = result.rows?.[0];
+    if (!row) return null;
+    return this.#buildUserEntity(row);
+  }
+
+  #buildUserEntity(row: IUserRowData) {
     const personalInfo = new UserPersonalInfoEntity({
       firstName: row.first_name,
       lastName: row.last_name || undefined,

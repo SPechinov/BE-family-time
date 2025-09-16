@@ -1,7 +1,7 @@
 import { IAuthUseCases } from '@/domain/useCases';
 import { IAuthRegistrationStore } from '@/domain/repositories/stores';
-import { UserContactsPlainEntity, UserPlainCreateEntity } from '@/domain/entities';
-import { ErrorInvalidCode, generateNumericCode } from '@/pkg';
+import { UserContactsPlainEntity, UserPlainCreateEntity, UserPlainFindEntity } from '@/domain/entities';
+import { ErrorInvalidCode, ErrorUserExists, generateNumericCode } from '@/pkg';
 import { CONFIG } from '@/config';
 import { FastifyBaseLogger } from 'fastify';
 import { IUserService } from '@/domain/services';
@@ -35,10 +35,15 @@ export class AuthUseCases implements IAuthUseCases {
 
     if (!storeCode || !props.code || props.code !== storeCode) {
       props.logger.debug({ userCode: props.code, storeCode }, 'invalid code');
-      throw ErrorInvalidCode.new();
+      throw new ErrorInvalidCode();
     }
 
     props.logger.debug('code compare success, saving user');
+
+    const userPlainFindEntity = new UserPlainFindEntity({ contactsPlain: props.userPlainCreateEntity.contacts })
+    if (await this.#usersService.hasUser({ userPlainFindEntity })) {
+      throw new ErrorUserExists();
+    }
 
     const createdUser = await this.#usersService.create({ userPlainCreateEntity: props.userPlainCreateEntity });
     props.logger.debug(`user saved, id: ${createdUser.id}`);

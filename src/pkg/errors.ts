@@ -1,5 +1,16 @@
+const CODES = {
+  invalidCode: 'invalidCode',
+  userExists: 'userExists',
+};
+
 export class ErrorInvalidCode extends Error {
-  static new() {
-    return new ErrorInvalidCode('invalid_code');
+  constructor() {
+    super(CODES.invalidCode);
+  }
+}
+
+export class ErrorUserExists extends Error {
+  constructor() {
+    super(CODES.userExists);
   }
 }

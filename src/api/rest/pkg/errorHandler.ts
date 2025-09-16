@@ -1,6 +1,6 @@
 import { FastifyError, FastifyReply, FastifyRequest } from 'fastify';
 import { hasZodFastifySchemaValidationErrors } from 'fastify-type-provider-zod';
-import { ErrorInvalidCode } from '@/pkg';
+import { ErrorInvalidCode, ErrorUserExists } from '@/pkg';
 
 export const errorHandler = (error: FastifyError, request: FastifyRequest, reply: FastifyReply) => {
   const params: Record<string, any> = {
@@ -9,18 +9,30 @@ export const errorHandler = (error: FastifyError, request: FastifyRequest, reply
     timestamp: Date.now(),
   };
 
-  if (hasZodFastifySchemaValidationErrors(error)) {
+  const businessError = getBusinessError(error);
+  if (businessError) {
+    params.statusCode = businessError.statusCode;
+    params.code = error.message;
+    request.log.debug(error.message);
+  } else if (hasZodFastifySchemaValidationErrors(error)) {
     params.statusCode = 422;
     params.message = error.message;
     params.isValidationError = true;
     request.log.error(error.message);
-  } else if (error instanceof ErrorInvalidCode) {
-    params.statusCode = 400;
-    params.message = error.message;
-    request.log.debug(error.message);
   } else {
     request.log.error(error);
   }
 
   reply.code(params.statusCode).send(params);
 };
+
+
+const BUSINESS_ERRORS = new Map([
+  [ErrorInvalidCode.name, { statusCode: 400 }],
+  [ErrorUserExists.name, { statusCode: 400 }],
+]);
+
+const getBusinessError = (error: FastifyError) => {
+  const errorConfig = BUSINESS_ERRORS.get(error.constructor.name);
+  return errorConfig || null;
+}

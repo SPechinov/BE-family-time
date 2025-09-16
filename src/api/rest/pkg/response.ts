@@ -9,6 +9,7 @@ const DEFAULT_ERROR = Object.freeze({
 export const RESPONSE_400 = z.object({
   ...DEFAULT_ERROR,
   statusCode: z.literal(400),
+  code: z.string(),
 });
 
 export const RESPONSE_422 = z.object({

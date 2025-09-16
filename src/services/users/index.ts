@@ -1,8 +1,10 @@
 import {
   UserContactsEncryptedEntity,
   UserContactsHashedEntity,
-  UserCreateEntity,
+  UserCreateEntity, UserEntity,
+  UserFindEntity,
   UserPlainCreateEntity,
+  UserPlainFindEntity
 } from '@/domain/entities';
 import {
   ICryptoService,
@@ -60,5 +62,28 @@ export class UsersService implements IUserService {
     });
 
     return this.#usersRepository.create(userCreateEntity);
+  }
+
+  async getUser(props: { userPlainFindEntity: UserPlainFindEntity }): Promise<UserEntity | null> {
+    let contactsHashed: UserContactsHashedEntity | undefined;
+
+    if (props.userPlainFindEntity.contactsPlain) {
+      const { contactsPlain } = props.userPlainFindEntity;
+      contactsHashed = new UserContactsHashedEntity({
+        email: contactsPlain.email ? this.#hashService.hash(contactsPlain.email, HASH_CONFIG) : undefined,
+        phone: contactsPlain.phone ? this.#hashService.hash(contactsPlain.phone, HASH_CONFIG) : undefined,
+      });
+    }
+
+    const userFindEntity = new UserFindEntity({
+      id: props.userPlainFindEntity.id,
+      contactsHashed,
+    });
+
+    return this.#usersRepository.findOne(userFindEntity);
+  }
+
+  async hasUser(props: { userPlainFindEntity: UserPlainFindEntity }) {
+    return !!(await this.getUser(props));
   }
 }

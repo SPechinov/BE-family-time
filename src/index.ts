@@ -1,7 +1,7 @@
 import { CONFIG } from '@/config';
 import { newFastify, newPg, newRedis } from '@/pkg';
-import { errorHandler } from '@/api/rest/pkg';
 import { CompositeAuth } from '@/composites';
+import { errorHandler } from '@/api/rest/pkg';
 
 console.log(CONFIG);
 

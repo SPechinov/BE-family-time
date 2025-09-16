@@ -1,6 +1,5 @@
 import crypto from 'crypto';
 import { CONFIG } from '@/config';
-import { ServerError } from '@/api/rest/errors';
 import { ICryptoService } from '@/domain/services';
 
 const ALGORITHM = 'aes-256-gcm';
@@ -26,7 +25,7 @@ export class CryptoService implements ICryptoService {
     const [ivHex, tagHex, encrypted] = encryptedText.split(':');
 
     if (!ivHex || !tagHex || !encrypted) {
-      throw new ServerError({ message: 'Invalid encrypted format' });
+      throw new Error('Invalid encrypted format');
     }
 
     const key = this.deriveKey(CONFIG.salts.cryptoCredentials);
