@@ -40,12 +40,13 @@ export class AuthUseCases implements IAuthUseCases {
 
     props.logger.debug('code compare success, saving user');
 
-    const userPlainFindEntity = new UserPlainFindEntity({ contactsPlain: props.userPlainCreateEntity.contacts })
-    if (await this.#usersService.hasUser({ userPlainFindEntity })) {
-      throw new ErrorUserExists();
-    }
+    const userPlainFindEntity = new UserPlainFindEntity({ contactsPlain: props.userPlainCreateEntity.contacts });
+    if (await this.#usersService.hasUser({ userPlainFindEntity })) throw new ErrorUserExists();
 
     const createdUser = await this.#usersService.create({ userPlainCreateEntity: props.userPlainCreateEntity });
+
+    this.#authRegistrationStore.deleteRegistrationCode({ userContactsPlain: props.userPlainCreateEntity.contacts });
+
     props.logger.debug(`user saved, id: ${createdUser.id}`);
 
     return Promise.resolve();
