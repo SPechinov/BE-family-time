@@ -35,3 +35,15 @@ export const SCHEMA_FORGOT_PASSWORD_START = {
     200: z.undefined(),
   },
 };
+
+export const SCHEMA_FORGOT_PASSWORD_END = {
+  body: z.object({
+    email: z.email().nonempty().describe('Email address'),
+    code: z.string().nonempty().length(CONFIG.codesLength.forgotPassword),
+    password: SCHEMAS_GLOBAL.password.nonempty(),
+  }),
+  response: {
+    ...getDefaultSchemaResponse(),
+    200: z.undefined(),
+  },
+};

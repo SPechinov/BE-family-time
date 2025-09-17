@@ -1,6 +1,11 @@
 import { IAuthUseCases } from '@/domain/useCases';
 import { IAuthForgotPasswordStore, IAuthRegistrationStore } from '@/domain/repositories/stores';
-import { UserContactsPlainEntity, UserPlainCreateEntity, UserPlainFindEntity } from '@/domain/entities';
+import {
+  UserContactsPlainEntity,
+  UserPlainCreateEntity,
+  UserPlainFindEntity,
+  UserPlainPatchEntity,
+} from '@/domain/entities';
 import { ErrorInvalidCode, ErrorUserExists, generateNumericCode } from '@/pkg';
 import { CONFIG } from '@/config';
 import { FastifyBaseLogger } from 'fastify';
@@ -70,5 +75,30 @@ export class AuthUseCases implements IAuthUseCases {
     await this.#authForgotPasswordStore.saveCode({ userContactsPlain: props.userContactsPlainEntity, code });
 
     props.logger.debug({ code, contact: props.userContactsPlainEntity.getContact() }, 'code saved');
+  }
+
+  async forgotPasswordEnd(props: {
+    userContactsPlainEntity: UserContactsPlainEntity;
+    userPlainPatchEntity: UserPlainPatchEntity;
+    code: string;
+    logger: FastifyBaseLogger;
+  }) {
+    const storeCode = await this.#authForgotPasswordStore.getCode({
+      userContactsPlain: props.userContactsPlainEntity,
+    });
+
+    if (!storeCode || !props.code || props.code !== storeCode) {
+      props.logger.debug({ userCode: props.code, storeCode }, 'invalid code');
+      throw new ErrorInvalidCode();
+    }
+
+    await this.#usersService.patchUser({
+      userPlainFindEntity: new UserPlainFindEntity({ contactsPlain: props.userContactsPlainEntity }),
+      userPlainPatchEntity: new UserPlainPatchEntity({
+        passwordPlain: props.userPlainPatchEntity.passwordPlain,
+      }),
+    });
+
+    props.logger.debug({ contact: props.userContactsPlainEntity.getContact() }, 'password changed');
   }
 }

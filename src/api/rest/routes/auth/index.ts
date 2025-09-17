@@ -1,8 +1,18 @@
 import { FastifyInstance } from 'fastify';
 import { ZodTypeProvider } from 'fastify-type-provider-zod';
-import { SCHEMA_FORGOT_PASSWORD_START, SCHEMA_REGISTRATION_END, SCHEMA_REGISTRATION_START } from './schemas';
+import {
+  SCHEMA_FORGOT_PASSWORD_END,
+  SCHEMA_FORGOT_PASSWORD_START,
+  SCHEMA_REGISTRATION_END,
+  SCHEMA_REGISTRATION_START,
+} from './schemas';
 import { IAuthUseCases } from '@/domain/useCases';
-import { UserContactsPlainEntity, UserPersonalInfoEntity, UserPlainCreateEntity } from '@/domain/entities';
+import {
+  UserContactsPlainEntity,
+  UserPersonalInfoEntity,
+  UserPlainCreateEntity,
+  UserPlainPatchEntity,
+} from '@/domain/entities';
 
 const ROUTES = Object.freeze({
   REGISTRATION_START: '/registration-start',
@@ -55,6 +65,18 @@ export class AuthRoutesController {
       await this.#authUseCases.forgotPasswordStart({
         logger: request.log,
         userContactsPlainEntity: new UserContactsPlainEntity({ email: request.body.email }),
+      });
+      reply.status(200).send();
+    });
+
+    router.post(ROUTES.FORGOT_PASSWORD_END, { schema: SCHEMA_FORGOT_PASSWORD_END }, async (request, reply) => {
+      await this.#authUseCases.forgotPasswordEnd({
+        logger: request.log,
+        code: request.body.code,
+        userContactsPlainEntity: new UserContactsPlainEntity({ email: request.body.email }),
+        userPlainPatchEntity: new UserPlainPatchEntity({
+          passwordPlain: request.body.password,
+        }),
       });
       reply.status(200).send();
     });

@@ -1,10 +1,15 @@
 import {
-  UserContactsEncryptedEntity,
+  UserContactsEncryptedEntity, UserContactsEncryptedPatchEntity,
   UserContactsHashedEntity,
-  UserCreateEntity, UserEntity,
+  UserContactsHashedPatchEntity,
+  UserCreateEntity,
+  UserEntity,
   UserFindEntity,
+  UserPatchEntity,
+  UserPersonalInfoPatchEntity,
   UserPlainCreateEntity,
-  UserPlainFindEntity
+  UserPlainFindEntity,
+  UserPlainPatchEntity
 } from '@/domain/entities';
 import {
   ICryptoService,
@@ -85,5 +90,80 @@ export class UsersService implements IUserService {
 
   async hasUser(props: { userPlainFindEntity: UserPlainFindEntity }) {
     return !!(await this.getUser(props));
+  }
+
+  async patchUser({
+    userPlainFindEntity,
+    userPlainPatchEntity,
+  }: {
+    userPlainFindEntity: UserPlainFindEntity;
+    userPlainPatchEntity: UserPlainPatchEntity;
+  }) {
+    let findContactsHashed: UserContactsHashedEntity | undefined;
+
+    if (userPlainFindEntity.contactsPlain) {
+      const { contactsPlain } = userPlainFindEntity;
+      findContactsHashed = new UserContactsHashedEntity({
+        email: contactsPlain.email ? this.#hashService.hash(contactsPlain.email, HASH_CONFIG) : undefined,
+        phone: contactsPlain.phone ? this.#hashService.hash(contactsPlain.phone, HASH_CONFIG) : undefined,
+      });
+    }
+
+    const userFindEntity = new UserFindEntity({
+      id: userPlainFindEntity.id,
+      contactsHashed: findContactsHashed,
+    });
+
+    let userPersonalInfoPatch: UserPersonalInfoPatchEntity | undefined | null = undefined;
+    if (userPlainPatchEntity.personalInfo === null) {
+      userPersonalInfoPatch = null;
+    } else if (typeof userPlainPatchEntity.personalInfo !== 'undefined') {
+      userPersonalInfoPatch = new UserPersonalInfoPatchEntity({
+        firstName: userPlainPatchEntity.personalInfo.firstName,
+        lastName: userPlainPatchEntity.personalInfo.lastName,
+      });
+    }
+
+    let userContactsHashedPatch: UserContactsHashedPatchEntity | undefined | null = undefined;
+    if (userPlainPatchEntity.contacts === null) {
+      userContactsHashedPatch = null;
+    } else if (typeof userPlainPatchEntity.contacts !== 'undefined') {
+      userContactsHashedPatch = new UserContactsHashedPatchEntity({
+        email: userPlainPatchEntity.contacts.email
+          ? this.#hashService.hash(userPlainPatchEntity.contacts.email, HASH_CONFIG)
+          : userPlainPatchEntity.contacts.email,
+        phone: userPlainPatchEntity.contacts.phone
+          ? this.#hashService.hash(userPlainPatchEntity.contacts.phone, HASH_CONFIG)
+          : userPlainPatchEntity.contacts.phone,
+      });
+    }
+
+    let userContactsEncryptedPatch: UserContactsEncryptedPatchEntity | undefined | null = undefined;
+    if (userPlainPatchEntity.contacts === null) {
+      userContactsEncryptedPatch = null;
+    } else if (typeof userPlainPatchEntity.contacts !== 'undefined') {
+      userContactsEncryptedPatch = new UserContactsEncryptedPatchEntity({
+        email: userPlainPatchEntity.contacts.email
+          ? this.#cryptoService.encrypt(userPlainPatchEntity.contacts.email)
+          : userPlainPatchEntity.contacts.email,
+        phone: userPlainPatchEntity.contacts.phone
+          ? this.#cryptoService.encrypt(userPlainPatchEntity.contacts.phone)
+          : userPlainPatchEntity.contacts.phone,
+      });
+    }
+
+    const passwordHashedPatch =
+      userPlainPatchEntity.passwordPlain === null || userPlainPatchEntity.passwordPlain === undefined
+        ? userPlainPatchEntity.passwordPlain
+        : this.#hashPasswordService.hashPassword(userPlainPatchEntity.passwordPlain);
+
+    const userPatchEntity = new UserPatchEntity({
+      personalInfo: userPersonalInfoPatch,
+      contactsHashed: userContactsHashedPatch,
+      contactsEncrypted: userContactsEncryptedPatch,
+      passwordHashed: passwordHashedPatch,
+    });
+
+    return await this.#usersRepository.patch({ userFindEntity, userPatchEntity });
   }
 }

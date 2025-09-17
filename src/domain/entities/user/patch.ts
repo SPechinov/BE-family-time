@@ -1,5 +1,33 @@
 import { UserPersonalInfoPatchEntity } from './personalInfo';
-import { UserContactsEncryptedPatchEntity, UserContactsHashedPatchEntity } from './contacts';
+import { UserContactsEncryptedPatchEntity, UserContactsHashedPatchEntity, UserContactsPatchEntity } from './contacts';
+
+export class UserPlainPatchEntity {
+  readonly #personalInfo?: UserPersonalInfoPatchEntity | null;
+  readonly #contacts?: UserContactsPatchEntity | null;
+  readonly #passwordPlain?: string | null;
+
+  constructor(props: {
+    personalInfo?: UserPersonalInfoPatchEntity | null;
+    contacts?: UserContactsPatchEntity | null;
+    passwordPlain?: string | null;
+  }) {
+    this.#personalInfo = props.personalInfo;
+    this.#contacts = props.contacts;
+    this.#passwordPlain = props.passwordPlain;
+  }
+
+  get personalInfo() {
+    return this.#personalInfo;
+  }
+
+  get contacts() {
+    return this.#contacts;
+  }
+
+  get passwordPlain() {
+    return this.#passwordPlain;
+  }
+}
 
 export class UserPatchEntity {
   readonly #personalInfo?: UserPersonalInfoPatchEntity | null;
