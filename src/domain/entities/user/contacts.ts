@@ -14,6 +14,10 @@ class UserContactsEntity {
   get phone() {
     return this.#phone;
   }
+
+  getContact() {
+    return this.#email ?? this.#phone;
+  }
 }
 
 export class UserContactsPlainEntity extends UserContactsEntity {

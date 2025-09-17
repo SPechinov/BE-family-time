@@ -5,8 +5,9 @@ import {
   UserContactsHashedEntity,
   UserCreateEntity,
   UserEntity,
-  UserFindEntity, UserPatchEntity,
-  UserPersonalInfoEntity
+  UserFindEntity,
+  UserPatchEntity,
+  UserPersonalInfoEntity,
 } from '@/domain/entities';
 import { IUserRowData } from './types';
 
@@ -59,66 +60,111 @@ export class UsersRepository implements IUsersRepository {
     return this.#buildUserEntity(row);
   }
 
-  patch(props: { userFindEntity: UserFindEntity; userPatchEntity: UserPatchEntity }) {
-    const { conditions, values } = this.#buildUsersConditions(props.userFindEntity);
-    if (conditions.length === 0) throw new Error('Invalid find params');
-    const where = 'WHERE ' + conditions.join(' AND ');
+  async patch({ userFindEntity, userPatchEntity }: { userFindEntity: UserFindEntity; userPatchEntity: UserPatchEntity }) {
+    const { conditions: findConditions, values: findValues } = this.#buildUsersConditions(userFindEntity);
+    if (findConditions.length === 0) throw new Error('Invalid find params');
+
+    const { setParts, updateValues } = this.#buildUpdateSetClause(
+      userPatchEntity,
+      findValues.length + 1,
+    );
+    if (setParts.length === 0) throw new Error('No fields to update');
 
     const query = `
       UPDATE users
-    `
+      SET ${setParts.join(', ')},
+          updated_at = NOW()
+      WHERE ${findConditions.join(' AND ')}
+      RETURNING *
+    `;
+
+    const allValues = [...findValues, ...updateValues];
+
+    const result = await this.#pool.query<IUserRowData>(query, allValues);
+    const row = result.rows?.[0];
+
+    if (!row) throw new Error('User not found or not updated');
+
+    return this.#buildUserEntity(row);
+
   }
 
-  #buildUpdateSetClause(userPatchEntity: UserPatchEntity, startIndex: number) {
+  #buildUpdateSetClause(userPatchEntity: UserPatchEntity, startValueIndex: number) {
     const setParts: string[] = [];
-    const setValues: (string | Buffer)[] = [];
-    let valueIndex = startIndex;
+    const updateValues: (string | null | Buffer)[] = [];
+    let valueIndex = startValueIndex;
 
-    if (userPatchEntity.contactsHashed?.email !== undefined) {
-      setParts.push(`email_hashed = $${valueIndex}`);
-      setValues.push(Buffer.from(userPatchEntity.contactsHashed.email, 'utf-8'));
-      valueIndex++;
+    if (userPatchEntity.personalInfo !== undefined) {
+      if (userPatchEntity.personalInfo === null) {
+        setParts.push(`first_name = NULL`, `last_name = NULL`);
+      } else {
+        if (userPatchEntity.personalInfo.firstName !== undefined) {
+          setParts.push(`first_name = $${valueIndex}`);
+          updateValues.push(userPatchEntity.personalInfo.firstName || '');
+          valueIndex++;
+        }
+        if (userPatchEntity.personalInfo.lastName !== undefined) {
+          setParts.push(`last_name = $${valueIndex}`);
+          updateValues.push(userPatchEntity.personalInfo.lastName || null);
+          valueIndex++;
+        }
+      }
     }
 
-    if (userPatchEntity.contactsEncrypted?.email !== undefined) {
-      setParts.push(`email_encrypted = $${valueIndex}`);
-      setValues.push(Buffer.from(userPatchEntity.contactsEncrypted.email, 'utf-8'));
-      valueIndex++;
+    if (userPatchEntity.contactsEncrypted !== undefined) {
+      if (userPatchEntity.contactsEncrypted === null) {
+        setParts.push(`email_encrypted = NULL`, `phone_encrypted = NULL`);
+      } else {
+        if (userPatchEntity.contactsEncrypted.email !== undefined) {
+          setParts.push(`email_encrypted = $${valueIndex}`);
+          updateValues.push(
+            userPatchEntity.contactsEncrypted.email
+              ? Buffer.from(userPatchEntity.contactsEncrypted.email, 'utf-8')
+              : null,
+          );
+          valueIndex++;
+        }
+        if (userPatchEntity.contactsEncrypted.phone !== undefined) {
+          setParts.push(`phone_encrypted = $${valueIndex}`);
+          updateValues.push(
+            userPatchEntity.contactsEncrypted.phone
+              ? Buffer.from(userPatchEntity.contactsEncrypted.phone, 'utf-8')
+              : null,
+          );
+          valueIndex++;
+        }
+      }
     }
 
-    if (userPatchEntity.contactsHashed?.phone !== undefined) {
-      setParts.push(`phone_hashed = $${valueIndex}`);
-      setValues.push(Buffer.from(userPatchEntity.contactsHashed.phone, 'utf-8'));
-      valueIndex++;
-    }
-
-    if (userPatchEntity.contactsEncrypted?.phone !== undefined) {
-      setParts.push(`phone_encrypted = $${valueIndex}`);
-      setValues.push(Buffer.from(userPatchEntity.contactsEncrypted.phone, 'utf-8'));
-      valueIndex++;
+    if (userPatchEntity.contactsHashed !== undefined) {
+      if (userPatchEntity.contactsHashed === null) {
+        setParts.push(`email_hashed = NULL`, `phone_hashed = NULL`);
+      } else {
+        if (userPatchEntity.contactsHashed.email !== undefined) {
+          setParts.push(`email_hashed = $${valueIndex}`);
+          updateValues.push(
+            userPatchEntity.contactsHashed.email ? Buffer.from(userPatchEntity.contactsHashed.email, 'utf-8') : null,
+          );
+          valueIndex++;
+        }
+        if (userPatchEntity.contactsHashed.phone !== undefined) {
+          setParts.push(`phone_hashed = $${valueIndex}`);
+          updateValues.push(
+            userPatchEntity.contactsHashed.phone ? Buffer.from(userPatchEntity.contactsHashed.phone, 'utf-8') : null,
+          );
+          valueIndex++;
+        }
+      }
     }
 
     if (userPatchEntity.passwordHashed !== undefined) {
       setParts.push(`password_hashed = $${valueIndex}`);
-      setValues.push(Buffer.from(userPatchEntity.passwordHashed, 'utf-8'));
+      updateValues.push(userPatchEntity.passwordHashed ? Buffer.from(userPatchEntity.passwordHashed, 'utf-8') : null);
       valueIndex++;
     }
 
-    if (userPatchEntity.personalInfo?.firstName !== undefined) {
-      setParts.push(`first_name = $${valueIndex}`);
-      setValues.push(userPatchEntity.personalInfo.firstName);
-      valueIndex++;
-    }
-
-    if (userPatchEntity.personalInfo?.lastName !== undefined) {
-      setParts.push(`last_name = $${valueIndex}`);
-      setValues.push(userPatchEntity.personalInfo.lastName);
-      valueIndex++;
-    }
-
-    return { setParts, setValues };
+    return { setParts, updateValues, nextValueIndex: valueIndex };
   }
-
 
   #buildUsersConditions(userFindEntity: UserFindEntity) {
     const conditions: string[] = [];
