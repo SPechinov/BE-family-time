@@ -60,14 +60,17 @@ export class UsersRepository implements IUsersRepository {
     return this.#buildUserEntity(row);
   }
 
-  async patch({ userFindEntity, userPatchEntity }: { userFindEntity: UserFindEntity; userPatchEntity: UserPatchEntity }) {
+  async patch({
+    userFindEntity,
+    userPatchEntity,
+  }: {
+    userFindEntity: UserFindEntity;
+    userPatchEntity: UserPatchEntity;
+  }) {
     const { conditions: findConditions, values: findValues } = this.#buildUsersConditions(userFindEntity);
     if (findConditions.length === 0) throw new Error('Invalid find params');
 
-    const { setParts, updateValues } = this.#buildUpdateSetClause(
-      userPatchEntity,
-      findValues.length + 1,
-    );
+    const { setParts, updateValues } = this.#buildUpdateSetClause(userPatchEntity, findValues.length + 1);
     if (setParts.length === 0) throw new Error('No fields to update');
 
     const query = `
@@ -86,7 +89,6 @@ export class UsersRepository implements IUsersRepository {
     if (!row) throw new Error('User not found or not updated');
 
     return this.#buildUserEntity(row);
-
   }
 
   #buildUpdateSetClause(userPatchEntity: UserPatchEntity, startValueIndex: number) {

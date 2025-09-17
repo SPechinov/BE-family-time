@@ -14,9 +14,11 @@ const ConfigSchema = z.object({
   }),
   ttls: z.object({
     registrationSec: z.number(),
+    forgotPasswordSec: z.number(),
   }),
   codesLength: z.object({
     registration: z.number(),
+    forgotPassword: z.number(),
   }),
   salts: z.object({
     hashCredentials: z.string().min(1),

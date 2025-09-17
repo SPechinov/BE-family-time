@@ -7,11 +7,13 @@ import { AuthUseCases } from '@/useCases/auth';
 import { AuthRoutesController } from '@/api/rest';
 import { CryptoService, HashPasswordService, HashService } from '@/services';
 import { UsersService } from '@/services/users';
+import { AuthForgotPasswordStore } from '@/repositories/stores/auth/forgotPassword';
 
 export class CompositeAuth {
   constructor(props: { fastify: FastifyInstance; pool: Pool; redis: RedisClient }) {
     const usersRepository = new UsersRepository({ pool: props.pool });
     const authRegistrationStore = new AuthRegistrationStore({ redis: props.redis });
+    const authForgotPasswordStore = new AuthForgotPasswordStore({ redis: props.redis });
 
     const hashPasswordService = new HashPasswordService();
     const hashService = new HashService();
@@ -26,6 +28,7 @@ export class CompositeAuth {
 
     const authUseCases = new AuthUseCases({
       authRegistrationStore,
+      authForgotPasswordStore,
       usersService,
     });
 

@@ -32,7 +32,7 @@ export class AuthRoutesController {
         request.log.info(request.body);
         await this.#authUseCases.registrationStart({
           logger: request.log,
-          userContactsPlainEntity: new UserContactsPlainEntity({ email: request.body.email.trim() }),
+          userContactsPlainEntity: new UserContactsPlainEntity({ email: request.body.email }),
         });
         reply.status(200).send();
       },
@@ -43,8 +43,8 @@ export class AuthRoutesController {
         logger: request.log,
         code: request.body.code,
         userPlainCreateEntity: new UserPlainCreateEntity({
-          contacts: new UserContactsPlainEntity({ email: request.body.email.trim() }),
-          personalInfo: new UserPersonalInfoEntity({ firstName: request.body.firstName.trim() }),
+          contacts: new UserContactsPlainEntity({ email: request.body.email }),
+          personalInfo: new UserPersonalInfoEntity({ firstName: request.body.firstName }),
           passwordPlain: request.body.password,
         }),
       });
@@ -52,7 +52,11 @@ export class AuthRoutesController {
     });
 
     router.post(ROUTES.FORGOT_PASSWORD_START, { schema: SCHEMA_FORGOT_PASSWORD_START }, async (request, reply) => {
-
+      await this.#authUseCases.forgotPasswordStart({
+        logger: request.log,
+        userContactsPlainEntity: new UserContactsPlainEntity({ email: request.body.email }),
+      });
+      reply.status(200).send();
     });
   }
 }

@@ -1,6 +1,6 @@
 import { UserContactsPlainEntity } from '@/domain/entities';
 
-export interface IAuthRegistrationStore {
+export interface IAuthForgotPasswordStore {
   saveCode(props: { userContactsPlain: UserContactsPlainEntity; code: string }): Promise<void>;
 
   getCode(props: { userContactsPlain: UserContactsPlainEntity }): Promise<string | null>;
