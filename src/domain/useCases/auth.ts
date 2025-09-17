@@ -2,7 +2,7 @@ import { UserContactsPlainEntity, UserPlainCreateEntity } from '@/domain/entitie
 import { FastifyBaseLogger } from 'fastify';
 
 export interface IAuthUseCases {
-  registrationBegin(props: {
+  registrationStart(props: {
     userContactsPlainEntity: UserContactsPlainEntity;
     logger: FastifyBaseLogger;
   }): Promise<void>;
@@ -10,6 +10,11 @@ export interface IAuthUseCases {
   registrationEnd(props: {
     userPlainCreateEntity: UserPlainCreateEntity;
     code: string;
+    logger: FastifyBaseLogger;
+  }): Promise<void>;
+
+  forgotPasswordStart(props: {
+    userContactsPlainEntity: UserContactsPlainEntity;
     logger: FastifyBaseLogger;
   }): Promise<void>;
 }

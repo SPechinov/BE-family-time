@@ -22,6 +22,16 @@ export const SCHEMA_REGISTRATION_END = {
   }),
   response: {
     ...getDefaultSchemaResponse(),
+    201: z.undefined(),
+  },
+};
+
+export const SCHEMA_FORGOT_PASSWORD_START = {
+  body: z.object({
+    email: z.email().nonempty().describe('Email address'),
+  }),
+  response: {
+    ...getDefaultSchemaResponse(),
     200: z.undefined(),
   },
 };

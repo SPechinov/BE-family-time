@@ -15,13 +15,11 @@ export class AuthUseCases implements IAuthUseCases {
     this.#usersService = props.usersService;
   }
 
-  async registrationBegin(props: { userContactsPlainEntity: UserContactsPlainEntity; logger: FastifyBaseLogger }) {
+  async registrationStart(props: { userContactsPlainEntity: UserContactsPlainEntity; logger: FastifyBaseLogger }) {
     const code = generateNumericCode(CONFIG.codesLength.registration);
     await this.#authRegistrationStore.saveRegistrationCode({ userContactsPlain: props.userContactsPlainEntity, code });
 
     props.logger.debug({ code, contact: props.userContactsPlainEntity.getContact() }, 'code saved');
-
-    return Promise.resolve();
   }
 
   async registrationEnd(props: {
@@ -38,7 +36,10 @@ export class AuthUseCases implements IAuthUseCases {
       throw new ErrorInvalidCode();
     }
 
-    props.logger.debug('code compare success, saving user');
+    props.logger.debug(
+      { contact: props.userPlainCreateEntity.contacts.getContact() },
+      'code compare success, saving user',
+    );
 
     const userPlainFindEntity = new UserPlainFindEntity({ contactsPlain: props.userPlainCreateEntity.contacts });
     if (await this.#usersService.hasUser({ userPlainFindEntity })) throw new ErrorUserExists();
@@ -48,7 +49,17 @@ export class AuthUseCases implements IAuthUseCases {
     this.#authRegistrationStore.deleteRegistrationCode({ userContactsPlain: props.userPlainCreateEntity.contacts });
 
     props.logger.debug(`user saved, id: ${createdUser.id}`);
+  }
 
-    return Promise.resolve();
+  async forgotPasswordStart(props: { userContactsPlainEntity: UserContactsPlainEntity; logger: FastifyBaseLogger }) {
+    const userPlainFindEntity = new UserPlainFindEntity({ contactsPlain: props.userContactsPlainEntity });
+    const hasUser = await this.#usersService.hasUser({ userPlainFindEntity });
+
+    if (!hasUser) {
+      props.logger.debug({ contact: props.userContactsPlainEntity.getContact() }, 'user not exists');
+      return;
+    }
+
+
   }
 }

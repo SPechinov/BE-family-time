@@ -151,6 +151,41 @@ export class UserFindEntity {
   }
 }
 
+export class UserPatchEntity {
+  readonly #personalInfo?: UserPersonalInfoEntity | null;
+  readonly #contactsEncrypted?: UserContactsEncryptedEntity | null;
+  readonly #contactsHashed?: UserContactsHashedEntity | null;
+  readonly #passwordHashed?: string | null;
+
+  constructor(props: {
+    personalInfo?: UserPersonalInfoEntity | null;
+    contactsEncrypted?: UserContactsEncryptedEntity | null;
+    contactsHashed?: UserContactsHashedEntity | null;
+    passwordHashed?: string | null;
+  }) {
+    this.#personalInfo = props.personalInfo;
+    this.#contactsEncrypted = props.contactsEncrypted;
+    this.#contactsHashed = props.contactsHashed;
+    this.#passwordHashed = props.passwordHashed;
+  }
+
+  get personalInfo() {
+    return this.#personalInfo;
+  }
+
+  get contactsEncrypted() {
+    return this.#contactsEncrypted;
+  }
+
+  get contactsHashed() {
+    return this.#contactsHashed;
+  }
+
+  get passwordHashed() {
+    return this.#passwordHashed;
+  }
+}
+
 export class UserEntity {
   readonly #id: string;
   readonly #personalInfo: UserPersonalInfoEntity;

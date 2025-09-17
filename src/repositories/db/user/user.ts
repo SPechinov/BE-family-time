@@ -5,8 +5,8 @@ import {
   UserContactsHashedEntity,
   UserCreateEntity,
   UserEntity,
-  UserFindEntity,
-  UserPersonalInfoEntity,
+  UserFindEntity, UserPatchEntity,
+  UserPersonalInfoEntity
 } from '@/domain/entities';
 import { IUserRowData } from './types';
 
@@ -48,6 +48,79 @@ export class UsersRepository implements IUsersRepository {
 
   async findOne(userFindEntity: UserFindEntity) {
     let query = 'SELECT * FROM users';
+    const { conditions, values } = this.#buildUsersConditions(userFindEntity);
+    if (conditions.length === 0) throw new Error('Invalid find params');
+
+    query += ' WHERE ' + conditions.join(' AND ');
+
+    const result = await this.#pool.query<IUserRowData>(query, values);
+    const row = result.rows?.[0];
+    if (!row) return null;
+    return this.#buildUserEntity(row);
+  }
+
+  patch(props: { userFindEntity: UserFindEntity; userPatchEntity: UserPatchEntity }) {
+    const { conditions, values } = this.#buildUsersConditions(props.userFindEntity);
+    if (conditions.length === 0) throw new Error('Invalid find params');
+    const where = 'WHERE ' + conditions.join(' AND ');
+
+    const query = `
+      UPDATE users
+    `
+  }
+
+  #buildUpdateSetClause(userPatchEntity: UserPatchEntity, startIndex: number) {
+    const setParts: string[] = [];
+    const setValues: (string | Buffer)[] = [];
+    let valueIndex = startIndex;
+
+    if (userPatchEntity.contactsHashed?.email !== undefined) {
+      setParts.push(`email_hashed = $${valueIndex}`);
+      setValues.push(Buffer.from(userPatchEntity.contactsHashed.email, 'utf-8'));
+      valueIndex++;
+    }
+
+    if (userPatchEntity.contactsEncrypted?.email !== undefined) {
+      setParts.push(`email_encrypted = $${valueIndex}`);
+      setValues.push(Buffer.from(userPatchEntity.contactsEncrypted.email, 'utf-8'));
+      valueIndex++;
+    }
+
+    if (userPatchEntity.contactsHashed?.phone !== undefined) {
+      setParts.push(`phone_hashed = $${valueIndex}`);
+      setValues.push(Buffer.from(userPatchEntity.contactsHashed.phone, 'utf-8'));
+      valueIndex++;
+    }
+
+    if (userPatchEntity.contactsEncrypted?.phone !== undefined) {
+      setParts.push(`phone_encrypted = $${valueIndex}`);
+      setValues.push(Buffer.from(userPatchEntity.contactsEncrypted.phone, 'utf-8'));
+      valueIndex++;
+    }
+
+    if (userPatchEntity.passwordHashed !== undefined) {
+      setParts.push(`password_hashed = $${valueIndex}`);
+      setValues.push(Buffer.from(userPatchEntity.passwordHashed, 'utf-8'));
+      valueIndex++;
+    }
+
+    if (userPatchEntity.personalInfo?.firstName !== undefined) {
+      setParts.push(`first_name = $${valueIndex}`);
+      setValues.push(userPatchEntity.personalInfo.firstName);
+      valueIndex++;
+    }
+
+    if (userPatchEntity.personalInfo?.lastName !== undefined) {
+      setParts.push(`last_name = $${valueIndex}`);
+      setValues.push(userPatchEntity.personalInfo.lastName);
+      valueIndex++;
+    }
+
+    return { setParts, setValues };
+  }
+
+
+  #buildUsersConditions(userFindEntity: UserFindEntity) {
     const conditions: string[] = [];
     const values: (string | Buffer)[] = [];
     let valueIndex = 1;
@@ -70,16 +143,7 @@ export class UsersRepository implements IUsersRepository {
       valueIndex++;
     }
 
-    if (conditions.length === 0) {
-      throw new Error('Invalid find params');
-    }
-
-    query += ' WHERE ' + conditions.join(' AND ');
-
-    const result = await this.#pool.query<IUserRowData>(query, values);
-    const row = result.rows?.[0];
-    if (!row) return null;
-    return this.#buildUserEntity(row);
+    return { conditions, values };
   }
 
   #buildUserEntity(row: IUserRowData) {

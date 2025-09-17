@@ -1,12 +1,14 @@
 import { FastifyInstance } from 'fastify';
 import { ZodTypeProvider } from 'fastify-type-provider-zod';
-import { SCHEMA_REGISTRATION_END, SCHEMA_REGISTRATION_START } from './schemas';
+import { SCHEMA_FORGOT_PASSWORD_START, SCHEMA_REGISTRATION_END, SCHEMA_REGISTRATION_START } from './schemas';
 import { IAuthUseCases } from '@/domain/useCases';
 import { UserContactsPlainEntity, UserPersonalInfoEntity, UserPlainCreateEntity } from '@/domain/entities';
 
 const ROUTES = Object.freeze({
   REGISTRATION_START: '/registration-start',
   REGISTRATION_END: '/registration-end',
+  FORGOT_PASSWORD_START: '/forgot-password-start',
+  FORGOT_PASSWORD_END: '/forgot-password-end',
 });
 
 export class AuthRoutesController {
@@ -28,7 +30,7 @@ export class AuthRoutesController {
       },
       async (request, reply) => {
         request.log.info(request.body);
-        await this.#authUseCases.registrationBegin({
+        await this.#authUseCases.registrationStart({
           logger: request.log,
           userContactsPlainEntity: new UserContactsPlainEntity({ email: request.body.email.trim() }),
         });
@@ -46,8 +48,11 @@ export class AuthRoutesController {
           passwordPlain: request.body.password,
         }),
       });
+      reply.status(201).send();
+    });
 
-      reply.status(200).send();
+    router.post(ROUTES.FORGOT_PASSWORD_START, { schema: SCHEMA_FORGOT_PASSWORD_START }, async (request, reply) => {
+
     });
   }
 }
