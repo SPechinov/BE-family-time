@@ -1,3 +1,3 @@
-export interface IRateLimiter {
+export interface IRateLimiterService {
   checkLimit(props: { key: string }): Promise<boolean>
 }

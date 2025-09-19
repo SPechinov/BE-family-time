@@ -1,7 +1,7 @@
 import { RedisClient } from '@/pkg';
-import { IRateLimiter } from '@/domain/services';
+import { IRateLimiterService } from '@/domain/services';
 
-export class RateLimiter implements IRateLimiter {
+export class RateLimiterService implements IRateLimiterService {
   readonly #redis: RedisClient;
   readonly #maxAttempts: number;
   readonly #windowSec: number;
