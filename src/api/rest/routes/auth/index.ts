@@ -33,6 +33,7 @@ export class AuthRoutesController {
 
   #register() {
     const router = this.#fastify.withTypeProvider<ZodTypeProvider>();
+
     router.post(
       ROUTES.REGISTRATION_START,
       {
