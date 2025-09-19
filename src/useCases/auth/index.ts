@@ -1,34 +1,36 @@
 import { IAuthUseCases } from '@/domain/useCases';
-import { IAuthForgotPasswordStore, IAuthRegistrationStore } from '@/domain/repositories/stores';
+import { IOtpCodesStore } from '@/domain/repositories/stores';
 import {
   UserContactsPlainEntity,
   UserPlainCreateEntity,
   UserPlainFindEntity,
   UserPlainPatchEntity,
 } from '@/domain/entities';
-import { ErrorInvalidCode, ErrorUserExists, generateNumericCode } from '@/pkg';
+import { ErrorInvalidCode, ErrorInvalidContacts, ErrorUserExists, generateNumericCode } from '@/pkg';
 import { CONFIG } from '@/config';
 import { FastifyBaseLogger } from 'fastify';
 import { IUserService } from '@/domain/services';
 
 export class AuthUseCases implements IAuthUseCases {
-  #authRegistrationStore: IAuthRegistrationStore;
-  #authForgotPasswordStore: IAuthForgotPasswordStore;
+  #authRegistrationOtpStore: IOtpCodesStore;
+  #authForgotPasswordOtpStore: IOtpCodesStore;
   #usersService: IUserService;
 
   constructor(props: {
-    authRegistrationStore: IAuthRegistrationStore;
-    authForgotPasswordStore: IAuthForgotPasswordStore;
+    authRegistrationOtpStore: IOtpCodesStore;
+    authForgotPasswordOtpStore: IOtpCodesStore;
     usersService: IUserService;
   }) {
-    this.#authRegistrationStore = props.authRegistrationStore;
-    this.#authForgotPasswordStore = props.authForgotPasswordStore;
+    this.#authRegistrationOtpStore = props.authRegistrationOtpStore;
+    this.#authForgotPasswordOtpStore = props.authForgotPasswordOtpStore;
     this.#usersService = props.usersService;
   }
 
   async registrationStart(props: { userContactsPlainEntity: UserContactsPlainEntity; logger: FastifyBaseLogger }) {
     const code = generateNumericCode(CONFIG.codesLength.registration);
-    await this.#authRegistrationStore.saveCode({ userContactsPlain: props.userContactsPlainEntity, code });
+    const contact = props.userContactsPlainEntity.getContact();
+    if (!contact) throw new ErrorInvalidContacts();
+    await this.#authRegistrationOtpStore.saveCode({ credential: contact, code });
 
     props.logger.debug({ code, contact: props.userContactsPlainEntity.getContact() }, 'code saved');
   }
@@ -38,8 +40,11 @@ export class AuthUseCases implements IAuthUseCases {
     code: string;
     logger: FastifyBaseLogger;
   }) {
-    const storeCode = await this.#authRegistrationStore.getCode({
-      userContactsPlain: props.userPlainCreateEntity.contacts,
+    const contact = props.userPlainCreateEntity.contacts.getContact();
+    if (!contact) throw new ErrorInvalidContacts();
+
+    const storeCode = await this.#authRegistrationOtpStore.getCode({
+      credential: contact,
     });
 
     if (!storeCode || !props.code || props.code !== storeCode) {
@@ -47,17 +52,14 @@ export class AuthUseCases implements IAuthUseCases {
       throw new ErrorInvalidCode();
     }
 
-    props.logger.debug(
-      { contact: props.userPlainCreateEntity.contacts.getContact() },
-      'code compare success, saving user',
-    );
+    this.#authRegistrationOtpStore.deleteCode({ credential: contact });
+
+    props.logger.debug({ contact }, 'code compare success, saving user');
 
     const userPlainFindEntity = new UserPlainFindEntity({ contactsPlain: props.userPlainCreateEntity.contacts });
     if (await this.#usersService.hasUser({ userPlainFindEntity })) throw new ErrorUserExists();
 
     const createdUser = await this.#usersService.create({ userPlainCreateEntity: props.userPlainCreateEntity });
-
-    this.#authRegistrationStore.deleteCode({ userContactsPlain: props.userPlainCreateEntity.contacts });
 
     props.logger.debug(`user saved, id: ${createdUser.id}`);
   }
@@ -66,15 +68,18 @@ export class AuthUseCases implements IAuthUseCases {
     const userPlainFindEntity = new UserPlainFindEntity({ contactsPlain: props.userContactsPlainEntity });
     const hasUser = await this.#usersService.hasUser({ userPlainFindEntity });
 
+    const contact = props.userContactsPlainEntity.getContact();
+    if (!contact) throw new ErrorInvalidContacts();
+
     if (!hasUser) {
-      props.logger.debug({ contact: props.userContactsPlainEntity.getContact() }, 'user not exists');
+      props.logger.debug({ contact }, 'user not exists');
       return;
     }
 
     const code = generateNumericCode(CONFIG.codesLength.forgotPassword);
-    await this.#authForgotPasswordStore.saveCode({ userContactsPlain: props.userContactsPlainEntity, code });
+    await this.#authForgotPasswordOtpStore.saveCode({ credential: contact, code });
 
-    props.logger.debug({ code, contact: props.userContactsPlainEntity.getContact() }, 'code saved');
+    props.logger.debug({ code, contact }, 'code saved');
   }
 
   async forgotPasswordEnd(props: {
@@ -83,14 +88,18 @@ export class AuthUseCases implements IAuthUseCases {
     code: string;
     logger: FastifyBaseLogger;
   }) {
-    const storeCode = await this.#authForgotPasswordStore.getCode({
-      userContactsPlain: props.userContactsPlainEntity,
+    const contact = props.userContactsPlainEntity.getContact();
+    if (!contact) throw new ErrorInvalidContacts();
+
+    const storeCode = await this.#authForgotPasswordOtpStore.getCode({
+      credential: contact,
     });
 
     if (!storeCode || !props.code || props.code !== storeCode) {
       props.logger.debug({ userCode: props.code, storeCode }, 'invalid code');
       throw new ErrorInvalidCode();
     }
+    this.#authForgotPasswordOtpStore.deleteCode({ credential: contact });
 
     await this.#usersService.patchUser({
       userPlainFindEntity: new UserPlainFindEntity({ contactsPlain: props.userContactsPlainEntity }),
@@ -99,6 +108,6 @@ export class AuthUseCases implements IAuthUseCases {
       }),
     });
 
-    props.logger.debug({ contact: props.userContactsPlainEntity.getContact() }, 'password changed');
+    props.logger.debug({ contact }, 'password changed');
   }
 }

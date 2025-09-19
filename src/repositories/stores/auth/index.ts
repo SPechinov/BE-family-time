@@ -1,1 +1,1 @@
-export { AuthRegistrationStore } from './registration';
+export * from './otpCodes';

@@ -1,2 +1,1 @@
-export * from './registration';
-export * from './forgotPassword';
+export * from './otpCodes';
