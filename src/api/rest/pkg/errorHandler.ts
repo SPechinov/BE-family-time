@@ -17,7 +17,6 @@ export const errorHandler = (error: FastifyError, request: FastifyRequest, reply
   } else if (hasZodFastifySchemaValidationErrors(error)) {
     params.statusCode = 422;
     params.message = error.message;
-    params.isValidationError = true;
     request.log.error(error.message);
   } else {
     request.log.error(error);

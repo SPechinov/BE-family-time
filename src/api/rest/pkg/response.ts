@@ -15,7 +15,11 @@ export const RESPONSE_400 = z.object({
 export const RESPONSE_422 = z.object({
   ...DEFAULT_ERROR,
   statusCode: z.literal(422),
-  isValidationError: z.literal(true),
+});
+
+export const RESPONSE_429 = z.object({
+  ...DEFAULT_ERROR,
+  statusCode: z.literal(429),
 });
 
 export const RESPONSE_500 = z.object({
@@ -27,7 +31,7 @@ export const getDefaultSchemaResponse = () => {
   return {
     400: RESPONSE_400,
     422: RESPONSE_422,
-    429: DEFAULT_ERROR,
+    429: RESPONSE_429,
     500: RESPONSE_500,
   };
 };

@@ -17,11 +17,16 @@ export class RateLimiterService implements IRateLimiterService {
   }
 
   async checkLimit(props: { key: string }): Promise<void> {
-    const currentCount = await this.#redis.get(`${KEY}:${this.#prefix}:${props.key}`);
+    const redisKey = this.#buildRedisKey(props.key);
+    const currentCount = await this.#redis.get(redisKey);
 
     if (currentCount && parseInt(currentCount) >= this.#maxAttempts) throw new ErrorTooManyRequests();
 
-    await this.#redis.incr(`${KEY}:${props.key}`);
-    await this.#redis.expire(`${KEY}:${props.key}`, this.#windowSec);
+    await this.#redis.incr(redisKey);
+    await this.#redis.expire(redisKey, this.#windowSec);
+  }
+
+  #buildRedisKey(key: string): string {
+    return `${KEY}:${this.#prefix}:${key}`;
   }
 }
