@@ -15,10 +15,10 @@ import {
 } from '@/domain/entities';
 
 const ROUTES = Object.freeze({
-  REGISTRATION_START: '/registration-start',
-  REGISTRATION_END: '/registration-end',
-  FORGOT_PASSWORD_START: '/forgot-password-start',
-  FORGOT_PASSWORD_END: '/forgot-password-end',
+  registrationStart: '/registration-start',
+  registrationEnd: '/registration-end',
+  forgotPasswordStart: '/forgot-password-start',
+  forgotPasswordEnd: '/forgot-password-end',
 });
 
 export class AuthRoutesController {
@@ -35,7 +35,7 @@ export class AuthRoutesController {
     const router = this.#fastify.withTypeProvider<ZodTypeProvider>();
 
     router.post(
-      ROUTES.REGISTRATION_START,
+      ROUTES.registrationStart,
       {
         schema: SCHEMA_REGISTRATION_START,
       },
@@ -49,7 +49,7 @@ export class AuthRoutesController {
       },
     );
 
-    router.post(ROUTES.REGISTRATION_END, { schema: SCHEMA_REGISTRATION_END }, async (request, reply) => {
+    router.post(ROUTES.registrationEnd, { schema: SCHEMA_REGISTRATION_END }, async (request, reply) => {
       await this.#authUseCases.registrationEnd({
         logger: request.log,
         code: request.body.code,
@@ -62,7 +62,7 @@ export class AuthRoutesController {
       reply.status(201).send();
     });
 
-    router.post(ROUTES.FORGOT_PASSWORD_START, { schema: SCHEMA_FORGOT_PASSWORD_START }, async (request, reply) => {
+    router.post(ROUTES.forgotPasswordStart, { schema: SCHEMA_FORGOT_PASSWORD_START }, async (request, reply) => {
       await this.#authUseCases.forgotPasswordStart({
         logger: request.log,
         userContactsPlainEntity: new UserContactsPlainEntity({ email: request.body.email }),
@@ -70,7 +70,7 @@ export class AuthRoutesController {
       reply.status(200).send();
     });
 
-    router.post(ROUTES.FORGOT_PASSWORD_END, { schema: SCHEMA_FORGOT_PASSWORD_END }, async (request, reply) => {
+    router.post(ROUTES.forgotPasswordEnd, { schema: SCHEMA_FORGOT_PASSWORD_END }, async (request, reply) => {
       await this.#authUseCases.forgotPasswordEnd({
         logger: request.log,
         code: request.body.code,
