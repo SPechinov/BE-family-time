@@ -4,16 +4,15 @@ import { RedisClient } from '@/pkg';
 import { UsersRepository } from '@/repositories/db';
 import { AuthUseCases } from '@/useCases/auth';
 import { AuthRoutesController } from '@/api/rest';
-import { CryptoService, HashPasswordService, HashService, RateLimiterService } from '@/services';
+import { CryptoService, HashPasswordService, HashService, OtpCodesService, RateLimiterService } from '@/services';
 import { UsersService } from '@/services/users';
 import { CONFIG } from '@/config';
-import { OtpCodesStore } from '@/repositories/stores';
 
 export class CompositeAuth {
   constructor(props: { fastify: FastifyInstance; pool: Pool; redis: RedisClient }) {
     const usersRepository = new UsersRepository({ pool: props.pool });
 
-    const registrationOtpStore = new OtpCodesStore({
+    const registrationOtpStore = new OtpCodesService({
       redis: props.redis,
       prefix: 'auth-registration',
       codeLength: CONFIG.codesLength.registration,
@@ -27,7 +26,7 @@ export class CompositeAuth {
       windowSec: 600,
     });
 
-    const forgotPasswordOtpStore = new OtpCodesStore({
+    const forgotPasswordOtpStore = new OtpCodesService({
       redis: props.redis,
       prefix: 'auth-forgot-password',
       codeLength: CONFIG.codesLength.forgotPassword,

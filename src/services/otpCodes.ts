@@ -1,12 +1,12 @@
 import { REDIS_SUCCESS_RESPONSE, RedisClient } from '@/pkg';
-import { IOtpCodesStore } from '@/domain/repositories/stores';
+import { IOtpCodesService } from '@/domain/services';
 
 const ERRORS = Object.freeze({
   FAILED_TO_SAVE_CODE: 'Failed to save code',
   INVALID_CODE_LENGTH: 'Invalid code length',
 });
 
-export class OtpCodesStore implements IOtpCodesStore {
+export class OtpCodesService implements IOtpCodesService {
   readonly #redis: RedisClient;
   readonly #prefix: string;
   readonly #codeLength: number;

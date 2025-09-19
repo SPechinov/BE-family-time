@@ -1,5 +1,4 @@
 import { IAuthUseCases } from '@/domain/useCases';
-import { IOtpCodesStore } from '@/domain/repositories/stores';
 import {
   UserContactsPlainEntity,
   UserPlainCreateEntity,
@@ -9,19 +8,19 @@ import {
 import { ErrorInvalidCode, ErrorInvalidContacts, ErrorUserExists, generateNumericCode } from '@/pkg';
 import { CONFIG } from '@/config';
 import { FastifyBaseLogger } from 'fastify';
-import { IRateLimiterService, IUserService } from '@/domain/services';
+import { IOtpCodesService, IRateLimiterService, IUserService } from '@/domain/services';
 
 export class AuthUseCases implements IAuthUseCases {
-  #registrationOtpStore: IOtpCodesStore;
+  #registrationOtpStore: IOtpCodesService;
   #registrationRateLimiterService: IRateLimiterService;
-  #forgotPasswordOtpStore: IOtpCodesStore;
+  #forgotPasswordOtpStore: IOtpCodesService;
   #forgotPasswordRateLimiterService: IRateLimiterService;
   #usersService: IUserService;
 
   constructor(props: {
-    registrationOtpStore: IOtpCodesStore;
+    registrationOtpStore: IOtpCodesService;
     registrationRateLimiterService: IRateLimiterService;
-    forgotPasswordOtpStore: IOtpCodesStore;
+    forgotPasswordOtpStore: IOtpCodesService;
     forgotPasswordRateLimiterService: IRateLimiterService;
     usersService: IUserService;
   }) {
