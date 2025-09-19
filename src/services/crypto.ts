@@ -42,6 +42,6 @@ export class CryptoService implements ICryptoService {
   }
 
   private deriveKey(key: string): Buffer {
-    return crypto.scryptSync(key, CONFIG.salts.cryptoCredentials, KEY_LENGTH);
+    return crypto.scryptSync(key, CONFIG.salts.keyDerivation, KEY_LENGTH);
   }
 }

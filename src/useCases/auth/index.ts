@@ -52,7 +52,7 @@ export class AuthUseCases implements IAuthUseCases {
       throw new ErrorInvalidCode();
     }
 
-    this.#authRegistrationOtpStore.deleteCode({ credential: contact });
+    await this.#authRegistrationOtpStore.deleteCode({ credential: contact });
 
     props.logger.debug({ contact }, 'code compare success, saving user');
 
@@ -99,7 +99,8 @@ export class AuthUseCases implements IAuthUseCases {
       props.logger.debug({ userCode: props.code, storeCode }, 'invalid code');
       throw new ErrorInvalidCode();
     }
-    this.#authForgotPasswordOtpStore.deleteCode({ credential: contact });
+
+    await this.#authForgotPasswordOtpStore.deleteCode({ credential: contact });
 
     await this.#usersService.patchUser({
       userPlainFindEntity: new UserPlainFindEntity({ contactsPlain: props.userContactsPlainEntity }),
