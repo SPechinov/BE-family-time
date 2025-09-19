@@ -3,6 +3,7 @@ const CODES = {
   userExists: 'userExists',
   invalidContacts: 'invalidContacts',
   tooManyRequests: 'tooManyRequests',
+  invalidLoginOrPassword: 'invalidLoginOrPassword',
 };
 
 export class ErrorInvalidCode extends Error {
@@ -26,5 +27,11 @@ export class ErrorInvalidContacts extends Error {
 export class ErrorTooManyRequests extends Error {
   constructor() {
     super(CODES.tooManyRequests);
+  }
+}
+
+export class ErrorInvalidLoginOrPassword extends Error {
+  constructor() {
+    super(CODES.invalidLoginOrPassword);
   }
 }

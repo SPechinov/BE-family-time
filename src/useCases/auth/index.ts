@@ -5,7 +5,13 @@ import {
   UserPlainFindEntity,
   UserPlainPatchEntity,
 } from '@/domain/entities';
-import { ErrorInvalidCode, ErrorInvalidContacts, ErrorUserExists, generateNumericCode } from '@/pkg';
+import {
+  ErrorInvalidCode,
+  ErrorInvalidContacts,
+  ErrorInvalidLoginOrPassword,
+  ErrorUserExists,
+  generateNumericCode,
+} from '@/pkg';
 import { CONFIG } from '@/config';
 import { FastifyBaseLogger } from 'fastify';
 import { IOtpCodesService, IRateLimiterService, IUserService } from '@/domain/services';
@@ -31,10 +37,26 @@ export class AuthUseCases implements IAuthUseCases {
     this.#usersService = props.usersService;
   }
 
+  async login(props: {
+    userContactsPlainEntity: UserContactsPlainEntity;
+    passwordPlain: string;
+    logger: FastifyBaseLogger;
+  }) {
+    const contact = this.#getContactOrThrow(props.userContactsPlainEntity);
+    props.logger.debug({ contact }, 'login start');
+
+    const user = await this.#usersService.getUser({
+      userPlainFindEntity: new UserPlainFindEntity({
+        contactsPlain: props.userContactsPlainEntity,
+      }),
+    });
+    if (!user) throw new ErrorInvalidLoginOrPassword();
+  }
+
   async registrationStart(props: { userContactsPlainEntity: UserContactsPlainEntity; logger: FastifyBaseLogger }) {
+    const contact = this.#getContactOrThrow(props.userContactsPlainEntity);
+
     const code = generateNumericCode(CONFIG.codesLength.registration);
-    const contact = props.userContactsPlainEntity.getContact();
-    if (!contact) throw new ErrorInvalidContacts();
     await this.#registrationOtpStore.saveCode({ key: contact, code });
 
     props.logger.debug({ code, contact: props.userContactsPlainEntity.getContact() }, 'code saved');
@@ -45,8 +67,7 @@ export class AuthUseCases implements IAuthUseCases {
     code: string;
     logger: FastifyBaseLogger;
   }) {
-    const contact = props.userPlainCreateEntity.contacts.getContact();
-    if (!contact) throw new ErrorInvalidContacts();
+    const contact = this.#getContactOrThrow(props.userPlainCreateEntity.contacts);
 
     await this.#registrationRateLimiterService.checkLimit({ key: contact });
 
@@ -72,11 +93,10 @@ export class AuthUseCases implements IAuthUseCases {
   }
 
   async forgotPasswordStart(props: { userContactsPlainEntity: UserContactsPlainEntity; logger: FastifyBaseLogger }) {
+    const contact = this.#getContactOrThrow(props.userContactsPlainEntity);
+
     const userPlainFindEntity = new UserPlainFindEntity({ contactsPlain: props.userContactsPlainEntity });
     const hasUser = await this.#usersService.hasUser({ userPlainFindEntity });
-
-    const contact = props.userContactsPlainEntity.getContact();
-    if (!contact) throw new ErrorInvalidContacts();
 
     if (!hasUser) {
       props.logger.debug({ contact }, 'user not exists');
@@ -95,8 +115,7 @@ export class AuthUseCases implements IAuthUseCases {
     code: string;
     logger: FastifyBaseLogger;
   }) {
-    const contact = props.userContactsPlainEntity.getContact();
-    if (!contact) throw new ErrorInvalidContacts();
+    const contact = this.#getContactOrThrow(props.userContactsPlainEntity);
 
     await this.#forgotPasswordRateLimiterService.checkLimit({ key: contact });
 
@@ -119,5 +138,11 @@ export class AuthUseCases implements IAuthUseCases {
     });
 
     props.logger.debug({ contact }, 'password changed');
+  }
+
+  #getContactOrThrow(userContactsPlainEntity: UserContactsPlainEntity): string {
+    const contact = userContactsPlainEntity.getContact();
+    if (!contact) throw new ErrorInvalidContacts();
+    return contact;
   }
 }

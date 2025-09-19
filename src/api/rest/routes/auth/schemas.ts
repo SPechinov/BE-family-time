@@ -3,6 +3,19 @@ import { getDefaultSchemaResponse } from '@/api/rest/pkg';
 import { CONFIG } from '@/config';
 import { SCHEMAS_GLOBAL } from '@/api/rest/schemas';
 
+export const SHEMA_LOGIN = {
+  body: z.object({
+    email: z.email().nonempty().describe('Email address'),
+    password: SCHEMAS_GLOBAL.password.nonempty(),
+  }),
+  response: {
+    ...getDefaultSchemaResponse(),
+    200: z.object({
+      token: z.string().nonempty(),
+    }),
+  }
+}
+
 export const SCHEMA_REGISTRATION_START = {
   body: z.object({
     email: z.email().nonempty().describe('Email address'),

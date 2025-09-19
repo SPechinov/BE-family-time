@@ -5,6 +5,7 @@ import {
   SCHEMA_FORGOT_PASSWORD_START,
   SCHEMA_REGISTRATION_END,
   SCHEMA_REGISTRATION_START,
+  SHEMA_LOGIN,
 } from './schemas';
 import { IAuthUseCases } from '@/domain/useCases';
 import {
@@ -15,6 +16,7 @@ import {
 } from '@/domain/entities';
 
 const ROUTES = Object.freeze({
+  login: '/login',
   registrationStart: '/registration-start',
   registrationEnd: '/registration-end',
   forgotPasswordStart: '/forgot-password-start',
@@ -33,6 +35,16 @@ export class AuthRoutesController {
 
   #register() {
     const router = this.#fastify.withTypeProvider<ZodTypeProvider>();
+
+    router.post(
+      ROUTES.login,
+      {
+        schema: SHEMA_LOGIN,
+      },
+      async (request, reply) => {
+        reply.status(200).send({ token: 'token' });
+      },
+    );
 
     router.post(
       ROUTES.registrationStart,
