@@ -35,7 +35,7 @@ export class AuthUseCases implements IAuthUseCases {
     const code = generateNumericCode(CONFIG.codesLength.registration);
     const contact = props.userContactsPlainEntity.getContact();
     if (!contact) throw new ErrorInvalidContacts();
-    await this.#registrationOtpStore.saveCode({ credential: contact, code });
+    await this.#registrationOtpStore.saveCode({ key: contact, code });
 
     props.logger.debug({ code, contact: props.userContactsPlainEntity.getContact() }, 'code saved');
   }
@@ -51,7 +51,7 @@ export class AuthUseCases implements IAuthUseCases {
     await this.#registrationRateLimiterService.checkLimit({ key: contact });
 
     const storeCode = await this.#registrationOtpStore.getCode({
-      credential: contact,
+      key: contact,
     });
 
     if (!storeCode || !props.code || props.code !== storeCode) {
@@ -59,7 +59,7 @@ export class AuthUseCases implements IAuthUseCases {
       throw new ErrorInvalidCode();
     }
 
-    await this.#registrationOtpStore.deleteCode({ credential: contact });
+    await this.#registrationOtpStore.deleteCode({ key: contact });
 
     props.logger.debug({ contact }, 'code compare success, saving user');
 
@@ -84,7 +84,7 @@ export class AuthUseCases implements IAuthUseCases {
     }
 
     const code = generateNumericCode(CONFIG.codesLength.forgotPassword);
-    await this.#forgotPasswordOtpStore.saveCode({ credential: contact, code });
+    await this.#forgotPasswordOtpStore.saveCode({ key: contact, code });
 
     props.logger.debug({ code, contact }, 'code saved');
   }
@@ -101,7 +101,7 @@ export class AuthUseCases implements IAuthUseCases {
     await this.#forgotPasswordRateLimiterService.checkLimit({ key: contact });
 
     const storeCode = await this.#forgotPasswordOtpStore.getCode({
-      credential: contact,
+      key: contact,
     });
 
     if (!storeCode || !props.code || props.code !== storeCode) {
@@ -109,7 +109,7 @@ export class AuthUseCases implements IAuthUseCases {
       throw new ErrorInvalidCode();
     }
 
-    await this.#forgotPasswordOtpStore.deleteCode({ credential: contact });
+    await this.#forgotPasswordOtpStore.deleteCode({ key: contact });
 
     await this.#usersService.patchUser({
       userPlainFindEntity: new UserPlainFindEntity({ contactsPlain: props.userContactsPlainEntity }),

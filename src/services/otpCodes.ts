@@ -19,17 +19,17 @@ export class OtpCodesService implements IOtpCodesService {
     this.#ttlSec = props.ttlSec;
   }
 
-  async saveCode(props: { code: string; credential: string }) {
+  async saveCode(props: { code: string; key: string }) {
     this.#validateCode(props.code);
     const result = await this.#redis.setEx(this.#buildRedisKey(props), this.#ttlSec, props.code);
     if (result !== REDIS_SUCCESS_RESPONSE) throw new Error(ERRORS.FAILED_TO_SAVE_CODE);
   }
 
-  getCode(props: { credential: string }) {
+  getCode(props: { key: string }) {
     return this.#redis.get(this.#buildRedisKey(props));
   }
 
-  deleteCode(props: { credential: string }) {
+  deleteCode(props: { key: string }) {
     return this.#redis.del(this.#buildRedisKey(props));
   }
 
@@ -38,7 +38,7 @@ export class OtpCodesService implements IOtpCodesService {
     throw new Error(ERRORS.INVALID_CODE_LENGTH);
   }
 
-  #buildRedisKey(props: { credential: string }): string {
-    return `otp:${this.#prefix}:${props.credential}`;
+  #buildRedisKey(props: { key: string }): string {
+    return `otp:${this.#prefix}:${props.key}`;
   }
 }
