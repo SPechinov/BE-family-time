@@ -1,6 +1,6 @@
 import { FastifyError, FastifyReply, FastifyRequest } from 'fastify';
 import { hasZodFastifySchemaValidationErrors } from 'fastify-type-provider-zod';
-import { ErrorInvalidCode, ErrorUserExists } from '@/pkg';
+import { ErrorInvalidCode, ErrorInvalidContacts, ErrorTooManyRequests, ErrorUserExists } from '@/pkg';
 
 export const errorHandler = (error: FastifyError, request: FastifyRequest, reply: FastifyReply) => {
   const params: Record<string, any> = {
@@ -30,6 +30,8 @@ export const errorHandler = (error: FastifyError, request: FastifyRequest, reply
 const BUSINESS_ERRORS = new Map([
   [ErrorInvalidCode.name, { statusCode: 400 }],
   [ErrorUserExists.name, { statusCode: 400 }],
+  [ErrorInvalidContacts.name, { statusCode: 400 }],
+  [ErrorTooManyRequests.name, { statusCode: 429 }],
 ]);
 
 const getBusinessError = (error: FastifyError) => {

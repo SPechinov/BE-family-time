@@ -27,6 +27,7 @@ export const getDefaultSchemaResponse = () => {
   return {
     400: RESPONSE_400,
     422: RESPONSE_422,
+    429: DEFAULT_ERROR,
     500: RESPONSE_500,
   };
 };
