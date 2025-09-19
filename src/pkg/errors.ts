@@ -2,6 +2,7 @@ const CODES = {
   invalidCode: 'invalidCode',
   userExists: 'userExists',
   invalidContacts: 'invalidContacts',
+  tooManyRequests: 'tooManyRequests',
 };
 
 export class ErrorInvalidCode extends Error {
@@ -19,5 +20,11 @@ export class ErrorUserExists extends Error {
 export class ErrorInvalidContacts extends Error {
   constructor() {
     super(CODES.invalidContacts);
+  }
+}
+
+export class ErrorTooManyRequests extends Error {
+  constructor() {
+    super(CODES.tooManyRequests);
   }
 }

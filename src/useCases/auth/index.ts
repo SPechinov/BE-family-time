@@ -9,20 +9,26 @@ import {
 import { ErrorInvalidCode, ErrorInvalidContacts, ErrorUserExists, generateNumericCode } from '@/pkg';
 import { CONFIG } from '@/config';
 import { FastifyBaseLogger } from 'fastify';
-import { IUserService } from '@/domain/services';
+import { IRateLimiterService, IUserService } from '@/domain/services';
 
 export class AuthUseCases implements IAuthUseCases {
-  #authRegistrationOtpStore: IOtpCodesStore;
-  #authForgotPasswordOtpStore: IOtpCodesStore;
+  #registrationOtpStore: IOtpCodesStore;
+  #registrationRateLimiterService: IRateLimiterService;
+  #forgotPasswordOtpStore: IOtpCodesStore;
+  #forgotPasswordRateLimiterService: IRateLimiterService;
   #usersService: IUserService;
 
   constructor(props: {
-    authRegistrationOtpStore: IOtpCodesStore;
-    authForgotPasswordOtpStore: IOtpCodesStore;
+    registrationOtpStore: IOtpCodesStore;
+    registrationRateLimiterService: IRateLimiterService;
+    forgotPasswordOtpStore: IOtpCodesStore;
+    forgotPasswordRateLimiterService: IRateLimiterService;
     usersService: IUserService;
   }) {
-    this.#authRegistrationOtpStore = props.authRegistrationOtpStore;
-    this.#authForgotPasswordOtpStore = props.authForgotPasswordOtpStore;
+    this.#registrationOtpStore = props.registrationOtpStore;
+    this.#registrationRateLimiterService = props.registrationRateLimiterService;
+    this.#forgotPasswordOtpStore = props.forgotPasswordOtpStore;
+    this.#forgotPasswordRateLimiterService = props.forgotPasswordRateLimiterService;
     this.#usersService = props.usersService;
   }
 
@@ -30,7 +36,7 @@ export class AuthUseCases implements IAuthUseCases {
     const code = generateNumericCode(CONFIG.codesLength.registration);
     const contact = props.userContactsPlainEntity.getContact();
     if (!contact) throw new ErrorInvalidContacts();
-    await this.#authRegistrationOtpStore.saveCode({ credential: contact, code });
+    await this.#registrationOtpStore.saveCode({ credential: contact, code });
 
     props.logger.debug({ code, contact: props.userContactsPlainEntity.getContact() }, 'code saved');
   }
@@ -43,7 +49,9 @@ export class AuthUseCases implements IAuthUseCases {
     const contact = props.userPlainCreateEntity.contacts.getContact();
     if (!contact) throw new ErrorInvalidContacts();
 
-    const storeCode = await this.#authRegistrationOtpStore.getCode({
+    await this.#registrationRateLimiterService.checkLimit({ key: contact });
+
+    const storeCode = await this.#registrationOtpStore.getCode({
       credential: contact,
     });
 
@@ -52,7 +60,7 @@ export class AuthUseCases implements IAuthUseCases {
       throw new ErrorInvalidCode();
     }
 
-    await this.#authRegistrationOtpStore.deleteCode({ credential: contact });
+    await this.#registrationOtpStore.deleteCode({ credential: contact });
 
     props.logger.debug({ contact }, 'code compare success, saving user');
 
@@ -77,7 +85,7 @@ export class AuthUseCases implements IAuthUseCases {
     }
 
     const code = generateNumericCode(CONFIG.codesLength.forgotPassword);
-    await this.#authForgotPasswordOtpStore.saveCode({ credential: contact, code });
+    await this.#forgotPasswordOtpStore.saveCode({ credential: contact, code });
 
     props.logger.debug({ code, contact }, 'code saved');
   }
@@ -91,7 +99,9 @@ export class AuthUseCases implements IAuthUseCases {
     const contact = props.userContactsPlainEntity.getContact();
     if (!contact) throw new ErrorInvalidContacts();
 
-    const storeCode = await this.#authForgotPasswordOtpStore.getCode({
+    await this.#forgotPasswordRateLimiterService.checkLimit({ key: contact });
+
+    const storeCode = await this.#forgotPasswordOtpStore.getCode({
       credential: contact,
     });
 
@@ -100,7 +110,7 @@ export class AuthUseCases implements IAuthUseCases {
       throw new ErrorInvalidCode();
     }
 
-    await this.#authForgotPasswordOtpStore.deleteCode({ credential: contact });
+    await this.#forgotPasswordOtpStore.deleteCode({ credential: contact });
 
     await this.#usersService.patchUser({
       userPlainFindEntity: new UserPlainFindEntity({ contactsPlain: props.userContactsPlainEntity }),

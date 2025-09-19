@@ -8,13 +8,13 @@ const ERRORS = Object.freeze({
 
 export class OtpCodesStore implements IOtpCodesStore {
   readonly #redis: RedisClient;
-  readonly #keyPrefix: string;
+  readonly #prefix: string;
   readonly #codeLength: number;
   readonly #ttlSec: number;
 
-  constructor(props: { redis: RedisClient; keyPrefix: string; codeLength: number; ttlSec: number }) {
+  constructor(props: { redis: RedisClient; prefix: string; codeLength: number; ttlSec: number }) {
     this.#redis = props.redis;
-    this.#keyPrefix = props.keyPrefix;
+    this.#prefix = props.prefix;
     this.#codeLength = props.codeLength;
     this.#ttlSec = props.ttlSec;
   }
@@ -39,6 +39,6 @@ export class OtpCodesStore implements IOtpCodesStore {
   }
 
   #buildRedisKey(props: { credential: string }): string {
-    return `${this.#keyPrefix}:${props.credential}`;
+    return `otp:${this.#prefix}:${props.credential}`;
   }
 }

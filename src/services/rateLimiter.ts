@@ -1,5 +1,7 @@
-import { RedisClient } from '@/pkg';
+import { ErrorTooManyRequests, RedisClient } from '@/pkg';
 import { IRateLimiterService } from '@/domain/services';
+
+const KEY = 'rate-limit';
 
 export class RateLimiterService implements IRateLimiterService {
   readonly #redis: RedisClient;
@@ -14,14 +16,12 @@ export class RateLimiterService implements IRateLimiterService {
     this.#prefix = props.prefix;
   }
 
-  async checkLimit(props: { key: string }): Promise<boolean> {
-    const currentCount = await this.#redis.get(`rate_limit:${this.#prefix}:${props.key}`);
-    if (currentCount && parseInt(currentCount) >= this.#maxAttempts) {
-      return false;
-    }
+  async checkLimit(props: { key: string }): Promise<void> {
+    const currentCount = await this.#redis.get(`${KEY}:${this.#prefix}:${props.key}`);
 
-    await this.#redis.incr(`rate_limit:${props.key}`);
-    await this.#redis.expire(`rate_limit:${props.key}`, this.#windowSec);
-    return true;
+    if (currentCount && parseInt(currentCount) >= this.#maxAttempts) throw new ErrorTooManyRequests();
+
+    await this.#redis.incr(`${KEY}:${props.key}`);
+    await this.#redis.expire(`${KEY}:${props.key}`, this.#windowSec);
   }
 }
