@@ -12,7 +12,7 @@ export class RefreshTokenStoreService implements IRefreshTokenStoreService {
     const key = `refresh_token:${props.userId}:${props.refreshToken}`;
     const ttl = Math.floor((props.expiresAt.getTime() - Date.now()) / 1000);
 
-    await this.#redis.setex(key, ttl, '1');
+    await this.#redis.setEx(key, ttl, '1');
   }
 
   async isRefreshTokenValid(props: { userId: string; refreshToken: string }): Promise<boolean> {
@@ -32,8 +32,7 @@ export class RefreshTokenStoreService implements IRefreshTokenStoreService {
     const pattern = `refresh_token:${props.userId}:*`;
     const keys = await this.#redis.keys(pattern);
 
-    if (keys.length > 0) {
-      await Promise.all(keys.map(key => this.#redis.del(key)));
-    }
+    if (keys.length < 1) return;
+    await Promise.all(keys.map((key) => this.#redis.del(key)));
   }
 }

@@ -4,9 +4,17 @@ import { RedisClient } from '@/pkg';
 import { UsersRepository } from '@/repositories/db';
 import { AuthUseCases } from '@/useCases/auth';
 import { AuthRoutesController } from '@/api/rest';
-import { CryptoService, HashPasswordService, HashService, OtpCodesService, RateLimiterService } from '@/services';
+import {
+  CryptoService,
+  HashPasswordService,
+  HashService,
+  OtpCodesService,
+  RateLimiterService,
+  RefreshTokenStoreService,
+} from '@/services';
 import { UsersService } from '@/services/users';
 import { CONFIG } from '@/config';
+import { JwtService } from '@/services/jwt';
 
 export class CompositeAuth {
   constructor(props: { fastify: FastifyInstance; pool: Pool; redis: RedisClient }) {
@@ -51,12 +59,16 @@ export class CompositeAuth {
       usersRepository,
     });
 
+    const jwtService = new JwtService();
+
     const authUseCases = new AuthUseCases({
       registrationOtpService: registrationOtpStore,
       forgotPasswordOtpService: forgotPasswordOtpStore,
       registrationRateLimiterService,
       forgotPasswordRateLimiterService,
       usersService,
+      jwtService,
+      refreshTokenStoreService: new RefreshTokenStoreService({ redis: props.redis }),
     });
 
     props.fastify.register(
@@ -64,6 +76,7 @@ export class CompositeAuth {
         new AuthRoutesController({
           fastify: instance,
           authUseCases,
+          jwtService,
         });
       },
       { prefix: '/auth' },

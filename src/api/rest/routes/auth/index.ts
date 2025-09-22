@@ -14,6 +14,8 @@ import {
   UserPlainCreateEntity,
   UserPlainPatchEntity,
 } from '@/domain/entities';
+import { IJwtService } from '@/domain/services';
+import { AuthMiddleware } from '@/api/rest/middlewares';
 
 const ROUTES = Object.freeze({
   login: '/login',
@@ -26,10 +28,12 @@ const ROUTES = Object.freeze({
 export class AuthRoutesController {
   #fastify: FastifyInstance;
   #authUseCases: IAuthUseCases;
+  #authMiddleware: AuthMiddleware;
 
-  constructor(props: { fastify: FastifyInstance; authUseCases: IAuthUseCases }) {
+  constructor(props: { fastify: FastifyInstance; authUseCases: IAuthUseCases; jwtService: IJwtService }) {
     this.#fastify = props.fastify;
     this.#authUseCases = props.authUseCases;
+    this.#authMiddleware = new AuthMiddleware({ jwtService: props.jwtService });
     this.#register();
   }
 
