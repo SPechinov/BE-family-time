@@ -57,7 +57,6 @@ export class AuthRoutesController {
         schema: SCHEMA_REGISTRATION_START,
       },
       async (request, reply) => {
-        request.log.info(request.body);
         await this.#authUseCases.registrationStart({
           logger: request.log,
           userContactsPlainEntity: new UserContactsPlainEntity({ email: request.body.email }),
