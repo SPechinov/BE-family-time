@@ -52,8 +52,8 @@ export class CompositeAuth {
     });
 
     const authUseCases = new AuthUseCases({
-      registrationOtpStore,
-      forgotPasswordOtpStore,
+      registrationOtpService: registrationOtpStore,
+      forgotPasswordOtpService: forgotPasswordOtpStore,
       registrationRateLimiterService,
       forgotPasswordRateLimiterService,
       usersService,

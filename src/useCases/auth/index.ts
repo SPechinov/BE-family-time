@@ -17,22 +17,22 @@ import { FastifyBaseLogger } from 'fastify';
 import { IOtpCodesService, IRateLimiterService, IUserService } from '@/domain/services';
 
 export class AuthUseCases implements IAuthUseCases {
-  #registrationOtpStore: IOtpCodesService;
+  #registrationOtpService: IOtpCodesService;
   #registrationRateLimiterService: IRateLimiterService;
-  #forgotPasswordOtpStore: IOtpCodesService;
+  #forgotPasswordOtpService: IOtpCodesService;
   #forgotPasswordRateLimiterService: IRateLimiterService;
   #usersService: IUserService;
 
   constructor(props: {
-    registrationOtpStore: IOtpCodesService;
+    registrationOtpService: IOtpCodesService;
     registrationRateLimiterService: IRateLimiterService;
-    forgotPasswordOtpStore: IOtpCodesService;
+    forgotPasswordOtpService: IOtpCodesService;
     forgotPasswordRateLimiterService: IRateLimiterService;
     usersService: IUserService;
   }) {
-    this.#registrationOtpStore = props.registrationOtpStore;
+    this.#registrationOtpService = props.registrationOtpService;
     this.#registrationRateLimiterService = props.registrationRateLimiterService;
-    this.#forgotPasswordOtpStore = props.forgotPasswordOtpStore;
+    this.#forgotPasswordOtpService = props.forgotPasswordOtpService;
     this.#forgotPasswordRateLimiterService = props.forgotPasswordRateLimiterService;
     this.#usersService = props.usersService;
   }
@@ -62,7 +62,7 @@ export class AuthUseCases implements IAuthUseCases {
     const contact = this.#getContactOrThrow(props.userContactsPlainEntity);
 
     const code = generateNumericCode(CONFIG.codesLength.registration);
-    await this.#registrationOtpStore.saveCode({ key: contact, code });
+    await this.#registrationOtpService.saveCode({ key: contact, code });
 
     props.logger.debug({ code, contact }, 'code saved');
   }
@@ -76,7 +76,7 @@ export class AuthUseCases implements IAuthUseCases {
 
     await this.#registrationRateLimiterService.checkLimit({ key: contact });
 
-    const storeCode = await this.#registrationOtpStore.getCode({
+    const storeCode = await this.#registrationOtpService.getCode({
       key: contact,
     });
 
@@ -85,7 +85,7 @@ export class AuthUseCases implements IAuthUseCases {
       throw new ErrorInvalidCode();
     }
 
-    await this.#registrationOtpStore.deleteCode({ key: contact });
+    await this.#registrationOtpService.deleteCode({ key: contact });
 
     props.logger.debug({ contact }, 'code compare success, saving user');
 
@@ -109,7 +109,7 @@ export class AuthUseCases implements IAuthUseCases {
     }
 
     const code = generateNumericCode(CONFIG.codesLength.forgotPassword);
-    await this.#forgotPasswordOtpStore.saveCode({ key: contact, code });
+    await this.#forgotPasswordOtpService.saveCode({ key: contact, code });
 
     props.logger.debug({ code, contact }, 'code saved');
   }
@@ -124,7 +124,7 @@ export class AuthUseCases implements IAuthUseCases {
 
     await this.#forgotPasswordRateLimiterService.checkLimit({ key: contact });
 
-    const storeCode = await this.#forgotPasswordOtpStore.getCode({
+    const storeCode = await this.#forgotPasswordOtpService.getCode({
       key: contact,
     });
 
@@ -133,7 +133,7 @@ export class AuthUseCases implements IAuthUseCases {
       throw new ErrorInvalidCode();
     }
 
-    await this.#forgotPasswordOtpStore.deleteCode({ key: contact });
+    await this.#forgotPasswordOtpService.deleteCode({ key: contact });
 
     await this.#usersService.patchUser({
       userPlainFindEntity: new UserPlainFindEntity({ contactsPlain: props.userContactsPlainEntity }),
