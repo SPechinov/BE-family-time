@@ -101,7 +101,6 @@ export class AuthRoutesController {
         await this.#authUseCases.logoutAll({
           logger: request.log,
           refreshToken,
-          // @ts-ignore
           userId: request.userId
         });
         this.#removeRefreshToken(reply);
