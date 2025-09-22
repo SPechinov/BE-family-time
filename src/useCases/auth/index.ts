@@ -64,7 +64,7 @@ export class AuthUseCases implements IAuthUseCases {
     const code = generateNumericCode(CONFIG.codesLength.registration);
     await this.#registrationOtpStore.saveCode({ key: contact, code });
 
-    props.logger.debug({ code, contact: props.userContactsPlainEntity.getContact() }, 'code saved');
+    props.logger.debug({ code, contact }, 'code saved');
   }
 
   async registrationEnd(props: {
