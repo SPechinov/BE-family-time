@@ -1,5 +1,6 @@
 import {
-  UserContactsEncryptedEntity, UserContactsEncryptedPatchEntity,
+  UserContactsEncryptedEntity,
+  UserContactsEncryptedPatchEntity,
   UserContactsHashedEntity,
   UserContactsHashedPatchEntity,
   UserCreateEntity,
@@ -9,7 +10,7 @@ import {
   UserPersonalInfoPatchEntity,
   UserPlainCreateEntity,
   UserPlainFindEntity,
-  UserPlainPatchEntity
+  UserPlainPatchEntity,
 } from '@/domain/entities';
 import {
   ICryptoService,
@@ -165,5 +166,9 @@ export class UsersService implements IUserService {
     });
 
     return await this.#usersRepository.patch({ userFindEntity, userPatchEntity });
+  }
+
+  comparePasswords(passwordPlain: string, passwordHashed: string) {
+    return this.#hashPasswordService.verifyPassword(passwordPlain, passwordHashed);
   }
 }

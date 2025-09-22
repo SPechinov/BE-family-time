@@ -50,7 +50,12 @@ export class AuthUseCases implements IAuthUseCases {
         contactsPlain: props.userContactsPlainEntity,
       }),
     });
-    if (!user) throw new ErrorInvalidLoginOrPassword();
+    if (!user || !user.passwordHashed || !props.passwordPlain) throw new ErrorInvalidLoginOrPassword();
+
+    if (!this.#usersService.comparePasswords(props.passwordPlain, user.passwordHashed)) {
+      props.logger.debug({ password: props.passwordPlain }, 'passwords are not equal, login failed');
+      throw new ErrorInvalidLoginOrPassword();
+    }
   }
 
   async registrationStart(props: { userContactsPlainEntity: UserContactsPlainEntity; logger: FastifyBaseLogger }) {

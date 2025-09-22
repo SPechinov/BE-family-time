@@ -7,10 +7,10 @@ const KEY_LENGTH = 64;
 const SALT_LENGTH = 32;
 
 export class HashPasswordService implements IHashPasswordService {
-  hashPassword(plainPassword: string): string {
+  hashPassword(passwordPlain: string): string {
     const salt = crypto.randomBytes(SALT_LENGTH);
     const hash = crypto.pbkdf2Sync(
-      plainPassword,
+      passwordPlain,
       salt,
       ITERATIONS,
       KEY_LENGTH,
@@ -20,9 +20,9 @@ export class HashPasswordService implements IHashPasswordService {
     return `${salt.toString('hex')}:${hash.toString('hex')}`;
   }
 
-  verifyPassword(plainPassword: string, hashedPassword: string): boolean {
+  verifyPassword(passwordPlain: string, passwordHashed: string): boolean {
     try {
-      const [saltHex, hashHex] = hashedPassword.split(':');
+      const [saltHex, hashHex] = passwordHashed.split(':');
 
       if (!saltHex || !hashHex) {
         return false;
@@ -32,14 +32,13 @@ export class HashPasswordService implements IHashPasswordService {
       const originalHash = Buffer.from(hashHex, 'hex');
 
       const hash = crypto.pbkdf2Sync(
-        plainPassword,
+        passwordPlain,
         salt,
         ITERATIONS,
         KEY_LENGTH,
         HASH_ALGORITHM
       );
 
-      // Используем timingSafeEqual для защиты от timing attacks
       return crypto.timingSafeEqual(originalHash, hash);
     } catch {
       return false;

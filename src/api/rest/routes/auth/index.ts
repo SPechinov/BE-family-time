@@ -42,6 +42,11 @@ export class AuthRoutesController {
         schema: SHEMA_LOGIN,
       },
       async (request, reply) => {
+        await this.#authUseCases.login({
+          logger: request.log,
+          userContactsPlainEntity: new UserContactsPlainEntity({ email: request.body.email }),
+          passwordPlain: request.body.password,
+        });
         reply.status(200).send({ token: 'token' });
       },
     );

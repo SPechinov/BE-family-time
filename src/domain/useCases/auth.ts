@@ -2,6 +2,12 @@ import { UserContactsPlainEntity, UserPlainCreateEntity, UserPlainPatchEntity } 
 import { FastifyBaseLogger } from 'fastify';
 
 export interface IAuthUseCases {
+  login(props: {
+    userContactsPlainEntity: UserContactsPlainEntity;
+    passwordPlain: string;
+    logger: FastifyBaseLogger;
+  }): Promise<void>;
+
   registrationStart(props: {
     userContactsPlainEntity: UserContactsPlainEntity;
     logger: FastifyBaseLogger;

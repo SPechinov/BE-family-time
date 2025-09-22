@@ -11,4 +11,6 @@ export interface IUserService {
     userPlainFindEntity: UserPlainFindEntity;
     userPlainPatchEntity: UserPlainPatchEntity;
   }): Promise<UserEntity | null>;
+
+  comparePasswords(passwordPlain: string, passwordHashed: string): boolean;
 }
