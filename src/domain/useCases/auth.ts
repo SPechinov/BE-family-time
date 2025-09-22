@@ -6,7 +6,13 @@ export interface IAuthUseCases {
     userContactsPlainEntity: UserContactsPlainEntity;
     passwordPlain: string;
     logger: FastifyBaseLogger;
-  }): Promise<void>;
+  }): Promise<{ accessToken: string; refreshToken: string }>;
+
+  refreshToken(props: { refreshToken: string }): Promise<{ accessToken: string; refreshToken: string }>;
+
+  logout(props: { refreshToken: string; logger: FastifyBaseLogger }): Promise<void>;
+
+  logoutAll(props: { userId: string; refreshToken: string; logger: FastifyBaseLogger }): Promise<void>;
 
   registrationStart(props: {
     userContactsPlainEntity: UserContactsPlainEntity;

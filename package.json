@@ -21,12 +21,14 @@
   "description": "",
   "dependencies": {
     "@fastify/formbody": "^8.0.2",
+    "@fastify/jwt": "^10.0.0",
     "@fastify/swagger": "^9.5.1",
     "@fastify/swagger-ui": "^5.2.3",
     "fastify": "^5.5.0",
     "fastify-type-provider-zod": "^6.0.0",
     "globals": "^16.3.0",
     "js-yaml": "^4.1.0",
+    "jsonwebtoken": "^9.0.2",
     "pg": "^8.16.3",
     "redis": "^5.8.2",
     "winston": "^3.17.0",
@@ -35,6 +37,7 @@
   "devDependencies": {
     "@eslint/js": "^9.34.0",
     "@types/js-yaml": "^4.0.9",
+    "@types/jsonwebtoken": "^9.0.10",
     "@types/node": "^24.3.0",
     "@types/pg": "^8.15.5",
     "eslint": "^9.34.0",

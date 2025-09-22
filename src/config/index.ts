@@ -25,6 +25,13 @@ const ConfigSchema = z.object({
     cryptoCredentials: z.string().min(1),
     keyDerivation: z.string().min(1),
   }),
+  jwt: z.object({
+    accessTokenSecret: z.string().min(1),
+    refreshTokenSecret: z.string().min(1),
+    accessTokenExpiry: z.string().min(1),
+    refreshTokenExpiry: z.string().min(1),
+    issuer: z.string().min(1),
+  })
 });
 
 const loadFile = (uri: string) => {

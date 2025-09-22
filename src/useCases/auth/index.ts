@@ -9,12 +9,19 @@ import {
   ErrorInvalidCode,
   ErrorInvalidContacts,
   ErrorInvalidLoginOrPassword,
+  ErrorInvalidRefreshToken,
   ErrorUserExists,
   generateNumericCode,
 } from '@/pkg';
 import { CONFIG } from '@/config';
 import { FastifyBaseLogger } from 'fastify';
-import { IOtpCodesService, IRateLimiterService, IUserService } from '@/domain/services';
+import {
+  IJwtService,
+  IOtpCodesService,
+  IRateLimiterService,
+  IRefreshTokenStoreService,
+  IUserService,
+} from '@/domain/services';
 
 export class AuthUseCases implements IAuthUseCases {
   #registrationOtpService: IOtpCodesService;
@@ -22,6 +29,8 @@ export class AuthUseCases implements IAuthUseCases {
   #forgotPasswordOtpService: IOtpCodesService;
   #forgotPasswordRateLimiterService: IRateLimiterService;
   #usersService: IUserService;
+  #jwtService: IJwtService;
+  #refreshTokenStoreService: IRefreshTokenStoreService;
 
   constructor(props: {
     registrationOtpService: IOtpCodesService;
@@ -29,11 +38,15 @@ export class AuthUseCases implements IAuthUseCases {
     forgotPasswordOtpService: IOtpCodesService;
     forgotPasswordRateLimiterService: IRateLimiterService;
     usersService: IUserService;
+    jwtService: IJwtService;
+    refreshTokenStoreService: IRefreshTokenStoreService;
   }) {
     this.#registrationOtpService = props.registrationOtpService;
     this.#registrationRateLimiterService = props.registrationRateLimiterService;
     this.#forgotPasswordOtpService = props.forgotPasswordOtpService;
     this.#forgotPasswordRateLimiterService = props.forgotPasswordRateLimiterService;
+    this.#jwtService = props.jwtService;
+    this.#refreshTokenStoreService = props.refreshTokenStoreService;
     this.#usersService = props.usersService;
   }
 
@@ -56,6 +69,71 @@ export class AuthUseCases implements IAuthUseCases {
       props.logger.debug({ password: props.passwordPlain }, 'passwords are not equal, login failed');
       throw new ErrorInvalidLoginOrPassword();
     }
+
+    const accessToken = this.#jwtService.generateAccessToken({ userId: user.id });
+    const refreshToken = this.#jwtService.generateRefreshToken({ userId: user.id });
+
+    const refreshTokenExpiry = new Date(Date.now() + 30 * 24 * 60 * 60 * 1000);
+    await this.#refreshTokenStoreService.saveRefreshToken({
+      userId: user.id,
+      refreshToken,
+      expiresAt: refreshTokenExpiry,
+    });
+
+    props.logger.debug({ userId: user.id }, 'login successful');
+
+    return { accessToken, refreshToken };
+  }
+
+  async refreshToken(props: { refreshToken: string; logger: FastifyBaseLogger }) {
+    const decoded = this.#jwtService.verifyRefreshToken(props.refreshToken);
+    if (!decoded) throw new ErrorInvalidRefreshToken();
+
+    const isValid = await this.#refreshTokenStoreService.isRefreshTokenValid({
+      userId: decoded.userId,
+      refreshToken: props.refreshToken,
+    });
+
+    if (!isValid) throw new ErrorInvalidRefreshToken();
+
+    await this.#refreshTokenStoreService.deleteRefreshToken({
+      userId: decoded.userId,
+      refreshToken: props.refreshToken,
+    });
+
+    const accessToken = this.#jwtService.generateAccessToken({ userId: decoded.userId });
+    const newRefreshToken = this.#jwtService.generateRefreshToken({ userId: decoded.userId });
+
+    const refreshTokenExpiry = new Date(Date.now() + 30 * 24 * 60 * 60 * 1000);
+    await this.#refreshTokenStoreService.saveRefreshToken({
+      userId: decoded.userId,
+      refreshToken: newRefreshToken,
+      expiresAt: refreshTokenExpiry,
+    });
+
+    props.logger.debug('token refreshed');
+
+    return { accessToken, refreshToken: newRefreshToken };
+  }
+
+  async logout(props: { refreshToken: string; logger: FastifyBaseLogger }) {
+    const decoded = this.#jwtService.verifyRefreshToken(props.refreshToken);
+    if (!decoded) return;
+
+    await this.#refreshTokenStoreService.deleteRefreshToken({
+      userId: decoded.userId,
+      refreshToken: props.refreshToken,
+    });
+
+    props.logger.debug('user logged out');
+  }
+
+  async logoutAll(props: { userId: string; logger: FastifyBaseLogger }) {
+    await this.#refreshTokenStoreService.deleteAllUserRefreshTokens({
+      userId: props.userId,
+    });
+
+    props.logger.debug('user logged out from all devices');
   }
 
   async registrationStart(props: { userContactsPlainEntity: UserContactsPlainEntity; logger: FastifyBaseLogger }) {

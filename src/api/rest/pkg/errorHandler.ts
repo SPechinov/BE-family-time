@@ -4,6 +4,7 @@ import {
   ErrorInvalidCode,
   ErrorInvalidContacts,
   ErrorInvalidLoginOrPassword,
+  ErrorInvalidRefreshToken,
   ErrorTooManyRequests,
   ErrorUserExists,
 } from '@/pkg';
@@ -37,6 +38,7 @@ const BUSINESS_ERRORS = new Map([
   [ErrorInvalidContacts.name, { statusCode: 400 }],
   [ErrorTooManyRequests.name, { statusCode: 429 }],
   [ErrorInvalidLoginOrPassword.name, { statusCode: 400 }],
+  [ErrorInvalidRefreshToken.name, { statusCode: 400 }],
 ]);
 
 const getBusinessError = (error: FastifyError) => {

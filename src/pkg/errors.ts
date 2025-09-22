@@ -4,6 +4,9 @@ const CODES = {
   invalidContacts: 'invalidContacts',
   tooManyRequests: 'tooManyRequests',
   invalidLoginOrPassword: 'invalidLoginOrPassword',
+  invalidRefreshToken: 'invalidRefreshToken',
+  unauthorized: 'unauthorized',
+  tokenExpired: 'tokenExpired',
 };
 
 export class ErrorInvalidCode extends Error {
@@ -33,5 +36,23 @@ export class ErrorTooManyRequests extends Error {
 export class ErrorInvalidLoginOrPassword extends Error {
   constructor() {
     super(CODES.invalidLoginOrPassword);
+  }
+}
+
+export class ErrorInvalidRefreshToken extends Error {
+  constructor() {
+    super(CODES.invalidRefreshToken);
+  }
+}
+
+export class ErrorUnauthorized extends Error {
+  constructor() {
+    super(CODES.unauthorized);
+  }
+}
+
+export class ErrorTokenExpired extends Error {
+  constructor() {
+    super(CODES.tokenExpired);
   }
 }
