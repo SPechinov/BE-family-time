@@ -3,6 +3,7 @@ import yaml from 'js-yaml';
 import { z } from 'zod';
 
 const ConfigSchema = z.object({
+  env: z.string(),
   server: z.object({
     port: z.number(),
   }),
@@ -31,7 +32,10 @@ const ConfigSchema = z.object({
     accessTokenExpiry: z.string().min(1),
     refreshTokenExpiry: z.string().min(1),
     issuer: z.string().min(1),
-  })
+  }),
+  cookie: z.object({
+    secret: z.string().min(1),
+  }),
 });
 
 const loadFile = (uri: string) => {

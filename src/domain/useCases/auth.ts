@@ -8,7 +8,10 @@ export interface IAuthUseCases {
     logger: FastifyBaseLogger;
   }): Promise<{ accessToken: string; refreshToken: string }>;
 
-  refreshToken(props: { refreshToken: string }): Promise<{ accessToken: string; refreshToken: string }>;
+  refreshToken(props: { refreshToken: string; logger: FastifyBaseLogger }): Promise<{
+    accessToken: string;
+    refreshToken: string;
+  }>;
 
   logout(props: { refreshToken: string; logger: FastifyBaseLogger }): Promise<void>;
 

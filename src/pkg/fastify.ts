@@ -4,6 +4,8 @@ import { jsonSchemaTransform, serializerCompiler, validatorCompiler } from 'fast
 import fastifySwagger from '@fastify/swagger';
 import fastifySwaggerUi from '@fastify/swagger-ui';
 import { errorHandler } from '@/api/rest/pkg';
+import cookie from '@fastify/cookie';
+import { CONFIG } from '@/config';
 
 export const newFastify = (props: {
   errorHandler: (error: FastifyError, request: FastifyRequest, reply: FastifyReply) => void;
@@ -20,6 +22,9 @@ export const newFastify = (props: {
   });
 
   fastify.register(formBody);
+  fastify.register(cookie, {
+    secret: CONFIG.cookie.secret,
+  });
 
   fastify.setValidatorCompiler(validatorCompiler);
   fastify.setSerializerCompiler(serializerCompiler);

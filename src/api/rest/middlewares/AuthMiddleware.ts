@@ -1,4 +1,4 @@
-import { FastifyRequest, FastifyReply } from 'fastify';
+import { FastifyRequest } from 'fastify';
 import { IJwtService } from '@/domain/services';
 import { ErrorUnauthorized, ErrorTokenExpired } from '@/pkg';
 
@@ -9,7 +9,7 @@ export class AuthMiddleware {
     this.#jwtService = props.jwtService;
   }
 
-  authenticate = async (request: FastifyRequest, reply: FastifyReply) => {
+  authenticate = async (request: FastifyRequest) => {
     const authHeader = request.headers.authorization;
 
     if (!authHeader || !authHeader.startsWith('Bearer ')) throw new ErrorUnauthorized();
