@@ -42,3 +42,10 @@ export const getDefaultSchemaResponse = () => {
     500: RESPONSE_500,
   };
 };
+
+export const createResponseSchema = (customResponses: Record<string | number, any> = {}) => {
+  return {
+    ...getDefaultSchemaResponse(),
+    ...customResponses,
+  };
+};
