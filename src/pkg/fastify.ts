@@ -1,9 +1,8 @@
-import Fastify, { FastifyError, FastifyReply, FastifyRequest, FastifySchema, RouteOptions } from 'fastify';
+import Fastify, { FastifyError, FastifyReply, FastifyRequest } from 'fastify';
 import formBody from '@fastify/formbody';
 import { jsonSchemaTransform, serializerCompiler, validatorCompiler } from 'fastify-type-provider-zod';
 import fastifySwagger from '@fastify/swagger';
 import fastifySwaggerUi from '@fastify/swagger-ui';
-import { errorHandler } from '@/api/rest/pkg';
 import cookie from '@fastify/cookie';
 import { CONFIG } from '@/config';
 
@@ -51,7 +50,7 @@ export const newFastify = (props: {
     done(null, payload);
   });
 
-  fastify.setErrorHandler(errorHandler);
+  fastify.setErrorHandler(props.errorHandler);
 
   fastify.register(fastifySwagger, {
     openapi: {
