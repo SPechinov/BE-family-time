@@ -33,19 +33,17 @@ export const RESPONSE_500 = z.object({
   statusCode: z.literal(500),
 });
 
-export const getDefaultSchemaResponse = () => {
-  return {
-    400: RESPONSE_400,
-    401: RESPONSE_401,
-    422: RESPONSE_422,
-    429: RESPONSE_429,
-    500: RESPONSE_500,
-  };
-};
+export const DEFAULT_RESPONSE_SCHEMA = Object.freeze({
+  400: RESPONSE_400,
+  401: RESPONSE_401,
+  422: RESPONSE_422,
+  429: RESPONSE_429,
+  500: RESPONSE_500,
+});
 
-export const createResponseSchema = (customResponses: Record<string | number, any> = {}) => {
+export const createResponseSchema = <T>(customResponses: T) => {
   return {
-    ...getDefaultSchemaResponse(),
+    ...DEFAULT_RESPONSE_SCHEMA,
     ...customResponses,
   };
 };

@@ -1,9 +1,11 @@
 import { z } from 'zod';
-import { createResponseSchema, getDefaultSchemaResponse } from '@/api/rest/pkg';
+import { createResponseSchema } from '@/api/rest/pkg';
 import { CONFIG } from '@/config';
 import { SCHEMAS_GLOBAL } from '@/api/rest/schemas';
 
 export const SHEMA_LOGIN = {
+  tags: ['Auth'],
+  security: [],
   body: z.object({
     email: z.email().nonempty().describe('Email address'),
     password: SCHEMAS_GLOBAL.password.nonempty(),
@@ -14,24 +16,22 @@ export const SHEMA_LOGIN = {
 };
 
 export const SHEMA_LOGOUT = {
-  headers: z.object({
-    authorization: z.string().nonempty(),
-  }),
+  tags: ['Auth'],
   response: createResponseSchema({
     200: z.undefined(),
   }),
 };
 
 export const SCHEMA_REFRESH_TOKEN = {
-  headers: z.object({
-    authorization: z.string().nonempty(),
-  }),
+  tags: ['Auth'],
   response: createResponseSchema({
     200: z.undefined(),
   }),
 };
 
 export const SCHEMA_REGISTRATION_START = {
+  tags: ['Auth'],
+  security: [],
   body: z.object({
     email: z.email().nonempty().describe('Email address'),
   }),
@@ -41,6 +41,8 @@ export const SCHEMA_REGISTRATION_START = {
 };
 
 export const SCHEMA_REGISTRATION_END = {
+  tags: ['Auth'],
+  security: [],
   body: z.object({
     email: z.email().nonempty().describe('Email address'),
     code: z.string().nonempty().length(CONFIG.codesLength.registration),
@@ -53,6 +55,8 @@ export const SCHEMA_REGISTRATION_END = {
 };
 
 export const SCHEMA_FORGOT_PASSWORD_START = {
+  tags: ['Auth'],
+  security: [],
   body: z.object({
     email: z.email().nonempty().describe('Email address'),
   }),
@@ -62,6 +66,8 @@ export const SCHEMA_FORGOT_PASSWORD_START = {
 };
 
 export const SCHEMA_FORGOT_PASSWORD_END = {
+  tags: ['Auth'],
+  security: [],
   body: z.object({
     email: z.email().nonempty().describe('Email address'),
     code: z.string().nonempty().length(CONFIG.codesLength.forgotPassword),

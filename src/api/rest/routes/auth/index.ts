@@ -7,14 +7,14 @@ import {
   SCHEMA_REGISTRATION_END,
   SCHEMA_REGISTRATION_START,
   SHEMA_LOGIN,
-  SHEMA_LOGOUT
+  SHEMA_LOGOUT,
 } from './schemas';
 import { IAuthUseCases } from '@/domain/useCases';
 import {
   UserContactsPlainEntity,
   UserPersonalInfoEntity,
   UserPlainCreateEntity,
-  UserPlainPatchEntity
+  UserPlainPatchEntity,
 } from '@/domain/entities';
 import { IJwtService } from '@/domain/services';
 import { AuthMiddleware } from '@/api/rest/middlewares';
@@ -27,7 +27,7 @@ const REFRESH_TOKEN_COOKIE_CONFIG: CookieSerializeOptions = {
   secure: CONFIG.env !== 'local',
   sameSite: 'strict',
   maxAge: 30 * 24 * 60 * 60 * 1000,
-  path: '/'
+  path: '/',
 };
 
 const ROUTES = Object.freeze({
@@ -38,7 +38,7 @@ const ROUTES = Object.freeze({
   registrationStart: '/registration-start',
   registrationEnd: '/registration-end',
   forgotPasswordStart: '/forgot-password-start',
-  forgotPasswordEnd: '/forgot-password-end'
+  forgotPasswordEnd: '/forgot-password-end',
 });
 
 export class AuthRoutesController {
@@ -59,25 +59,25 @@ export class AuthRoutesController {
     router.post(
       ROUTES.login,
       {
-        schema: SHEMA_LOGIN
+        schema: SHEMA_LOGIN,
       },
       async (request, reply) => {
         const { accessToken, refreshToken } = await this.#authUseCases.login({
           logger: request.log,
           userContactsPlainEntity: new UserContactsPlainEntity({ email: request.body.email }),
-          passwordPlain: request.body.password
+          passwordPlain: request.body.password,
         });
         this.#setAccessToken(reply, accessToken);
         this.#setRefreshToken(reply, refreshToken);
         reply.status(200).send();
-      }
+      },
     );
 
     router.post(
       ROUTES.logout,
       {
         preHandler: [this.#authMiddleware.authenticate],
-        schema: SHEMA_LOGOUT
+        schema: SHEMA_LOGOUT,
       },
       async (request, reply) => {
         const refreshToken = this.#getRefreshTokenOrThrow(request);
@@ -86,14 +86,14 @@ export class AuthRoutesController {
 
         this.#removeRefreshToken(reply);
         reply.status(200).send();
-      }
+      },
     );
 
     router.post(
       ROUTES.logoutAll,
       {
         preHandler: [this.#authMiddleware.authenticate],
-        schema: SHEMA_LOGOUT
+        schema: SHEMA_LOGOUT,
       },
       async (request, reply) => {
         const refreshToken = this.#getRefreshTokenOrThrow(request);
@@ -101,44 +101,44 @@ export class AuthRoutesController {
         await this.#authUseCases.logoutAll({
           logger: request.log,
           refreshToken,
-          userId: request.userId
+          userId: request.userId,
         });
         this.#removeRefreshToken(reply);
         reply.status(200).send();
-      }
+      },
     );
 
     router.post(
       ROUTES.refreshTokens,
       {
         preHandler: [this.#authMiddleware.authenticate],
-        schema: SCHEMA_REFRESH_TOKEN
+        schema: SCHEMA_REFRESH_TOKEN,
       },
       async (request, reply) => {
         const oldRefreshToken = this.#getRefreshTokenOrThrow(request);
         const { accessToken, refreshToken } = await this.#authUseCases.refreshToken({
           logger: request.log,
-          refreshToken: oldRefreshToken
+          refreshToken: oldRefreshToken,
         });
 
         this.#setAccessToken(reply, accessToken);
         this.#setRefreshToken(reply, refreshToken);
         reply.status(200).send();
-      }
+      },
     );
 
     router.post(
       ROUTES.registrationStart,
       {
-        schema: SCHEMA_REGISTRATION_START
+        schema: SCHEMA_REGISTRATION_START,
       },
       async (request, reply) => {
         await this.#authUseCases.registrationStart({
           logger: request.log,
-          userContactsPlainEntity: new UserContactsPlainEntity({ email: request.body.email })
+          userContactsPlainEntity: new UserContactsPlainEntity({ email: request.body.email }),
         });
         reply.status(200).send();
-      }
+      },
     );
 
     router.post(ROUTES.registrationEnd, { schema: SCHEMA_REGISTRATION_END }, async (request, reply) => {
@@ -148,8 +148,8 @@ export class AuthRoutesController {
         userPlainCreateEntity: new UserPlainCreateEntity({
           contacts: new UserContactsPlainEntity({ email: request.body.email }),
           personalInfo: new UserPersonalInfoEntity({ firstName: request.body.firstName }),
-          passwordPlain: request.body.password
-        })
+          passwordPlain: request.body.password,
+        }),
       });
       reply.status(201).send();
     });
@@ -157,7 +157,7 @@ export class AuthRoutesController {
     router.post(ROUTES.forgotPasswordStart, { schema: SCHEMA_FORGOT_PASSWORD_START }, async (request, reply) => {
       await this.#authUseCases.forgotPasswordStart({
         logger: request.log,
-        userContactsPlainEntity: new UserContactsPlainEntity({ email: request.body.email })
+        userContactsPlainEntity: new UserContactsPlainEntity({ email: request.body.email }),
       });
       reply.status(200).send();
     });
@@ -168,8 +168,8 @@ export class AuthRoutesController {
         code: request.body.code,
         userContactsPlainEntity: new UserContactsPlainEntity({ email: request.body.email }),
         userPlainPatchEntity: new UserPlainPatchEntity({
-          passwordPlain: request.body.password
-        })
+          passwordPlain: request.body.password,
+        }),
       });
       reply.status(200).send();
     });

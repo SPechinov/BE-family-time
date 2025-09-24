@@ -59,6 +59,17 @@ export const newFastify = (props: {
         title: 'Docs',
         version: '1.0.0',
       },
+      components: {
+        securitySchemes: {
+          bearerAuth: {
+            type: 'http',
+            scheme: 'bearer',
+            bearerFormat: 'JWT',
+            description: 'Enter JWT token',
+          },
+        },
+      },
+      security: [{ bearerAuth: [] }],
     },
     transform: customJsonSchemaTransform,
   });
