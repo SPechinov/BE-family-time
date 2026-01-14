@@ -38,14 +38,20 @@ const ConfigSchema = z.object({
   }),
 });
 
-const loadFile = (uri: string) => {
-  const envFile = fs.readFileSync(uri, 'utf8');
-  return yaml.load(envFile) as unknown;
-};
-
 export type Config = z.infer<typeof ConfigSchema>;
 
-export const CONFIG = (() => {
+const loadFile = (uri: string): object => {
+  const envFile = fs.readFileSync(uri, 'utf8');
+  const fileData = yaml.load(envFile);
+
+  if (typeof fileData !== 'object' || fileData === null) {
+    throw new Error('Невалидный файл конфигурации');
+  }
+
+  return fileData;
+};
+
+export const CONFIG = ((): Config => {
   const file = loadFile('config/env.yaml');
 
   const result = ConfigSchema.safeParse(file);
