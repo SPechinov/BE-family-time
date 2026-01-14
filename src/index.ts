@@ -1,10 +1,27 @@
 import { CONFIG } from '@/config';
-import { newPostgresConnection, newRedisConnection } from '@/pkg';
+import { newFastify, newPostgresConnection, newRedisConnection, registerOpenApi } from '@/pkg';
 
 const run = async () => {
-  const [redis, postgres] = await Promise.all([newRedisConnection(CONFIG.redis), newPostgresConnection(CONFIG.postgres)]);
+  const [redis, postgres] = await Promise.all([
+    newRedisConnection(CONFIG.redis),
+    newPostgresConnection(CONFIG.postgres),
+  ]);
+
+  const fastify = newFastify({
+    errorHandler: () => {},
+  });
+  registerOpenApi(fastify);
+
+  fastify.listen({ port: CONFIG.server.port }, (error, address) => {
+    if (error) throw error;
+    console.log(`Сервер запущен по адресу: ${address}`);
+  });
 
   const destroyApp = async () => {
+    await fastify.close();
+    console.log('\n');
+    console.log('Сервер выключен');
+
     redis.destroy();
     console.log('Redis отключен');
 
