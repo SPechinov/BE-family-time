@@ -23,7 +23,7 @@ export default defineConfig(
     },
   },
   {
-    ignores: ['node_modules', 'build'],
+    ignores: ['node_modules', 'build', '.prettierrc.js', 'eslint.config.mjs'],
   },
   {
     rules: {
@@ -32,6 +32,7 @@ export default defineConfig(
       'prefer-const': 2,
       '@typescript-eslint/no-explicit-any': 0,
       '@typescript-eslint/no-unused-vars': 1,
+      '@typescript-eslint/no-empty-function': 0,
     },
     files: ['**/*.{js,ts}'],
   }

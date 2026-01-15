@@ -30,6 +30,7 @@ const customJsonSchemaTransform = (props: any) => {
 
     errorCodes.forEach((code) => {
       if (code.startsWith('4') || code.startsWith('5')) {
+        // eslint-disable-next-line @typescript-eslint/no-dynamic-delete
         delete responses[code];
       }
     });

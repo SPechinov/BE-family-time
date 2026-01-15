@@ -4,13 +4,13 @@ import { serializerCompiler, validatorCompiler } from 'fastify-type-provider-zod
 import cookie, { FastifyCookieOptions } from '@fastify/cookie';
 import { CONFIG } from '@/config';
 
-let genReqId = (() => {
+const genReqId = (() => {
   let i = 0;
   return () => `${Date.now()}${i++}`;
 })();
 
 const handleSend = (request: FastifyRequest, reply: FastifyReply, payload: unknown, done: DoneFuncWithErrOrRes) => {
-  reply.header("X-Request-ID", request.id);
+  reply.header('X-Request-ID', request.id);
   done(null, payload);
 };
 

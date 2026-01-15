@@ -2,11 +2,12 @@ import { newFastify, RedisClient, registerOpenApi } from '@/pkg';
 import { CONFIG } from '@/config';
 import { Pool } from 'pg';
 
-type Props = {
+interface Props {
   redis: RedisClient;
-  postgres: Pool
+  postgres: Pool;
 }
 
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
 export const newApiRest = (props: Props) => {
   const fastify = newFastify({
     errorHandler: () => {},
@@ -19,4 +20,4 @@ export const newApiRest = (props: Props) => {
   });
 
   return fastify;
-}
+};
