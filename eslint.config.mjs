@@ -1,31 +1,29 @@
-import js from '@eslint/js';
-import globals from 'globals';
-import tsEslint from 'typescript-eslint';
+// @ts-check
+
+import eslint from '@eslint/js';
+import { defineConfig } from 'eslint/config';
+import tseslint from 'typescript-eslint';
 import prettierPlugin from 'eslint-plugin-prettier';
 import prettierConfig from 'eslint-config-prettier';
 
-export default tsEslint.config(
+export default defineConfig(
+  eslint.configs.recommended,
+  tseslint.configs.strict,
+  tseslint.configs.stylistic,
   {
     plugins: {
-      '@typescript-eslint': tsEslint.plugin,
       prettier: prettierPlugin,
     },
   },
   {
-    ignores: ['node_modules', 'build'],
-  },
-  js.configs.recommended,
-  ...tsEslint.configs.recommended,
-  {
     languageOptions: {
-      globals: {
-        ...globals.node,
-        ...globals.es2022,
-      },
       parserOptions: {
-        tsconfigRootDir: './tsconfig.json',
+        projectService: true,
       },
     },
+  },
+  {
+    ignores: ['node_modules', 'build'],
   },
   {
     rules: {
@@ -36,5 +34,5 @@ export default tsEslint.config(
       '@typescript-eslint/no-unused-vars': 1,
     },
     files: ['**/*.{js,ts}'],
-  },
+  }
 );
