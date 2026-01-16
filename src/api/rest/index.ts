@@ -1,6 +1,7 @@
 import { newFastify, RedisClient, registerOpenApi } from '@/pkg';
 import { CONFIG } from '@/config';
 import { Pool } from 'pg';
+import { globalErrorHandler } from './utils';
 
 interface Props {
   redis: RedisClient;
@@ -10,7 +11,7 @@ interface Props {
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
 export const newApiRest = (props: Props) => {
   const fastify = newFastify({
-    errorHandler: () => {},
+    errorHandler: globalErrorHandler,
   });
   registerOpenApi(fastify);
 
