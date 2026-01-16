@@ -8,7 +8,7 @@ const run = async () => {
     newPostgresConnection(CONFIG.postgres),
   ]);
 
-  const apiRest = newApiRest({
+  const apiRest = await newApiRest({
     redis,
     postgres,
   });
