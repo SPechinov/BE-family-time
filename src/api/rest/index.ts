@@ -1,4 +1,4 @@
-import { newFastify, RedisClient, registerOpenApi } from '@/pkg';
+import { newFastify, RedisClient } from '@/pkg';
 import { CONFIG } from '@/config';
 import { Pool } from 'pg';
 import { globalErrorHandler } from './utils';
