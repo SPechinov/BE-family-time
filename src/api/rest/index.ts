@@ -4,19 +4,22 @@ import { Pool } from 'pg';
 import { globalErrorHandler } from './utils';
 import { AuthRoutesController } from './routes/auth';
 import { AuthUseCases } from '@/useCases/auth';
+import { UsersService } from '@/services/users';
+import { UsersRepository } from '@/repositories/db';
 
 interface Props {
   redis: RedisClient;
   postgres: Pool;
 }
 
-// eslint-disable-next-line @typescript-eslint/no-unused-vars
 export const newApiRest = async (props: Props) => {
   const fastify = newFastify({
     errorHandler: globalErrorHandler,
   });
 
-  const authUseCases = new AuthUseCases();
+  const usersRepository = new UsersRepository({ pool: props.postgres });
+  const userService = new UsersService({ usersRepository });
+  const authUseCases = new AuthUseCases({ userService });
 
   fastify.register(
     (instance) => {
