@@ -15,7 +15,12 @@ export const newApiRest = async (props: Props) => {
     errorHandler: globalErrorHandler,
   });
 
-  new AuthRoutesController({ fastify }).register();
+  fastify.register(
+    (instance) => {
+      new AuthRoutesController({ fastify: instance }).register();
+    },
+    { prefix: '/api' },
+  );
 
   fastify.listen({ port: CONFIG.server.port }, (error, address) => {
     if (error) throw error;

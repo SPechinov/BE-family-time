@@ -8,8 +8,8 @@ CREATE TABLE IF NOT EXISTS users (
     phone_encrypted BYTEA,
     phone_hashed BYTEA,
     password_hashed BYTEA,
-    first_name VARCHAR(50) NOT NULL,
-    last_name VARCHAR(50),
+    first_name_encrypted BYTEA NOT NULL,
+    last_name_encrypted BYTEA,
     created_at TIMESTAMP DEFAULT NOW(),
     updated_at TIMESTAMP DEFAULT NOW()
     );
