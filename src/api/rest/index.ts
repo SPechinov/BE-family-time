@@ -3,6 +3,7 @@ import { CONFIG } from '@/config';
 import { Pool } from 'pg';
 import { globalErrorHandler } from './utils';
 import { AuthRoutesController } from './routes/auth';
+import { AuthUseCases } from '@/useCases/auth';
 
 interface Props {
   redis: RedisClient;
@@ -15,9 +16,11 @@ export const newApiRest = async (props: Props) => {
     errorHandler: globalErrorHandler,
   });
 
+  const authUseCases = new AuthUseCases();
+
   fastify.register(
     (instance) => {
-      new AuthRoutesController({ fastify: instance }).register();
+      new AuthRoutesController({ fastify: instance, useCases: authUseCases }).register();
     },
     { prefix: '/api' },
   );
