@@ -6,7 +6,7 @@
   "scripts": {
     "dev": "nodemon",
     "build": "tsc",
-    "migrations:up": "DATABASE_URL=postgresql://root:root@localhost:5432/postgres node-pg-migrate up",
+    "migrations:up": "cross-env DATABASE_URL=postgresql://root:root@localhost:5432/postgres node-pg-migrate up",
     "migrations:create": "node-pg-migrate create 1 -j sql"
   },
   "repository": {
@@ -26,6 +26,7 @@
     "@fastify/jwt": "^10.0.0",
     "@fastify/swagger": "^9.6.1",
     "@fastify/swagger-ui": "^5.2.4",
+    "cross-env": "^10.1.0",
     "fastify": "^5.5.0",
     "fastify-type-provider-zod": "^6.0.0",
     "globals": "^16.3.0",

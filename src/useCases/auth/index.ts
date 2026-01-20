@@ -1,17 +1,23 @@
 import { CONFIG } from '@/config';
-import { IOtpCodesService, IUsersService } from '@/domains/services';
+import { IOtpCodesService, IRateLimiterService, IUsersService } from '@/domains/services';
 import { IAuthUseCases } from '@/domains/useCases';
-import { UserContactsPlainEntity, UserCreatePlainEntity, UserEntity } from '@/entities';
-import { ErrorInvalidCode, ErrorInvalidContacts, generateNumericCode } from '@/pkg';
+import { UserContactsPlainEntity, UserCreatePlainEntity, UserEntity, UserFindOnePlainEntity } from '@/entities';
+import { ErrorInvalidCode, ErrorInvalidContacts, ErrorUserExists, generateNumericCode } from '@/pkg';
 import { FastifyBaseLogger } from 'fastify';
 
 export class AuthUseCases implements IAuthUseCases {
   readonly #userService: IUsersService;
-  readonly #registrationOtpService: IOtpCodesService;
+  readonly #registrationOtpCodesService: IOtpCodesService;
+  readonly #registrationRateLimiterService: IRateLimiterService;
 
-  constructor(props: { userService: IUsersService; registrationOtpService: IOtpCodesService }) {
+  constructor(props: {
+    userService: IUsersService;
+    registrationOtpCodesService: IOtpCodesService;
+    registrationRateLimiterService: IRateLimiterService;
+  }) {
     this.#userService = props.userService;
-    this.#registrationOtpService = props.registrationOtpService;
+    this.#registrationOtpCodesService = props.registrationOtpCodesService;
+    this.#registrationRateLimiterService = props.registrationRateLimiterService;
   }
 
   async registrationStart(props: {
@@ -22,7 +28,7 @@ export class AuthUseCases implements IAuthUseCases {
     if (!contact) throw new ErrorInvalidContacts();
 
     const otpCode = generateNumericCode(CONFIG.codesLength.registration);
-    await this.#registrationOtpService.saveCode({ key: contact, code: otpCode });
+    await this.#registrationOtpCodesService.saveCode({ key: contact, code: otpCode });
 
     props.logger.debug({ otpCode, contact }, 'code saved');
     return { otpCode };
@@ -36,14 +42,24 @@ export class AuthUseCases implements IAuthUseCases {
     const contact = props.userCreatePlainEntity.contactsPlain?.getContact();
     if (!contact) throw new ErrorInvalidContacts();
 
-    const storeOtpCode = await this.#registrationOtpService.getCode({ key: contact });
+    await this.#registrationRateLimiterService.checkLimitOrThrow({ key: contact });
+
+    const storeOtpCode = await this.#registrationOtpCodesService.getCode({ key: contact });
 
     if (!storeOtpCode || !props.otpCode || storeOtpCode !== props.otpCode) {
       props.logger.debug({ userOtpCode: props.otpCode, storeOtpCode }, 'invalid code');
       throw new ErrorInvalidCode();
     }
 
+    this.#registrationOtpCodesService.deleteCode({ key: contact });
+
     props.logger.debug({ contact }, 'code compare success, saving user');
+
+    const userFindOnePlainEntity = new UserFindOnePlainEntity({
+      contactsPlain: props.userCreatePlainEntity.contactsPlain,
+    });
+    const foundUser = await this.#userService.findUser({ userFindOnePlainEntity });
+    if (foundUser) throw new ErrorUserExists();
 
     return new UserEntity({ id: '', createdAt: new Date(), updatedAt: new Date() });
   }

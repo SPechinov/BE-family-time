@@ -66,6 +66,7 @@ export class UserEntity {
   readonly #personalInfoEncrypted?: UserPersonalInfoEncryptedEntity;
   readonly #contactsPlain?: UserContactsPlainEntity;
   readonly #contactsEncrypted?: UserContactsEncryptedEntity;
+  readonly #contactsHashed?: UserContactsHashedEntity;
   readonly #passwordHashed?: UserPasswordHashedEntity;
 
   constructor(props: {
@@ -76,6 +77,7 @@ export class UserEntity {
     personalInfoEncrypted?: UserPersonalInfoEncryptedEntity;
     contactsPlain?: UserContactsPlainEntity;
     contactsEncrypted?: UserContactsEncryptedEntity;
+    contactsHashed?: UserContactsHashedEntity;
     passwordHashed?: UserPasswordHashedEntity;
   }) {
     this.#id = props.id;
@@ -85,6 +87,7 @@ export class UserEntity {
     this.#personalInfoEncrypted = props.personalInfoEncrypted;
     this.#contactsPlain = props.contactsPlain;
     this.#contactsEncrypted = props.contactsEncrypted;
+    this.#contactsHashed = props.contactsHashed;
     this.#passwordHashed = props.passwordHashed;
   }
 
@@ -114,6 +117,10 @@ export class UserEntity {
 
   get contactsEncrypted() {
     return this.#contactsEncrypted;
+  }
+
+  get contactsHashed() {
+    return this.#contactsHashed;
   }
 
   get passwordHashed() {
@@ -181,6 +188,24 @@ export class UserCreateEntity {
 
   get passwordHashed() {
     return this.#passwordHashed;
+  }
+}
+
+export class UserFindOnePlainEntity {
+  readonly #id?: string;
+  readonly #contactsPlain?: UserContactsPlainEntity;
+
+  constructor(props: { id?: string; contactsPlain?: UserContactsPlainEntity }) {
+    this.#id = props.id;
+    this.#contactsPlain = props.contactsPlain;
+  }
+
+  get id() {
+    return this.#id;
+  }
+
+  get contactsPlain() {
+    return this.#contactsPlain;
   }
 }
 
