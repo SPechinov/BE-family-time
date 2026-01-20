@@ -6,6 +6,7 @@ import { AuthRoutesController } from './routes/auth';
 import { AuthUseCases } from '@/useCases/auth';
 import { UsersService } from '@/services/users';
 import { UsersRepository } from '@/repositories/db';
+import { OtpCodesService } from '@/services';
 
 interface Props {
   redis: RedisClient;
@@ -17,9 +18,16 @@ export const newApiRest = async (props: Props) => {
     errorHandler: globalErrorHandler,
   });
 
+  const registrationOtpCodesService = new OtpCodesService({
+    redis: props.redis,
+    prefix: 'auth-registration',
+    codeLength: CONFIG.codesLength.registration,
+    ttlSec: CONFIG.ttls.registrationSec,
+  });
+
   const usersRepository = new UsersRepository({ pool: props.postgres });
   const userService = new UsersService({ usersRepository });
-  const authUseCases = new AuthUseCases({ userService });
+  const authUseCases = new AuthUseCases({ userService, registrationOtpService: registrationOtpCodesService });
 
   fastify.register(
     (instance) => {

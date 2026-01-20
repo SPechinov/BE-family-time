@@ -1,0 +1,23 @@
+meta {
+  name: registration-end
+  type: http
+  seq: 2
+}
+
+post {
+  url: http://127.0.0.1:8000/api/auth/registration-end
+  body: formUrlEncoded
+  auth: inherit
+}
+
+body:form-urlencoded {
+  email: test@test.com
+  otpCode: 949914
+  firstName: Сергей
+  password: 123123123
+}
+
+settings {
+  encodeUrl: true
+  timeout: 0
+}

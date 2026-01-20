@@ -1,8 +1,9 @@
 import z from 'zod';
 import { createResponseSchema } from '../../utils';
-import { FastifySchema } from 'fastify';
+import { CONFIG } from '@/config';
+import { GLOBAL_SCHEMAS } from '../../schemas';
 
-const SCHEMA_REGISTRATION_START: FastifySchema = {
+const SCHEMA_REGISTRATION_START = {
   tags: ['Auth'],
   security: [],
   body: z.object({
@@ -13,6 +14,21 @@ const SCHEMA_REGISTRATION_START: FastifySchema = {
   }),
 };
 
-export const AUTH_SCHEMAS: Record<string, FastifySchema> = Object.freeze({
+const SCHEMA_REGISTRATION_END = {
+  tags: ['Auth'],
+  security: [],
+  body: z.object({
+    email: z.email().nonempty().describe('Email адрес'),
+    otpCode: z.string().nonempty().length(CONFIG.codesLength.registration),
+    firstName: GLOBAL_SCHEMAS.firstName.nonempty(),
+    password: GLOBAL_SCHEMAS.password.nonempty(),
+  }),
+  response: createResponseSchema({
+    201: z.undefined(),
+  }),
+};
+
+export const AUTH_SCHEMAS = Object.freeze({
   registrationStart: SCHEMA_REGISTRATION_START,
+  registrationEnd: SCHEMA_REGISTRATION_END,
 });

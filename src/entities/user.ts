@@ -34,6 +34,10 @@ export class UserContactsPlainEntity {
   get phone() {
     return this.#phone;
   }
+
+  getContact() {
+    return this.#email ?? this.#phone;
+  }
 }
 
 export class UserContactsEncryptedEntity extends UserContactsPlainEntity {}
