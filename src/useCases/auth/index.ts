@@ -61,6 +61,7 @@ export class AuthUseCases implements IAuthUseCases {
     const foundUser = await this.#userService.findUser({ userFindOnePlainEntity });
     if (foundUser) throw new ErrorUserExists();
 
-    return new UserEntity({ id: '', createdAt: new Date(), updatedAt: new Date() });
+    const createdUser = await this.#userService.create({ userCreatePlainEntity: props.userCreatePlainEntity });
+    return createdUser;
   }
 }

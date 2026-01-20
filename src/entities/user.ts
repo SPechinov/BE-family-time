@@ -51,7 +51,7 @@ export class UserPasswordPlainEntity {
     this.#password = hash;
   }
 
-  get hash(): string {
+  get password(): string {
     return this.#password;
   }
 }
@@ -157,16 +157,16 @@ export class UserCreatePlainEntity {
 }
 
 export class UserCreateEntity {
-  readonly #personalInfoEncrypted: UserPersonalInfoEncryptedEntity;
-  readonly #contactsHashed: UserContactsHashedEntity;
-  readonly #contactsEncrypted: UserContactsEncryptedEntity;
-  readonly #passwordHashed: UserPasswordHashedEntity;
+  readonly #personalInfoEncrypted?: UserPersonalInfoEncryptedEntity;
+  readonly #contactsHashed?: UserContactsHashedEntity;
+  readonly #contactsEncrypted?: UserContactsEncryptedEntity;
+  readonly #passwordHashed?: UserPasswordHashedEntity;
 
   constructor(props: {
-    personalInfoEncrypted: UserPersonalInfoEncryptedEntity;
-    contactsHashed: UserContactsHashedEntity;
-    contactsEncrypted: UserContactsEncryptedEntity;
-    passwordHashed: UserPasswordHashedEntity;
+    personalInfoEncrypted?: UserPersonalInfoEncryptedEntity;
+    contactsHashed?: UserContactsHashedEntity;
+    contactsEncrypted?: UserContactsEncryptedEntity;
+    passwordHashed?: UserPasswordHashedEntity;
   }) {
     this.#personalInfoEncrypted = props.personalInfoEncrypted;
     this.#contactsHashed = props.contactsHashed;
@@ -174,7 +174,7 @@ export class UserCreateEntity {
     this.#passwordHashed = props.passwordHashed;
   }
 
-  get personalInfoEncrypted(): UserPersonalInfoEncryptedEntity {
+  get personalInfoEncrypted() {
     return this.#personalInfoEncrypted;
   }
 

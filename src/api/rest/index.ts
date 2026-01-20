@@ -4,11 +4,15 @@ import { Pool } from 'pg';
 import { globalErrorHandler } from './utils';
 import { AuthRoutesController } from './routes/auth';
 import { AuthUseCases } from '@/useCases/auth';
-import { UsersService } from '@/services/users';
 import { UsersRepository } from '@/repositories/db';
-import { OtpCodesService } from '@/services';
-import { RateLimiterService } from '@/services/rateLimiter';
-import { HashService } from '@/services/hash';
+import {
+  CryptoService,
+  HashPasswordService,
+  HashService,
+  OtpCodesService,
+  RateLimiterService,
+  UsersService,
+} from '@/services';
 
 interface Props {
   redis: RedisClient;
@@ -38,8 +42,16 @@ export const newApiRest = async (props: Props) => {
     salt: CONFIG.salts.hashCredentials,
   });
 
+  const hashPasswordService = new HashPasswordService();
+  const cryptoService = new CryptoService();
+
   const usersRepository = new UsersRepository({ pool: props.postgres });
-  const userService = new UsersService({ usersRepository, hashService: userHashService });
+  const userService = new UsersService({
+    usersRepository,
+    hashService: userHashService,
+    hashPasswordService,
+    cryptoService,
+  });
   const authUseCases = new AuthUseCases({
     userService,
     registrationOtpCodesService,
