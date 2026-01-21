@@ -10,6 +10,7 @@ import {
   UserPasswordHashedEntity,
   UserPersonalInfoEncryptedEntity,
 } from '@/entities';
+import { ErrorUserExists } from '@/pkg';
 
 export class UsersRepository implements IUsersRepository {
   #pool: Pool;
@@ -26,25 +27,25 @@ export class UsersRepository implements IUsersRepository {
         phone_hashed,
         phone_encrypted,
         password_hashed,
-        first_name,
-        last_name
+        first_name_encrypted,
+        last_name_encrypted
       )
       VALUES ($1, $2, $3, $4, $5, $6, $7)
       RETURNING *
     `;
 
     const result = await this.#pool.query<IUserRowData>(query, [
-      userCreateEntity.contactsHashed.email,
-      userCreateEntity.contactsEncrypted.email,
-      userCreateEntity.contactsHashed.phone,
-      userCreateEntity.contactsEncrypted.phone,
-      userCreateEntity.passwordHashed.hash,
-      userCreateEntity.personalInfoEncrypted.firstName,
-      userCreateEntity.personalInfoEncrypted.lastName,
+      userCreateEntity.contactsHashed?.email,
+      userCreateEntity.contactsEncrypted?.email,
+      userCreateEntity.contactsHashed?.phone,
+      userCreateEntity.contactsEncrypted?.phone,
+      userCreateEntity.passwordHashed?.password,
+      userCreateEntity.personalInfoEncrypted?.firstName,
+      userCreateEntity.personalInfoEncrypted?.lastName,
     ]);
 
     const row = result.rows?.[0];
-    if (!row) throw new Error('User not created');
+    if (!row) throw new ErrorUserExists();
 
     return this.#buildUserEntity(row);
   }

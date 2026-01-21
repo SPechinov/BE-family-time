@@ -60,7 +60,7 @@ export class UsersService implements IUsersService {
       passwordHashed = new UserPasswordHashedEntity(this.#hashPasswordService.hashPassword(passwordPlain.password));
     }
 
-    this.#usersRepository.create(
+    return this.#usersRepository.create(
       new UserCreateEntity({
         personalInfoEncrypted,
         contactsHashed,
