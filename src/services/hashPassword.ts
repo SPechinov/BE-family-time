@@ -2,7 +2,7 @@ import { IHashPasswordService } from '@/domains/services';
 import crypto from 'crypto';
 
 const HASH_ALGORITHM = 'sha512';
-const ITERATIONS = 100000;
+const ITERATIONS = 600000;
 const KEY_LENGTH = 64;
 const SALT_LENGTH = 32;
 
