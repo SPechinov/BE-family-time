@@ -2,7 +2,13 @@ import { FastifyInstance } from 'fastify';
 import { ZodTypeProvider } from 'fastify-type-provider-zod';
 import { AUTH_SCHEMAS } from './schemas';
 import { IAuthUseCases } from '@/domains/useCases';
-import { UserContactsPlainEntity, UserCreatePlainEntity, UserPersonalInfoPlainEntity } from '@/entities';
+import {
+  UserContactsPlainEntity,
+  UserCreatePlainEntity,
+  UserPasswordPlainEntity,
+  UserPersonalInfoPlainEntity,
+} from '@/entities';
+import { CONFIG } from '@/config';
 
 const PREFIX = '/auth';
 
@@ -31,10 +37,13 @@ export class AuthRoutesController {
             schema: AUTH_SCHEMAS.registrationStart,
           },
           async (request, reply) => {
-            await this.#useCases.registrationStart({
+            const result = await this.#useCases.registrationStart({
               logger: request.log,
               userContactsPlainEntity: new UserContactsPlainEntity({ email: request.body.email }),
             });
+            if (CONFIG.env === 'local') {
+              reply.header('x-dev-otp-code', result.otpCode);
+            }
             reply.status(200).send();
           },
         );
@@ -53,6 +62,7 @@ export class AuthRoutesController {
                 personalInfoPlain: new UserPersonalInfoPlainEntity({
                   firstName: request.body.firstName,
                 }),
+                passwordPlain: new UserPasswordPlainEntity(request.body.password),
               }),
             });
             reply.status(201).send();

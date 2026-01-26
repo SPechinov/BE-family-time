@@ -1,5 +1,6 @@
 import { Pool } from 'pg';
 import { IUsersRepository } from '@/domains/repositories/db';
+import { ErrorUserExists } from '@/pkg';
 import { IUserRowData } from './types';
 import {
   UserContactsEncryptedEntity,
@@ -10,7 +11,6 @@ import {
   UserPasswordHashedEntity,
   UserPersonalInfoEncryptedEntity,
 } from '@/entities';
-import { ErrorUserExists } from '@/pkg';
 
 export class UsersRepository implements IUsersRepository {
   #pool: Pool;
@@ -34,20 +34,27 @@ export class UsersRepository implements IUsersRepository {
       RETURNING *
     `;
 
-    const result = await this.#pool.query<IUserRowData>(query, [
-      userCreateEntity.contactsHashed?.email,
-      userCreateEntity.contactsEncrypted?.email,
-      userCreateEntity.contactsHashed?.phone,
-      userCreateEntity.contactsEncrypted?.phone,
-      userCreateEntity.passwordHashed?.password,
-      userCreateEntity.personalInfoEncrypted?.firstName,
-      userCreateEntity.personalInfoEncrypted?.lastName,
-    ]);
+    try {
+      const result = await this.#pool.query<IUserRowData>(query, [
+        userCreateEntity.contactsHashed?.email,
+        userCreateEntity.contactsEncrypted?.email,
+        userCreateEntity.contactsHashed?.phone,
+        userCreateEntity.contactsEncrypted?.phone,
+        userCreateEntity.passwordHashed?.password,
+        userCreateEntity.personalInfoEncrypted?.firstName,
+        userCreateEntity.personalInfoEncrypted?.lastName,
+      ]);
 
-    const row = result.rows?.[0];
-    if (!row) throw new ErrorUserExists();
+      const row = result.rows?.[0];
+      if (!row) throw new Error('User not created');
 
-    return this.#buildUserEntity(row);
+      return this.#buildUserEntity(row);
+    } catch (error) {
+      if (error instanceof Error && 'code' in error && error.code === '23505') {
+        throw new ErrorUserExists();
+      }
+      throw error;
+    }
   }
 
   async findOne(userFindEntity: UserFindOneEntity) {
