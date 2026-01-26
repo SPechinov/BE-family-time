@@ -1,4 +1,4 @@
 export interface ICryptoService {
-  encrypt(value: string): string;
-  decrypt(value: string): string;
+  encrypt(value: string, salt: string): string;
+  decrypt(value: string, salt: string): string;
 }

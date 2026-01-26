@@ -1,5 +1,6 @@
 export interface IUserRowData {
   id: string;
+  encryption_salt: string;
   first_name_encrypted: string;
   last_name_encrypted?: string | null;
   email_encrypted?: Buffer | null;

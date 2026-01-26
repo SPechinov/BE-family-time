@@ -7,8 +7,10 @@ const KEY_LENGTH = 32;
 const IV_LENGTH = 16;
 
 export class CryptoService implements ICryptoService {
-  encrypt(text: string): string {
-    const key = this.deriveKey(CONFIG.salts.cryptoCredentials);
+  #password = CONFIG.salts.cryptoCredentials;
+
+  encrypt(text: string, salt: string): string {
+    const key = this.deriveKey(salt);
     const iv = crypto.randomBytes(IV_LENGTH);
 
     const cipher = crypto.createCipheriv(ALGORITHM, key, iv);
@@ -21,14 +23,14 @@ export class CryptoService implements ICryptoService {
     return `${iv.toString('hex')}:${tag.toString('hex')}:${encrypted}`;
   }
 
-  decrypt(encryptedText: string): string {
+  decrypt(encryptedText: string, salt: string): string {
     const [ivHex, tagHex, encrypted] = encryptedText.split(':');
 
     if (!ivHex || !tagHex || !encrypted) {
       throw new Error('Invalid encrypted format');
     }
 
-    const key = this.deriveKey(CONFIG.salts.cryptoCredentials);
+    const key = this.deriveKey(salt);
     const iv = Buffer.from(ivHex, 'hex');
     const tag = Buffer.from(tagHex, 'hex');
 
@@ -41,7 +43,7 @@ export class CryptoService implements ICryptoService {
     return decrypted;
   }
 
-  private deriveKey(key: string): Buffer {
-    return crypto.scryptSync(key, CONFIG.salts.keyDerivation, KEY_LENGTH);
+  private deriveKey(salt: string): Buffer {
+    return crypto.scryptSync(this.#password, salt, KEY_LENGTH);
   }
 }

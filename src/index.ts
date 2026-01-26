@@ -1,3 +1,7 @@
+// import { benchmarkCryptoService } from './tests/benchamarks';
+
+// benchmarkCryptoService();
+
 import { CONFIG } from '@/config';
 import { newPostgresConnection, newRedisConnection } from '@/pkg';
 import { newApiRest } from '@/api/rest';

@@ -3,12 +3,13 @@ CREATE EXTENSION IF NOT EXISTS "uuid-ossp";
 
 CREATE TABLE IF NOT EXISTS users (
     id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    encryption_salt UUID NOT NULL DEFAULT gen_random_uuid(),
     email_encrypted BYTEA,
     email_hashed BYTEA,
     phone_encrypted BYTEA,
     phone_hashed BYTEA,
     password_hashed BYTEA,
-    first_name_encrypted BYTEA NOT NULL,
+    first_name_encrypted BYTEA,
     last_name_encrypted BYTEA,
     created_at TIMESTAMP DEFAULT NOW(),
     updated_at TIMESTAMP DEFAULT NOW()

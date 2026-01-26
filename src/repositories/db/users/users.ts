@@ -22,6 +22,7 @@ export class UsersRepository implements IUsersRepository {
   async create(userCreateEntity: UserCreateEntity): Promise<UserEntity> {
     const query = `
       INSERT INTO users (
+        encryption_salt,
         email_hashed,
         email_encrypted,
         phone_hashed,
@@ -30,12 +31,13 @@ export class UsersRepository implements IUsersRepository {
         first_name_encrypted,
         last_name_encrypted
       )
-      VALUES ($1, $2, $3, $4, $5, $6, $7)
+      VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
       RETURNING *
     `;
 
     try {
       const result = await this.#pool.query<IUserRowData>(query, [
+        userCreateEntity.encryptionSalt,
         userCreateEntity.contactsHashed?.email,
         userCreateEntity.contactsEncrypted?.email,
         userCreateEntity.contactsHashed?.phone,
@@ -225,6 +227,7 @@ export class UsersRepository implements IUsersRepository {
 
     return new UserEntity({
       id: row.id,
+      encryptionSalt: row.encryption_salt,
       personalInfoEncrypted,
       contactsHashed,
       contactsEncrypted,

@@ -60,6 +60,7 @@ export class UserPasswordHashedEntity extends UserPasswordPlainEntity {}
 
 export class UserEntity {
   readonly #id: string;
+  readonly #encryptionSalt: string;
   readonly #updatedAt: Date;
   readonly #createdAt: Date;
   readonly #personalInfoPlain?: UserPersonalInfoPlainEntity;
@@ -71,6 +72,7 @@ export class UserEntity {
 
   constructor(props: {
     id: string;
+    encryptionSalt: string;
     updatedAt: Date;
     createdAt: Date;
     personalInfoPlain?: UserPersonalInfoPlainEntity;
@@ -81,6 +83,7 @@ export class UserEntity {
     passwordHashed?: UserPasswordHashedEntity;
   }) {
     this.#id = props.id;
+    this.#encryptionSalt = props.encryptionSalt;
     this.#updatedAt = props.updatedAt;
     this.#createdAt = props.createdAt;
     this.#personalInfoPlain = props.personalInfoPlain;
@@ -93,6 +96,10 @@ export class UserEntity {
 
   get id(): string {
     return this.#id;
+  }
+
+  get encryptionSalt(): string {
+    return this.#encryptionSalt;
   }
 
   get updatedAt(): Date {
@@ -157,21 +164,28 @@ export class UserCreatePlainEntity {
 }
 
 export class UserCreateEntity {
+  readonly #encryptionSalt: string;
   readonly #personalInfoEncrypted?: UserPersonalInfoEncryptedEntity;
   readonly #contactsHashed?: UserContactsHashedEntity;
   readonly #contactsEncrypted?: UserContactsEncryptedEntity;
   readonly #passwordHashed?: UserPasswordHashedEntity;
 
   constructor(props: {
+    encryptionSalt: string;
     personalInfoEncrypted?: UserPersonalInfoEncryptedEntity;
     contactsHashed?: UserContactsHashedEntity;
     contactsEncrypted?: UserContactsEncryptedEntity;
     passwordHashed?: UserPasswordHashedEntity;
   }) {
+    this.#encryptionSalt = props.encryptionSalt;
     this.#personalInfoEncrypted = props.personalInfoEncrypted;
     this.#contactsHashed = props.contactsHashed;
     this.#contactsEncrypted = props.contactsEncrypted;
     this.#passwordHashed = props.passwordHashed;
+  }
+
+  get encryptionSalt() {
+    return this.#encryptionSalt;
   }
 
   get personalInfoEncrypted() {

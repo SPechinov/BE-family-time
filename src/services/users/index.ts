@@ -1,3 +1,4 @@
+import { randomUUID } from 'node:crypto';
 import { IUsersRepository } from '@/domains/repositories/db';
 import { ICryptoService, IHashPasswordService, IHashService, IUsersService } from '@/domains/services';
 import {
@@ -32,12 +33,15 @@ export class UsersService implements IUsersService {
 
   async create({ userCreatePlainEntity }: { userCreatePlainEntity: UserCreatePlainEntity }): Promise<UserEntity> {
     const { personalInfoPlain, contactsPlain, passwordPlain } = userCreatePlainEntity;
+    const encryptionSalt = randomUUID();
 
     let personalInfoEncrypted: UserPersonalInfoEncryptedEntity | undefined;
     if (personalInfoPlain) {
       personalInfoEncrypted = new UserPersonalInfoEncryptedEntity({
-        firstName: this.#cryptoService.encrypt(personalInfoPlain.firstName),
-        lastName: personalInfoPlain.lastName ? this.#cryptoService.encrypt(personalInfoPlain.lastName) : undefined,
+        firstName: this.#cryptoService.encrypt(personalInfoPlain.firstName, encryptionSalt),
+        lastName: personalInfoPlain.lastName
+          ? this.#cryptoService.encrypt(personalInfoPlain.lastName, encryptionSalt)
+          : undefined,
       });
     }
 
@@ -50,8 +54,8 @@ export class UsersService implements IUsersService {
       });
 
       contactsEncrypted = new UserContactsEncryptedEntity({
-        email: contactsPlain.email ? this.#cryptoService.encrypt(contactsPlain.email) : undefined,
-        phone: contactsPlain.phone ? this.#cryptoService.encrypt(contactsPlain.phone) : undefined,
+        email: contactsPlain.email ? this.#cryptoService.encrypt(contactsPlain.email, encryptionSalt) : undefined,
+        phone: contactsPlain.phone ? this.#cryptoService.encrypt(contactsPlain.phone, encryptionSalt) : undefined,
       });
     }
 
@@ -62,6 +66,7 @@ export class UsersService implements IUsersService {
 
     return this.#usersRepository.create(
       new UserCreateEntity({
+        encryptionSalt,
         personalInfoEncrypted,
         contactsHashed,
         contactsEncrypted,
