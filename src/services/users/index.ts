@@ -34,35 +34,49 @@ export class UsersService implements IUsersService {
   async create({ userCreatePlainEntity }: { userCreatePlainEntity: UserCreatePlainEntity }): Promise<UserEntity> {
     const { personalInfoPlain, contactsPlain, passwordPlain } = userCreatePlainEntity;
     const encryptionSalt = randomUUID();
+    const promises: (Promise<string> | undefined)[] = Array.from({ length: 5 }, () => undefined);
 
-    let personalInfoEncrypted: UserPersonalInfoEncryptedEntity | undefined;
     if (personalInfoPlain) {
-      personalInfoEncrypted = new UserPersonalInfoEncryptedEntity({
-        firstName: this.#cryptoService.encrypt(personalInfoPlain.firstName, encryptionSalt),
-        lastName: personalInfoPlain.lastName
-          ? this.#cryptoService.encrypt(personalInfoPlain.lastName, encryptionSalt)
-          : undefined,
-      });
+      if (personalInfoPlain.firstName) {
+        promises[0] = this.#cryptoService.encrypt(personalInfoPlain.firstName, encryptionSalt);
+      }
+      if (personalInfoPlain.lastName) {
+        promises[1] = this.#cryptoService.encrypt(personalInfoPlain.lastName, encryptionSalt);
+      }
     }
 
-    let contactsHashed: UserContactsHashedEntity | undefined;
-    let contactsEncrypted: UserContactsEncryptedEntity | undefined;
     if (contactsPlain) {
-      contactsHashed = new UserContactsHashedEntity({
-        email: contactsPlain.email ? this.#hashService.hash(contactsPlain.email) : undefined,
-        phone: contactsPlain.phone ? this.#hashService.hash(contactsPlain.phone) : undefined,
-      });
-
-      contactsEncrypted = new UserContactsEncryptedEntity({
-        email: contactsPlain.email ? this.#cryptoService.encrypt(contactsPlain.email, encryptionSalt) : undefined,
-        phone: contactsPlain.phone ? this.#cryptoService.encrypt(contactsPlain.phone, encryptionSalt) : undefined,
-      });
+      if (contactsPlain.email) {
+        promises[2] = this.#cryptoService.encrypt(contactsPlain.email, encryptionSalt);
+      }
+      if (contactsPlain.phone) {
+        promises[3] = this.#cryptoService.encrypt(contactsPlain.phone, encryptionSalt);
+      }
     }
 
-    let passwordHashed: UserPasswordHashedEntity | undefined;
-    if (passwordPlain?.password && passwordPlain.password.length > 0) {
-      passwordHashed = new UserPasswordHashedEntity(this.#hashPasswordService.hashPassword(passwordPlain.password));
+    if (passwordPlain?.password) {
+      promises[4] = this.#hashPasswordService.hashPassword(passwordPlain.password);
     }
+
+    const [firstNameEncrypted, lastNameEncrypted, emailEncrypted, phoneEncrypted, userPasswordHashed] =
+      await Promise.all(promises);
+
+    const personalInfoEncrypted = new UserPersonalInfoEncryptedEntity({
+      firstName: firstNameEncrypted,
+      lastName: lastNameEncrypted,
+    });
+
+    const contactsEncrypted = new UserContactsEncryptedEntity({
+      email: emailEncrypted,
+      phone: phoneEncrypted,
+    });
+
+    const passwordHashed = userPasswordHashed ? new UserPasswordHashedEntity(userPasswordHashed) : undefined;
+
+    const contactsHashed = new UserContactsHashedEntity({
+      email: contactsPlain?.email ? this.#hashService.hash(contactsPlain.email) : undefined,
+      phone: contactsPlain?.phone ? this.#hashService.hash(contactsPlain.phone) : undefined,
+    });
 
     return this.#usersRepository.create(
       new UserCreateEntity({

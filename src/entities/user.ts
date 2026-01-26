@@ -1,8 +1,8 @@
 export class UserPersonalInfoPlainEntity {
-  readonly #firstName: string;
+  readonly #firstName?: string;
   readonly #lastName?: string;
 
-  constructor(props: { firstName: string; lastName?: string }) {
+  constructor(props: { firstName?: string; lastName?: string }) {
     this.#firstName = props.firstName;
     this.#lastName = props.lastName;
   }

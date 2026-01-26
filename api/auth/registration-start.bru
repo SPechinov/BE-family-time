@@ -11,7 +11,25 @@ post {
 }
 
 body:form-urlencoded {
-  email: test+4@test.com
+  email: test@test.com
+}
+
+script:pre-request {
+  const emailElement = req.body.find((element) => {
+    return element.name === 'email'
+  });
+  
+  if (emailElement) {
+    bru.setVar("registrationEmail", emailElement.value)
+  }
+}
+
+script:post-response {
+  if (res.status === 200) {
+    bru.setVar("registrationOtpCode", res.getHeader("x-dev-otp-code"));
+  }
+  
+  
 }
 
 settings {
