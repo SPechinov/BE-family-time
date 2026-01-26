@@ -6,11 +6,13 @@ const ALGORITHM = 'aes-256-gcm';
 const KEY_LENGTH = 32;
 const IV_LENGTH = 16;
 
+const cache = new Map<string, Buffer>();
+
 export class CryptoService implements ICryptoService {
   #password = CONFIG.salts.cryptoCredentials;
 
-  encrypt(text: string, salt: string): string {
-    const key = this.deriveKey(salt);
+  async encrypt(text: string, salt: string): Promise<string> {
+    const key = await this.#deriveKey(salt);
     const iv = crypto.randomBytes(IV_LENGTH);
 
     const cipher = crypto.createCipheriv(ALGORITHM, key, iv);
@@ -23,14 +25,14 @@ export class CryptoService implements ICryptoService {
     return `${iv.toString('hex')}:${tag.toString('hex')}:${encrypted}`;
   }
 
-  decrypt(encryptedText: string, salt: string): string {
+  async decrypt(encryptedText: string, salt: string): Promise<string> {
     const [ivHex, tagHex, encrypted] = encryptedText.split(':');
 
     if (!ivHex || !tagHex || !encrypted) {
       throw new Error('Invalid encrypted format');
     }
 
-    const key = this.deriveKey(salt);
+    const key = await this.#deriveKey(salt);
     const iv = Buffer.from(ivHex, 'hex');
     const tag = Buffer.from(tagHex, 'hex');
 
@@ -43,7 +45,19 @@ export class CryptoService implements ICryptoService {
     return decrypted;
   }
 
-  private deriveKey(salt: string): Buffer {
-    return crypto.scryptSync(this.#password, salt, KEY_LENGTH);
+  async #deriveKey(salt: string): Promise<Buffer> {
+    const cachedKey = cache.get(salt);
+    if (cachedKey) return cachedKey;
+
+    return new Promise((resolve, reject) => {
+      crypto.scrypt(this.#password, salt, KEY_LENGTH, (error, key) => {
+        if (error) {
+          reject(error);
+          return;
+        }
+        cache.set(salt, Buffer.from(key));
+        resolve(key);
+      });
+    });
   }
 }

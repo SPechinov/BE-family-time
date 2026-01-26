@@ -7,14 +7,21 @@ const KEY_LENGTH = 64;
 const SALT_LENGTH = 32;
 
 export class HashPasswordService implements IHashPasswordService {
-  hashPassword(passwordPlain: string): string {
+  async hashPassword(passwordPlain: string): Promise<string> {
     const salt = crypto.randomBytes(SALT_LENGTH);
-    const hash = crypto.pbkdf2Sync(passwordPlain, salt, ITERATIONS, KEY_LENGTH, HASH_ALGORITHM);
 
-    return `${salt.toString('hex')}:${hash.toString('hex')}`;
+    return new Promise((resolve, reject) => {
+      crypto.pbkdf2(passwordPlain, salt, ITERATIONS, KEY_LENGTH, HASH_ALGORITHM, (error, hash) => {
+        if (error) {
+          reject(error);
+          return;
+        }
+        resolve(`${salt.toString('hex')}:${hash.toString('hex')}`);
+      });
+    });
   }
 
-  verifyPassword(passwordPlain: string, passwordHashed: string): boolean {
+  async verifyPassword(passwordPlain: string, passwordHashed: string): Promise<boolean> {
     try {
       const [saltHex, hashHex] = passwordHashed.split(':');
 
@@ -25,9 +32,16 @@ export class HashPasswordService implements IHashPasswordService {
       const salt = Buffer.from(saltHex, 'hex');
       const originalHash = Buffer.from(hashHex, 'hex');
 
-      const hash = crypto.pbkdf2Sync(passwordPlain, salt, ITERATIONS, KEY_LENGTH, HASH_ALGORITHM);
+      return new Promise((resolve, reject) => {
+        crypto.pbkdf2(passwordPlain, salt, ITERATIONS, KEY_LENGTH, HASH_ALGORITHM, (error, hash) => {
+          if (error) {
+            reject(error);
+            return;
+          }
 
-      return crypto.timingSafeEqual(originalHash, hash);
+          resolve(crypto.timingSafeEqual(originalHash, hash));
+        });
+      });
     } catch {
       return false;
     }

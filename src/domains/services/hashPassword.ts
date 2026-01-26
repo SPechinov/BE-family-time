@@ -1,4 +1,4 @@
 export interface IHashPasswordService {
-  hashPassword(passwordPlain: string): string;
-  verifyPassword(passwordPlain: string, passwordHashed: string): boolean;
+  hashPassword(passwordPlain: string): Promise<string>;
+  verifyPassword(passwordPlain: string, passwordHashed: string): Promise<boolean>;
 }

@@ -1,5 +1,5 @@
-import { benchmarkHashService } from './tests/benchamarks';
-benchmarkHashService();
+import { benchmarkHashPasswordService } from './tests/benchamarks';
+benchmarkHashPasswordService();
 
 // import { CONFIG } from '@/config';
 // import { newPostgresConnection, newRedisConnection } from '@/pkg';

@@ -1,9 +1,9 @@
-export const benchmark = (fn: () => void, iterations = 1000) => {
+export const benchmark = async (fn: () => Promise<void> | void, iterations = 1000) => {
   console.log(`Start benchmarking: ${fn.name}, iterations: ${iterations}`);
   const times = [];
   for (let i = 0; i < iterations; i++) {
     const start = performance.now();
-    fn();
+    await fn();
     times.push(performance.now() - start);
 
     const percent = Math.round(((i + 1) / iterations) * 100);
