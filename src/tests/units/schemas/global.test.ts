@@ -97,6 +97,11 @@ describe('Global schemas validation test', () => {
       const result = GLOBAL_SCHEMAS.email.safeParse('test-email@test.ru');
       expect(result.success).toBe(true);
     });
+
+    it('email with no EN chars', () => {
+      const result = GLOBAL_SCHEMAS.email.safeParse('тест-емайл@test.ru');
+      expect(result.success).toBe(false);
+    });
   });
 
   describe('Password validation', () => {

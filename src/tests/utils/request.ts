@@ -7,6 +7,7 @@ export const request = async <R = undefined | object>(
 ): Promise<{
   status: number;
   statusText: string;
+  headers: Headers;
   body?: R;
 }> => {
   const response = await fetch(`${API_URL}${path}`, {
@@ -20,6 +21,7 @@ export const request = async <R = undefined | object>(
   return {
     status: response.status,
     statusText: response.statusText,
+    headers: response.headers,
     body: await response.json().catch(() => null),
   };
 };
