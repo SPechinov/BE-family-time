@@ -34,57 +34,33 @@ export class UsersService implements IUsersService {
   async create({ userCreatePlainEntity }: { userCreatePlainEntity: UserCreatePlainEntity }): Promise<UserEntity> {
     const { personalInfoPlain, contactsPlain, passwordPlain } = userCreatePlainEntity;
     const encryptionSalt = randomUUID();
-    const promises: (Promise<string> | undefined)[] = Array.from({ length: 5 }, () => undefined);
 
-    if (personalInfoPlain) {
-      if (personalInfoPlain.firstName) {
-        promises[0] = this.#cryptoService.encrypt(personalInfoPlain.firstName, encryptionSalt);
-      }
-      if (personalInfoPlain.lastName) {
-        promises[1] = this.#cryptoService.encrypt(personalInfoPlain.lastName, encryptionSalt);
-      }
-    }
-
-    if (contactsPlain) {
-      if (contactsPlain.email) {
-        promises[2] = this.#cryptoService.encrypt(contactsPlain.email, encryptionSalt);
-      }
-      if (contactsPlain.phone) {
-        promises[3] = this.#cryptoService.encrypt(contactsPlain.phone, encryptionSalt);
-      }
-    }
-
-    if (passwordPlain?.password) {
-      promises[4] = this.#hashPasswordService.hashPassword(passwordPlain.password);
-    }
-
-    const [firstNameEncrypted, lastNameEncrypted, emailEncrypted, phoneEncrypted, userPasswordHashed] =
-      await Promise.all(promises);
-
-    const personalInfoEncrypted = new UserPersonalInfoEncryptedEntity({
-      firstName: firstNameEncrypted,
-      lastName: lastNameEncrypted,
-    });
-
-    const contactsEncrypted = new UserContactsEncryptedEntity({
-      email: emailEncrypted,
-      phone: phoneEncrypted,
-    });
-
-    const passwordHashed = userPasswordHashed ? new UserPasswordHashedEntity(userPasswordHashed) : undefined;
-
-    const contactsHashed = new UserContactsHashedEntity({
-      email: contactsPlain?.email ? this.#hashService.hash(contactsPlain.email) : undefined,
-      phone: contactsPlain?.phone ? this.#hashService.hash(contactsPlain.phone) : undefined,
-    });
+    const [firstNameEncrypted, lastNameEncrypted, emailEncrypted, phoneEncrypted, passwordHashed] = await Promise.all([
+      personalInfoPlain?.firstName
+        ? this.#cryptoService.encrypt(personalInfoPlain.firstName, encryptionSalt)
+        : undefined,
+      personalInfoPlain?.lastName ? this.#cryptoService.encrypt(personalInfoPlain.lastName, encryptionSalt) : undefined,
+      contactsPlain?.email ? this.#cryptoService.encrypt(contactsPlain.email, encryptionSalt) : undefined,
+      contactsPlain?.phone ? this.#cryptoService.encrypt(contactsPlain.phone, encryptionSalt) : undefined,
+      passwordPlain?.password ? this.#hashPasswordService.hashPassword(passwordPlain.password) : undefined,
+    ]);
 
     return this.#usersRepository.create(
       new UserCreateEntity({
         encryptionSalt,
-        personalInfoEncrypted,
-        contactsHashed,
-        contactsEncrypted,
-        passwordHashed,
+        personalInfoEncrypted: new UserPersonalInfoEncryptedEntity({
+          firstName: firstNameEncrypted,
+          lastName: lastNameEncrypted,
+        }),
+        contactsHashed: new UserContactsHashedEntity({
+          email: contactsPlain?.email ? this.#hashService.hash(contactsPlain.email) : undefined,
+          phone: contactsPlain?.phone ? this.#hashService.hash(contactsPlain.phone) : undefined,
+        }),
+        contactsEncrypted: new UserContactsEncryptedEntity({
+          email: emailEncrypted,
+          phone: phoneEncrypted,
+        }),
+        passwordHashed: passwordHashed ? new UserPasswordHashedEntity(passwordHashed) : undefined,
       }),
     );
   }
