@@ -6,6 +6,9 @@
   "scripts": {
     "dev": "nodemon",
     "build": "tsc",
+    "test": "npx jest",
+    "test:api": "npx jest src/tests/api",
+    "test:units": "npx jest src/tests/units",
     "migrations:up": "cross-env DATABASE_URL=postgresql://root:root@localhost:5432/postgres node-pg-migrate up",
     "migrations:create": "node-pg-migrate create 1 -j sql"
   },
@@ -21,6 +24,7 @@
   "homepage": "https://github.com/SPechinov/BE-family-time#readme",
   "description": "",
   "dependencies": {
+    "@faker-js/faker": "^10.2.0",
     "@fastify/cookie": "^11.0.2",
     "@fastify/formbody": "^8.0.2",
     "@fastify/jwt": "^10.0.0",
@@ -47,6 +51,7 @@
     "eslint": "^9.39.2",
     "eslint-config-prettier": "^10.1.8",
     "eslint-plugin-prettier": "^5.5.5",
+    "faker": "^6.6.6",
     "jest": "^30.2.0",
     "node-pg-migrate": "^8.0.3",
     "nodemon": "^3.1.10",
