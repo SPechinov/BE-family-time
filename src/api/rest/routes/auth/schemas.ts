@@ -28,7 +28,33 @@ const SCHEMA_REGISTRATION_END = {
   }),
 };
 
+const SCHEMA_FORGOT_PASSWORD_START = {
+  tags: ['Auth'],
+  security: [],
+  body: z.object({
+    email: GLOBAL_SCHEMAS.email.nonempty().describe('Email адрес'),
+  }),
+  response: createResponseSchema({
+    200: z.undefined(),
+  }),
+};
+
+const SCHEMA_FORGOT_PASSWORD_END = {
+  tags: ['Auth'],
+  security: [],
+  body: z.object({
+    email: GLOBAL_SCHEMAS.email.nonempty().describe('Email адрес'),
+    otpCode: GLOBAL_SCHEMAS.otpCode(CONFIG.codesLength.registration),
+    password: GLOBAL_SCHEMAS.password.nonempty(),
+  }),
+  response: createResponseSchema({
+    200: z.undefined(),
+  }),
+};
+
 export const AUTH_SCHEMAS = Object.freeze({
   registrationStart: SCHEMA_REGISTRATION_START,
   registrationEnd: SCHEMA_REGISTRATION_END,
+  forgotPasswordStart: SCHEMA_FORGOT_PASSWORD_START,
+  forgotPasswordEnd: SCHEMA_FORGOT_PASSWORD_END,
 });

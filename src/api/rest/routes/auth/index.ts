@@ -15,6 +15,8 @@ const PREFIX = '/auth';
 const ROUTES = Object.freeze({
   registrationStart: '/registration-start',
   registrationEnd: '/registration-end',
+  forgotPasswordStart: '/forgot-password-start',
+  forgotPasswordEnd: '/forgot-password-end',
 });
 
 export class AuthRoutesController {
@@ -66,6 +68,26 @@ export class AuthRoutesController {
               }),
             });
             reply.status(201).send();
+          },
+        );
+
+        router.post(
+          ROUTES.forgotPasswordStart,
+          {
+            schema: AUTH_SCHEMAS.forgotPasswordStart,
+          },
+          async (request, reply) => {
+            reply.status(200).send();
+          },
+        );
+
+        router.post(
+          ROUTES.forgotPasswordEnd,
+          {
+            schema: AUTH_SCHEMAS.forgotPasswordEnd,
+          },
+          async (request, reply) => {
+            reply.status(200).send();
           },
         );
       },

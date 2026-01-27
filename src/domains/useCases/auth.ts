@@ -11,4 +11,13 @@ export interface IAuthUseCases {
     otpCode: string;
     logger: FastifyBaseLogger;
   }): Promise<UserEntity>;
+  forgotPasswordStart(props: {
+    userContactsPlainEntity: UserContactsPlainEntity;
+    logger: FastifyBaseLogger;
+  }): Promise<{ otpCode: string }>;
+  forgotPasswordEnd(props: {
+    userCreatePlainEntity: UserCreatePlainEntity;
+    otpCode: string;
+    logger: FastifyBaseLogger;
+  }): Promise<UserEntity>;
 }
