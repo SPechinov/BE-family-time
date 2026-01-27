@@ -7,7 +7,7 @@ const SCHEMA_REGISTRATION_START = {
   tags: ['Auth'],
   security: [],
   body: z.object({
-    email: z.email().nonempty().describe('Email адрес'),
+    email: GLOBAL_SCHEMAS.email.nonempty().describe('Email адрес'),
   }),
   response: createResponseSchema({
     200: z.undefined(),
@@ -18,7 +18,7 @@ const SCHEMA_REGISTRATION_END = {
   tags: ['Auth'],
   security: [],
   body: z.object({
-    email: z.email().nonempty().describe('Email адрес'),
+    email: GLOBAL_SCHEMAS.email.nonempty().describe('Email адрес'),
     otpCode: z.string().nonempty().length(CONFIG.codesLength.registration),
     firstName: GLOBAL_SCHEMAS.firstName.nonempty(),
     password: GLOBAL_SCHEMAS.password.nonempty(),

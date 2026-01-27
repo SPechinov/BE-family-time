@@ -27,6 +27,10 @@ export const globalErrorHandler = (error: FastifyError, request: FastifyRequest,
     params.statusCode = 422;
     params.message = error.message;
     request.log.error(error.message);
+  } else if (error.code === 'FST_ERR_CTP_EMPTY_JSON_BODY') {
+    params.statusCode = 422;
+    params.message = error.message;
+    request.log.error(error.message);
   } else {
     request.log.error(error);
   }

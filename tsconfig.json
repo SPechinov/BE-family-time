@@ -10,7 +10,8 @@
     "sourceMap": false,
     "moduleResolution": "node",
     "types": [
-      "node"
+      "node",
+      "jest"
     ],
     "paths": {
       "@/*": [
