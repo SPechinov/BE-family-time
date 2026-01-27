@@ -125,4 +125,26 @@ describe('Global schemas validation test', () => {
       expect(result.success).toBe(false);
     });
   });
+
+  describe('OTP code validation', () => {
+    it('otpCode length (6 chars)', () => {
+      const result = GLOBAL_SCHEMAS.otpCode(6).safeParse('123456');
+      expect(result.success).toBe(true);
+    });
+
+    it('otpCode length (6 chars) too short (5 chars)', () => {
+      const result = GLOBAL_SCHEMAS.otpCode(6).safeParse('12345');
+      expect(result.success).toBe(false);
+    });
+
+    it('otpCode length (6 chars) too long (7 chars)', () => {
+      const result = GLOBAL_SCHEMAS.otpCode(6).safeParse('1234567');
+      expect(result.success).toBe(false);
+    });
+
+    it('otpCode empty', () => {
+      const result = GLOBAL_SCHEMAS.otpCode(6).safeParse('');
+      expect(result.success).toBe(false);
+    });
+  });
 });

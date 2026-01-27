@@ -19,7 +19,7 @@ const SCHEMA_REGISTRATION_END = {
   security: [],
   body: z.object({
     email: GLOBAL_SCHEMAS.email.nonempty().describe('Email адрес'),
-    otpCode: z.string().nonempty().length(CONFIG.codesLength.registration),
+    otpCode: GLOBAL_SCHEMAS.otpCode(CONFIG.codesLength.registration),
     firstName: GLOBAL_SCHEMAS.firstName.nonempty(),
     password: GLOBAL_SCHEMAS.password.nonempty(),
   }),
