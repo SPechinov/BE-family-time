@@ -77,6 +77,7 @@ export class AuthRoutesController {
             schema: AUTH_SCHEMAS.forgotPasswordStart,
           },
           async (request, reply) => {
+            // TODO: check ErrorNotUserExists
             reply.status(200).send();
           },
         );

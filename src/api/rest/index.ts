@@ -26,14 +26,42 @@ export const newApiRest = async (props: Props) => {
 
   const registrationOtpCodesService = new OtpCodesService({
     redis: props.redis,
-    prefix: 'auth-registration',
+    prefix: 'auth-registration-otp',
     codeLength: CONFIG.codesLength.registration,
     ttlSec: CONFIG.ttls.registrationSec,
   });
 
-  const registrationRateLimiterService = new RateLimiterService({
+  const registrationStartRateLimiterService = new RateLimiterService({
     redis: props.redis,
-    prefix: 'auth-registration-otp',
+    prefix: 'auth-registration-start-rate-limiter',
+    maxAttempts: 3,
+    windowSec: 600,
+  });
+
+  const registrationEndRateLimiterService = new RateLimiterService({
+    redis: props.redis,
+    prefix: 'auth-registration-end-rate-limiter',
+    maxAttempts: 3,
+    windowSec: 600,
+  });
+
+  const forgotPasswordOtpCodesService = new OtpCodesService({
+    redis: props.redis,
+    prefix: 'auth-forgot-password-otp',
+    codeLength: CONFIG.codesLength.forgotPassword,
+    ttlSec: CONFIG.ttls.forgotPasswordSec,
+  });
+
+  const forgotPasswordStartRateLimiterService = new RateLimiterService({
+    redis: props.redis,
+    prefix: 'auth-forgot-password-rate-limiter',
+    maxAttempts: 3,
+    windowSec: 600,
+  });
+
+  const forgotPasswordEndRateLimiterService = new RateLimiterService({
+    redis: props.redis,
+    prefix: 'auth-forgot-password-rate-limiter',
     maxAttempts: 3,
     windowSec: 600,
   });
@@ -55,7 +83,11 @@ export const newApiRest = async (props: Props) => {
   const authUseCases = new AuthUseCases({
     userService,
     registrationOtpCodesService,
-    registrationRateLimiterService,
+    forgotPasswordOtpCodesService,
+    registrationStartRateLimiterService,
+    registrationEndRateLimiterService,
+    forgotPasswordStartRateLimiterService,
+    forgotPasswordEndRateLimiterService,
   });
 
   fastify.register(

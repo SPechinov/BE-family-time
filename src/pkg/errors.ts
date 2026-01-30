@@ -7,6 +7,7 @@ const CODES = {
   invalidRefreshToken: 'invalidRefreshToken',
   unauthorized: 'unauthorized',
   tokenExpired: 'tokenExpired',
+  userNotExists: 'userNotExists',
 };
 
 export class ErrorInvalidCode extends Error {
@@ -18,6 +19,12 @@ export class ErrorInvalidCode extends Error {
 export class ErrorUserExists extends Error {
   constructor() {
     super(CODES.userExists);
+  }
+}
+
+export class ErrorNotUserExists extends Error {
+  constructor() {
+    super(CODES.userNotExists);
   }
 }
 

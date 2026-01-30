@@ -4,6 +4,7 @@ import {
   ErrorInvalidContacts,
   ErrorInvalidLoginOrPassword,
   ErrorInvalidRefreshToken,
+  ErrorNotUserExists,
   ErrorTokenExpired,
   ErrorTooManyRequests,
   ErrorUnauthorized,
@@ -47,6 +48,7 @@ const BUSINESS_ERRORS = new Map([
   [ErrorInvalidRefreshToken.name, { statusCode: 400 }],
   [ErrorUnauthorized.name, { statusCode: 401 }],
   [ErrorTokenExpired.name, { statusCode: 401 }],
+  [ErrorNotUserExists.name, { statusCode: 400 }],
 ]);
 
 const getBusinessError = (error: FastifyError) => {
