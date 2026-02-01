@@ -151,5 +151,15 @@ describe('Global schemas validation test', () => {
       const result = GLOBAL_SCHEMAS.otpCode(6).safeParse('');
       expect(result.success).toBe(false);
     });
+
+    it('otpCode wih symbols', () => {
+      const result = GLOBAL_SCHEMAS.otpCode(6).safeParse('1q23456');
+      expect(result.success).toBe(false);
+    });
+
+    it('otpCode wih emoji', () => {
+      const result = GLOBAL_SCHEMAS.otpCode(6).safeParse('😍😍😍');
+      expect(result.success).toBe(false);
+    });
   });
 });

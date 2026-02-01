@@ -1,16 +1,18 @@
 import { generateRandomEmail, request } from '../../utils';
-const URL_REG_START = '/auth/registration-start';
-const URL_REG_END = '/auth/registration-end';
+import { URL_REG_END, URL_REG_START } from '../constants';
+import { newUser } from '../utils';
 
 describe('Registration test', () => {
   describe(`POST ${URL_REG_START}`, () => {
     it('valid email', async () => {
-      const response = await request('POST', URL_REG_START, { email: 'test-email@test.test' });
+      const email = generateRandomEmail();
+      const response = await request('POST', URL_REG_START, { email });
       expect(response.status).toBe(200);
     });
 
     it('check otp code', async () => {
-      const response = await request('POST', URL_REG_START, { email: 'test-email@test.test' });
+      const email = generateRandomEmail();
+      const response = await request('POST', URL_REG_START, { email });
       expect(response.status).toBe(200);
 
       const otpCode = response.headers.get('x-dev-otp-code');
@@ -19,7 +21,8 @@ describe('Registration test', () => {
     });
 
     it('with implemented and not implemented params', async () => {
-      const response = await request('POST', URL_REG_START, { email: 'test-email@test.com', tg: 'test-tg' });
+      const email = generateRandomEmail();
+      const response = await request('POST', URL_REG_START, { email, tg: 'test-tg' });
       expect(response.status).toBe(200);
     });
 
@@ -37,6 +40,27 @@ describe('Registration test', () => {
       const response = await request('POST', URL_REG_START, { tg: 'test-tg' });
       expect(response.status).toBe(422);
     });
+
+    it('rate limit 3 times', async () => {
+      const email = generateRandomEmail();
+      const body = { email };
+      await request('POST', URL_REG_START, body);
+      await request('POST', URL_REG_START, body);
+      const responseEnd = await request('POST', URL_REG_START, body);
+
+      expect(responseEnd.status).toBe(200);
+    });
+
+    it('rate limit 4 times', async () => {
+      const email = generateRandomEmail();
+      const body = { email };
+      await request('POST', URL_REG_START, body);
+      await request('POST', URL_REG_START, body);
+      await request('POST', URL_REG_START, body);
+      const responseEnd = await request('POST', URL_REG_START, body);
+
+      expect(responseEnd.status).toBe(429);
+    });
   });
 
   describe(`POST ${URL_REG_END}`, () => {
@@ -48,7 +72,7 @@ describe('Registration test', () => {
       const responseEnd = await request('POST', URL_REG_END, {
         email,
         otpCode,
-        firstName: 'Sergei',
+        firstName: 'TestName',
         password: 'test-pass',
       });
       expect(responseEnd.status).toBe(201);
@@ -69,14 +93,15 @@ describe('Registration test', () => {
     });
 
     it('ivalid email', async () => {
-      const responseStart = await request('POST', URL_REG_START, { email: 'testinvalidemail@test.test' });
+      const emailStart = generateRandomEmail();
+      const responseStart = await request('POST', URL_REG_START, { email: emailStart });
       const otpCode = responseStart.headers.get('x-dev-otp-code');
-      const email = generateRandomEmail();
+      const emailEnd = generateRandomEmail();
 
       const responseEnd = await request<{ code: string }>('POST', URL_REG_END, {
-        email,
+        email: emailEnd,
         otpCode,
-        firstName: 'Sergei',
+        firstName: 'TestName',
         password: 'test-pass',
       });
 
@@ -94,7 +119,7 @@ describe('Registration test', () => {
       const responseEnd = await request<{ code: string }>('POST', URL_REG_END, {
         email,
         otpCode: invalidOtpCode,
-        firstName: 'Sergei',
+        firstName: 'TestName',
         password: 'test-pass',
       });
 
@@ -108,7 +133,7 @@ describe('Registration test', () => {
       const body = {
         email,
         otpCode: '000000',
-        firstName: 'Sergei',
+        firstName: 'TestName',
         password: 'test-pass',
       };
 
@@ -126,7 +151,7 @@ describe('Registration test', () => {
       const body = {
         email,
         otpCode: '000000',
-        firstName: 'Sergei',
+        firstName: 'TestName',
         password: 'test-pass',
       };
 
@@ -137,5 +162,12 @@ describe('Registration test', () => {
 
       expect(responseEnd.status).toBe(429);
     });
+  });
+
+  it('user exists', async () => {
+    const email = generateRandomEmail();
+    newUser({ email });
+    const dublicate = await request('POST', URL_REG_START, { email });
+    expect(dublicate.status).toBe(200);
   });
 });
