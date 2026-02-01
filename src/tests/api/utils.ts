@@ -1,9 +1,9 @@
 import { generateRandomEmail, request } from '../utils';
-import { URL_REG_END, URL_REG_START } from './constants';
+import { URL_REGISTRATION_END, URL_REGISTRATION_START } from './constants';
 
 export const newUser = async (props: { email?: string }) => {
   const email = props.email ?? generateRandomEmail();
-  const responseStart = await request('POST', URL_REG_START, { email: props.email });
+  const responseStart = await request('POST', URL_REGISTRATION_START, { email: props.email });
   const otpCode = responseStart.headers.get('x-dev-otp-code');
 
   const body = {
@@ -13,5 +13,5 @@ export const newUser = async (props: { email?: string }) => {
     password: 'test-pass',
   };
 
-  await request('POST', URL_REG_END, body);
+  await request('POST', URL_REGISTRATION_END, body);
 };
