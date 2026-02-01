@@ -5,12 +5,12 @@ const hashService = new HashService({
   salt: 'test-salt',
 });
 
-const benchmarkHash = () => {
+const benchmarkHash = async () => {
   const hash = () => {
     hashService.hash('test-data');
   };
 
-  const { avg, median } = benchmark(hash, 100);
+  const { avg, median } = await benchmark(hash, 100);
   console.log(`\nAverage: ${avg}, Median: ${median}`);
 };
 

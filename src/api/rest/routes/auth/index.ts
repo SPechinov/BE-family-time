@@ -9,6 +9,8 @@ import {
   UserPersonalInfoPlainEntity,
 } from '@/entities';
 import { CONFIG } from '@/config';
+import { HEADER } from '../../constants';
+import { ErrorUserNotExists } from '@/pkg';
 
 const PREFIX = '/auth';
 
@@ -44,7 +46,7 @@ export class AuthRoutesController {
               userContactsPlainEntity: new UserContactsPlainEntity({ email: request.body.email }),
             });
             if (CONFIG.env === 'local') {
-              reply.header('x-dev-otp-code', result.otpCode);
+              reply.header(HEADER.headerDevOtpCode, result.otpCode);
             }
             reply.status(200).send();
           },
@@ -77,8 +79,23 @@ export class AuthRoutesController {
             schema: AUTH_SCHEMAS.forgotPasswordStart,
           },
           async (request, reply) => {
-            // TODO: check ErrorNotUserExists
-            reply.status(200).send();
+            try {
+              const { otpCode } = await this.#useCases.forgotPasswordStart({
+                logger: request.log,
+                userContactsPlainEntity: new UserContactsPlainEntity({ email: request.body.email }),
+              });
+
+              if (CONFIG.env === 'local') {
+                reply.header(HEADER.headerDevOtpCode, otpCode);
+              }
+              reply.status(200).send();
+            } catch (error: unknown) {
+              if (error instanceof ErrorUserNotExists) {
+                reply.status(200).send();
+                return;
+              }
+              throw error;
+            }
           },
         );
 
@@ -88,7 +105,21 @@ export class AuthRoutesController {
             schema: AUTH_SCHEMAS.forgotPasswordEnd,
           },
           async (request, reply) => {
-            reply.status(200).send();
+            try {
+              await this.#useCases.forgotPasswordEnd({
+                logger: request.log,
+                userContactsPlainEntity: new UserContactsPlainEntity({ email: request.body.email }),
+                otpCode: request.body.otpCode,
+                password: new UserPasswordPlainEntity(request.body.password),
+              });
+              reply.status(200).send();
+            } catch (error: unknown) {
+              if (error instanceof ErrorUserNotExists) {
+                reply.status(200).send();
+                return;
+              }
+              throw error;
+            }
           },
         );
       },

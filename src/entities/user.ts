@@ -1,8 +1,8 @@
 export class UserPersonalInfoPlainEntity {
-  readonly #firstName?: string;
-  readonly #lastName?: string;
+  readonly #firstName?: string | null;
+  readonly #lastName?: string | null;
 
-  constructor(props: { firstName?: string; lastName?: string }) {
+  constructor(props: { firstName?: string | null; lastName?: string | null }) {
     this.#firstName = props.firstName;
     this.#lastName = props.lastName;
   }
@@ -19,10 +19,10 @@ export class UserPersonalInfoPlainEntity {
 export class UserPersonalInfoEncryptedEntity extends UserPersonalInfoPlainEntity {}
 
 export class UserContactsPlainEntity {
-  readonly #email?: string;
-  readonly #phone?: string;
+  readonly #email?: string | null;
+  readonly #phone?: string | null;
 
-  constructor(props: { email?: string; phone?: string }) {
+  constructor(props: { email?: string | null; phone?: string | null }) {
     this.#email = props.email;
     this.#phone = props.phone;
   }
@@ -238,5 +238,68 @@ export class UserFindOneEntity {
 
   get contactsHashed() {
     return this.#contactsHashed;
+  }
+}
+
+export class UserPatchOnePlainEntity {
+  readonly #personalInfoPlain?: UserPersonalInfoPlainEntity | null;
+  readonly #contactsPlain?: UserContactsPlainEntity | null;
+  readonly #passwordPlain?: UserPasswordPlainEntity | null;
+
+  constructor(props: {
+    personalInfoPlain?: UserPersonalInfoPlainEntity | null;
+    contactsPlain?: UserContactsPlainEntity | null;
+    passwordPlain?: UserPasswordPlainEntity | null;
+  }) {
+    this.#personalInfoPlain = props.personalInfoPlain;
+    this.#contactsPlain = props.contactsPlain;
+    this.#passwordPlain = props.passwordPlain;
+  }
+
+  get personalInfoPlain() {
+    return this.#personalInfoPlain;
+  }
+
+  get contactsPlain() {
+    return this.#contactsPlain;
+  }
+
+  get passwordPlain() {
+    return this.#passwordPlain;
+  }
+}
+
+export class UserPatchOneEntity {
+  readonly #personalInfoEncrypted?: UserPersonalInfoEncryptedEntity | null;
+  readonly #contactsHashed?: UserContactsHashedEntity | null;
+  readonly #contactsEncrypted?: UserContactsEncryptedEntity | null;
+  readonly #passwordHashed?: UserPasswordHashedEntity | null;
+
+  constructor(props: {
+    personalInfoEncrypted?: UserPersonalInfoEncryptedEntity | null;
+    contactsHashed?: UserContactsHashedEntity | null;
+    contactsEncrypted?: UserContactsEncryptedEntity | null;
+    passwordHashed?: UserPasswordHashedEntity | null;
+  }) {
+    this.#personalInfoEncrypted = props.personalInfoEncrypted;
+    this.#contactsHashed = props.contactsHashed;
+    this.#contactsEncrypted = props.contactsEncrypted;
+    this.#passwordHashed = props.passwordHashed;
+  }
+
+  get personalInfoEncrypted() {
+    return this.#personalInfoEncrypted;
+  }
+
+  get contactsHashed() {
+    return this.#contactsHashed;
+  }
+
+  get contactsEncrypted() {
+    return this.#contactsEncrypted;
+  }
+
+  get passwordHashed() {
+    return this.#passwordHashed;
   }
 }

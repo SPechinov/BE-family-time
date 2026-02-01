@@ -1,6 +1,10 @@
-import { UserCreatePlainEntity, UserEntity, UserFindOnePlainEntity } from '@/entities';
+import { UserCreatePlainEntity, UserEntity, UserFindOnePlainEntity, UserPatchOnePlainEntity } from '@/entities';
 
 export interface IUsersService {
-  create(props: { userCreatePlainEntity: UserCreatePlainEntity }): Promise<UserEntity>;
-  findUser(props: { userFindOnePlainEntity: UserFindOnePlainEntity }): Promise<UserEntity | null>;
+  createOne(props: { userCreatePlainEntity: UserCreatePlainEntity }): Promise<UserEntity>;
+  findOne(props: { userFindOnePlainEntity: UserFindOnePlainEntity }): Promise<UserEntity | null>;
+  patchOne(props: {
+    userFindOnePlainEntity: UserFindOnePlainEntity;
+    userPatchOnePlainEntity: UserPatchOnePlainEntity;
+  }): Promise<UserEntity>;
 }

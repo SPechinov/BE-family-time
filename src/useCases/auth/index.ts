@@ -1,11 +1,18 @@
 import { CONFIG } from '@/config';
 import { IOtpCodesService, IRateLimiterService, IUsersService } from '@/domains/services';
 import { IAuthUseCases } from '@/domains/useCases';
-import { UserContactsPlainEntity, UserCreatePlainEntity, UserEntity, UserFindOnePlainEntity } from '@/entities';
+import {
+  UserContactsPlainEntity,
+  UserCreatePlainEntity,
+  UserEntity,
+  UserFindOnePlainEntity,
+  UserPasswordPlainEntity,
+  UserPatchOnePlainEntity,
+} from '@/entities';
 import {
   ErrorInvalidCode,
   ErrorInvalidContacts,
-  ErrorNotUserExists,
+  ErrorUserNotExists,
   ErrorUserExists,
   generateNumericCode,
 } from '@/pkg';
@@ -78,10 +85,10 @@ export class AuthUseCases implements IAuthUseCases {
     const userFindOnePlainEntity = new UserFindOnePlainEntity({
       contactsPlain: props.userCreatePlainEntity.contactsPlain,
     });
-    const foundUser = await this.#userService.findUser({ userFindOnePlainEntity });
+    const foundUser = await this.#userService.findOne({ userFindOnePlainEntity });
     if (foundUser) throw new ErrorUserExists();
 
-    const createdUser = await this.#userService.create({ userCreatePlainEntity: props.userCreatePlainEntity });
+    const createdUser = await this.#userService.createOne({ userCreatePlainEntity: props.userCreatePlainEntity });
     return createdUser;
   }
 
@@ -92,11 +99,13 @@ export class AuthUseCases implements IAuthUseCases {
     const contact = props.userContactsPlainEntity.getContact();
     if (!contact) throw new ErrorInvalidContacts();
 
+    await this.#forgotPasswordStartRateLimiterService.checkLimitOrThrow({ key: contact });
+
     const userFindOnePlainEntity = new UserFindOnePlainEntity({ contactsPlain: props.userContactsPlainEntity });
-    const foundUser = await this.#userService.findUser({ userFindOnePlainEntity });
+    const foundUser = await this.#userService.findOne({ userFindOnePlainEntity });
     if (!foundUser) {
       props.logger.debug({ contact }, 'user not found');
-      throw new ErrorNotUserExists();
+      throw new ErrorUserNotExists();
     }
 
     const otpCode = generateNumericCode(CONFIG.codesLength.forgotPassword);
@@ -108,10 +117,34 @@ export class AuthUseCases implements IAuthUseCases {
   }
 
   async forgotPasswordEnd(props: {
-    userCreatePlainEntity: UserCreatePlainEntity;
+    userContactsPlainEntity: UserContactsPlainEntity;
+    password: UserPasswordPlainEntity;
     otpCode: string;
     logger: FastifyBaseLogger;
   }): Promise<UserEntity> {
-    return new UserEntity();
+    const contact = props.userContactsPlainEntity.getContact();
+    if (!contact) throw new ErrorInvalidContacts();
+
+    await this.#forgotPasswordEndRateLimiterService.checkLimitOrThrow({ key: contact });
+
+    const storeOtpCode = await this.#forgotPasswordOtpCodesService.getCode({ key: contact });
+
+    if (!storeOtpCode || !props.otpCode || storeOtpCode !== props.otpCode) {
+      props.logger.debug({ userOtpCode: props.otpCode, storeOtpCode }, 'invalid code');
+      throw new ErrorInvalidCode();
+    }
+
+    await this.#forgotPasswordOtpCodesService.deleteCode({ key: contact });
+
+    const user = await this.#userService.patchOne({
+      userFindOnePlainEntity: new UserFindOnePlainEntity({ contactsPlain: props.userContactsPlainEntity }),
+      userPatchOnePlainEntity: new UserPatchOnePlainEntity({
+        passwordPlain: props.password,
+      }),
+    });
+
+    props.logger.debug({ contact }, 'code compare success, password updated');
+
+    return user;
   }
 }

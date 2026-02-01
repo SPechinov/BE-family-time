@@ -22,7 +22,7 @@ export class ErrorUserExists extends Error {
   }
 }
 
-export class ErrorNotUserExists extends Error {
+export class ErrorUserNotExists extends Error {
   constructor() {
     super(CODES.userNotExists);
   }

@@ -1,4 +1,4 @@
-import { UserContactsPlainEntity, UserCreatePlainEntity, UserEntity } from '@/entities';
+import { UserContactsPlainEntity, UserCreatePlainEntity, UserEntity, UserPasswordPlainEntity } from '@/entities';
 import { FastifyBaseLogger } from 'fastify';
 
 export interface IAuthUseCases {
@@ -19,7 +19,8 @@ export interface IAuthUseCases {
   }): Promise<{ otpCode: string }>;
 
   forgotPasswordEnd(props: {
-    userCreatePlainEntity: UserCreatePlainEntity;
+    userContactsPlainEntity: UserContactsPlainEntity;
+    password: UserPasswordPlainEntity;
     otpCode: string;
     logger: FastifyBaseLogger;
   }): Promise<UserEntity>;
