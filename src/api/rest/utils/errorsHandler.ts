@@ -9,6 +9,7 @@ import {
   ErrorTooManyRequests,
   ErrorUnauthorized,
   ErrorUserExists,
+  ErrorDoubleRegistration,
 } from '@/pkg';
 import { FastifyError, FastifyReply, FastifyRequest } from 'fastify';
 
@@ -49,6 +50,7 @@ const BUSINESS_ERRORS = new Map([
   [ErrorUnauthorized.name, { statusCode: 401 }],
   [ErrorTokenExpired.name, { statusCode: 401 }],
   [ErrorUserNotExists.name, { statusCode: 400 }],
+  [ErrorDoubleRegistration.name, { statusCode: 429 }],
 ]);
 
 const getBusinessError = (error: FastifyError) => {

@@ -15,6 +15,7 @@ import {
   ErrorUserNotExists,
   ErrorUserExists,
   generateNumericCode,
+  ErrorDoubleRegistration,
 } from '@/pkg';
 import { FastifyBaseLogger } from 'fastify';
 
@@ -26,6 +27,7 @@ export class AuthUseCases implements IAuthUseCases {
   readonly #registrationEndRateLimiterService: IRateLimiterService;
   readonly #forgotPasswordStartRateLimiterService: IRateLimiterService;
   readonly #forgotPasswordEndRateLimiterService: IRateLimiterService;
+  readonly #pendRegistrationEndRequests = new Set<string>();
 
   constructor(props: {
     userService: IUsersService;
@@ -69,27 +71,34 @@ export class AuthUseCases implements IAuthUseCases {
     const contact = props.userCreatePlainEntity.contactsPlain?.getContact();
     if (!contact) throw new ErrorInvalidContacts();
 
-    await this.#registrationEndRateLimiterService.checkLimitOrThrow({ key: contact });
+    if (this.#pendRegistrationEndRequests.has(contact)) throw new ErrorDoubleRegistration();
 
-    const storeOtpCode = await this.#registrationOtpCodesService.getCode({ key: contact });
+    try {
+      this.#pendRegistrationEndRequests.add(contact);
+      await this.#registrationEndRateLimiterService.checkLimitOrThrow({ key: contact });
 
-    if (!storeOtpCode || !props.otpCode || storeOtpCode !== props.otpCode) {
-      props.logger.debug({ userOtpCode: props.otpCode, storeOtpCode }, 'invalid code');
-      throw new ErrorInvalidCode();
+      const storeOtpCode = await this.#registrationOtpCodesService.getCode({ key: contact });
+
+      if (!storeOtpCode || !props.otpCode || storeOtpCode !== props.otpCode) {
+        props.logger.debug({ userOtpCode: props.otpCode, storeOtpCode }, 'invalid code');
+        throw new ErrorInvalidCode();
+      }
+
+      this.#registrationOtpCodesService.deleteCode({ key: contact });
+
+      props.logger.debug({ contact }, 'code compare success, saving user');
+
+      const userFindOnePlainEntity = new UserFindOnePlainEntity({
+        contactsPlain: props.userCreatePlainEntity.contactsPlain,
+      });
+      const foundUser = await this.#userService.findOne({ userFindOnePlainEntity });
+      if (foundUser) throw new ErrorUserExists();
+
+      const createdUser = await this.#userService.createOne({ userCreatePlainEntity: props.userCreatePlainEntity });
+      return createdUser;
+    } finally {
+      this.#pendRegistrationEndRequests.delete(contact);
     }
-
-    this.#registrationOtpCodesService.deleteCode({ key: contact });
-
-    props.logger.debug({ contact }, 'code compare success, saving user');
-
-    const userFindOnePlainEntity = new UserFindOnePlainEntity({
-      contactsPlain: props.userCreatePlainEntity.contactsPlain,
-    });
-    const foundUser = await this.#userService.findOne({ userFindOnePlainEntity });
-    if (foundUser) throw new ErrorUserExists();
-
-    const createdUser = await this.#userService.createOne({ userCreatePlainEntity: props.userCreatePlainEntity });
-    return createdUser;
   }
 
   async forgotPasswordStart(props: {
@@ -134,14 +143,14 @@ export class AuthUseCases implements IAuthUseCases {
       throw new ErrorInvalidCode();
     }
 
-    await this.#forgotPasswordOtpCodesService.deleteCode({ key: contact });
-
     const user = await this.#userService.patchOne({
       userFindOnePlainEntity: new UserFindOnePlainEntity({ contactsPlain: props.userContactsPlainEntity }),
       userPatchOnePlainEntity: new UserPatchOnePlainEntity({
         passwordPlain: props.password,
       }),
     });
+
+    await this.#forgotPasswordOtpCodesService.deleteCode({ key: contact });
 
     props.logger.debug({ contact }, 'code compare success, password updated');
 

@@ -8,11 +8,18 @@ const CODES = {
   unauthorized: 'unauthorized',
   tokenExpired: 'tokenExpired',
   userNotExists: 'userNotExists',
+  doubleRegistration: 'doubleRegistration',
 };
 
 export class ErrorInvalidCode extends Error {
   constructor() {
     super(CODES.invalidCode);
+  }
+}
+
+export class ErrorDoubleRegistration extends Error {
+  constructor() {
+    super(CODES.doubleRegistration);
   }
 }
 

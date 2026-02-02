@@ -128,6 +128,26 @@ describe('Registration test', () => {
       expect(responseEnd.body?.code).toBe('invalidCode');
     });
 
+    it('double create user', async () => {
+      const email = generateRandomEmail();
+      const responseStart = await request('POST', URL_REGISTRATION_START, { email });
+      const otpCode = responseStart.headers.get('x-dev-otp-code');
+      const body = {
+        email,
+        otpCode,
+        firstName: 'TestName',
+        password: 'test-pass',
+      };
+
+      const [responseEnd1, responseEnd2] = await Promise.all([
+        request<{ code: string }>('POST', URL_REGISTRATION_END, body),
+        request<{ code: string }>('POST', URL_REGISTRATION_END, body),
+      ]);
+
+      expect(responseEnd1.status).toBe(201);
+      expect(responseEnd2.status).toBe(400);
+    });
+
     it('rate limit 3 times', async () => {
       const email = generateRandomEmail();
       const body = {
