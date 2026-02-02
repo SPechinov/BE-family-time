@@ -95,6 +95,8 @@ export class AuthUseCases implements IAuthUseCases {
       if (foundUser) throw new ErrorUserExists();
 
       const createdUser = await this.#userService.createOne({ userCreatePlainEntity: props.userCreatePlainEntity });
+
+      props.logger.debug({ contact }, 'user created');
       return createdUser;
     } finally {
       this.#pendRegistrationEndRequests.delete(contact);
@@ -142,6 +144,8 @@ export class AuthUseCases implements IAuthUseCases {
       props.logger.debug({ userOtpCode: props.otpCode, storeOtpCode }, 'invalid code');
       throw new ErrorInvalidCode();
     }
+
+    props.logger.debug({ contact }, 'code compare success, updating password');
 
     const user = await this.#userService.patchOne({
       userFindOnePlainEntity: new UserFindOnePlainEntity({ contactsPlain: props.userContactsPlainEntity }),
