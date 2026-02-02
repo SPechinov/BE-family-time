@@ -85,7 +85,7 @@ export class AuthComposite {
       cryptoService,
     });
     const authUseCases = new AuthUseCases({
-      userService,
+      usersService: userService,
       registrationOtpCodesService,
       forgotPasswordOtpCodesService,
       registrationStartRateLimiterService,

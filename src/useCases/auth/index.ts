@@ -30,7 +30,7 @@ export class AuthUseCases implements IAuthUseCases {
   readonly #pendRegistrationEndRequests = new Set<string>();
 
   constructor(props: {
-    userService: IUsersService;
+    usersService: IUsersService;
     registrationOtpCodesService: IOtpCodesService;
     forgotPasswordOtpCodesService: IOtpCodesService;
     registrationStartRateLimiterService: IRateLimiterService;
@@ -38,7 +38,7 @@ export class AuthUseCases implements IAuthUseCases {
     forgotPasswordStartRateLimiterService: IRateLimiterService;
     forgotPasswordEndRateLimiterService: IRateLimiterService;
   }) {
-    this.#userService = props.userService;
+    this.#userService = props.usersService;
     this.#registrationOtpCodesService = props.registrationOtpCodesService;
     this.#forgotPasswordOtpCodesService = props.forgotPasswordOtpCodesService;
     this.#registrationStartRateLimiterService = props.registrationStartRateLimiterService;
