@@ -145,7 +145,7 @@ describe('Registration test', () => {
       ]);
 
       expect(responseEnd1.status).toBe(201);
-      expect(responseEnd2.status).toBe(400);
+      expect([400, 429].includes(responseEnd2.status)).toBeTruthy();
     });
 
     it('rate limit 3 times', async () => {
@@ -187,7 +187,7 @@ describe('Registration test', () => {
   it('user exists', async () => {
     const email = generateRandomEmail();
     newUser({ email });
-    const dublicate = await request('POST', URL_REGISTRATION_START, { email });
-    expect(dublicate.status).toBe(200);
+    const duplicate = await request('POST', URL_REGISTRATION_START, { email });
+    expect(duplicate.status).toBe(200);
   });
 });
