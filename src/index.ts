@@ -1,28 +1,56 @@
 import { CONFIG } from '@/config';
-import { newPostgresConnection, newRedisConnection } from '@/pkg';
+import { Logger, newPostgresConnection, newRedisConnection } from '@/pkg';
 import { newApiRest } from '@/api/rest';
 
 const run = async () => {
+  const logger = new Logger({
+    level: 'debug',
+    transport: {
+      target: 'pino-pretty',
+      options: {
+        colorize: true,
+        translateTime: 'HH:MM:ss',
+        ignore: 'pid,hostname',
+      },
+    },
+  });
+
   const [redis, postgres] = await Promise.all([
-    newRedisConnection(CONFIG.redis),
-    newPostgresConnection(CONFIG.postgres),
+    newRedisConnection({
+      uri: CONFIG.redis.uri,
+      onError: (error) => {
+        logger.warn({ error }, 'Redis error');
+      },
+      onReady: () => {
+        logger.info('Redis connected');
+      },
+    }),
+    newPostgresConnection({
+      uri: CONFIG.postgres.uri,
+      onError: (error) => {
+        logger.warn({ error }, 'PostgreSQL error');
+      },
+      onReady: () => {
+        logger.info('PostgreSQL connected');
+      },
+    }),
   ]);
 
   const apiRest = await newApiRest({
     redis,
     postgres,
+    logger,
   });
 
   const destroyApp = async () => {
     await apiRest.close();
-    console.log('\n');
-    console.log('API сервер выключен');
+    logger.info('API сервер выключен');
 
     redis.destroy();
-    console.log('Redis отключен');
+    logger.info('Redis отключен');
 
     postgres.end();
-    console.log('PostgreSQL отключен');
+    logger.info('PostgreSQL отключен');
 
     process.exit(0);
   };

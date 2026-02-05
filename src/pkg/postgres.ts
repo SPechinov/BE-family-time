@@ -1,6 +1,10 @@
 import { Pool } from 'pg';
 
-export const newPostgresConnection = async (props: { uri: string }) => {
+export const newPostgresConnection = async (props: {
+  uri: string;
+  onError?: (error: any) => void;
+  onReady?: () => void;
+}) => {
   const pool = new Pool({
     connectionString: props.uri,
     max: 20,
@@ -8,12 +12,12 @@ export const newPostgresConnection = async (props: { uri: string }) => {
     connectionTimeoutMillis: 2000,
   });
 
-  pool.on('error', (err) => {
-    console.error('PostgreSQL ошибка:', err);
+  pool.on('error', (error) => {
+    props.onError?.(error);
   });
 
   pool.on('connect', () => {
-    console.log('PostgreSQL подключен');
+    props.onReady?.();
   });
 
   try {

@@ -1,4 +1,4 @@
-import { newFastify, RedisClient } from '@/pkg';
+import { ILogger, newFastify, RedisClient } from '@/pkg';
 import { CONFIG } from '@/config';
 import { Pool } from 'pg';
 import { globalErrorHandler } from './utils';
@@ -7,11 +7,13 @@ import { AuthComposite } from './composites';
 interface Props {
   redis: RedisClient;
   postgres: Pool;
+  logger: ILogger;
 }
 
 export const newApiRest = async (props: Props) => {
   const fastify = newFastify({
     errorHandler: globalErrorHandler,
+    logger: props.logger,
   });
 
   fastify.register(
@@ -21,10 +23,7 @@ export const newApiRest = async (props: Props) => {
     { prefix: '/api' },
   );
 
-  fastify.listen({ port: CONFIG.server.port }, (error, address) => {
-    if (error) throw error;
-    console.log(`Сервер запущен по адресу: ${address}`);
-  });
+  fastify.listen({ port: CONFIG.server.port });
 
   await fastify.ready();
   fastify.swagger();

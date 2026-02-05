@@ -16,8 +16,8 @@ import {
   ErrorUserExists,
   generateNumericCode,
   ErrorDoubleRegistration,
+  ILogger,
 } from '@/pkg';
-import { FastifyBaseLogger } from 'fastify';
 
 export class AuthUseCases implements IAuthUseCases {
   readonly #userService: IUsersService;
@@ -49,7 +49,7 @@ export class AuthUseCases implements IAuthUseCases {
 
   async registrationStart(props: {
     userContactsPlainEntity: UserContactsPlainEntity;
-    logger: FastifyBaseLogger;
+    logger: ILogger;
   }): Promise<{ otpCode: string }> {
     const contact = this.#getContactOrThrow(props.userContactsPlainEntity);
 
@@ -65,7 +65,7 @@ export class AuthUseCases implements IAuthUseCases {
   async registrationEnd(props: {
     userCreatePlainEntity: UserCreatePlainEntity;
     otpCode: string;
-    logger: FastifyBaseLogger;
+    logger: ILogger;
   }): Promise<UserEntity> {
     const contact = this.#getContactOrThrow(props.userCreatePlainEntity.contactsPlain);
 
@@ -96,7 +96,7 @@ export class AuthUseCases implements IAuthUseCases {
 
   async forgotPasswordStart(props: {
     userContactsPlainEntity: UserContactsPlainEntity;
-    logger: FastifyBaseLogger;
+    logger: ILogger;
   }): Promise<{ otpCode: string }> {
     const contact = props.userContactsPlainEntity.getContact();
     if (!contact) throw new ErrorInvalidContacts();
@@ -118,7 +118,7 @@ export class AuthUseCases implements IAuthUseCases {
     userContactsPlainEntity: UserContactsPlainEntity;
     password: UserPasswordPlainEntity;
     otpCode: string;
-    logger: FastifyBaseLogger;
+    logger: ILogger;
   }): Promise<UserEntity> {
     const contact = props.userContactsPlainEntity.getContact();
     if (!contact) throw new ErrorInvalidContacts();

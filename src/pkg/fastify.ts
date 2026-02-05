@@ -5,6 +5,7 @@ import fastifySwagger, { FastifyDynamicSwaggerOptions } from '@fastify/swagger';
 import fastifySwaggerUi from '@fastify/swagger-ui';
 import cookie from '@fastify/cookie';
 import { CONFIG } from '@/config';
+import { ILogger } from '@/pkg/logger';
 
 const OPEN_API_CONFIG: FastifyDynamicSwaggerOptions['openapi'] = {
   info: {
@@ -44,12 +45,11 @@ const customJsonSchemaTransform = (props: any) => {
 
 export const newFastify = (props: {
   errorHandler: (error: FastifyError, request: FastifyRequest, reply: FastifyReply) => void;
+  logger: ILogger;
 }) => {
   const fastify = Fastify({
-    logger: {
-      base: null,
-      level: 'debug',
-    },
+    loggerInstance: props.logger,
+    disableRequestLogging: true,
     genReqId: (() => {
       let i = 0;
       return () => `${Date.now()}${i++}`;
