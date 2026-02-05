@@ -51,15 +51,14 @@ export class AuthUseCases implements IAuthUseCases {
     userContactsPlainEntity: UserContactsPlainEntity;
     logger: FastifyBaseLogger;
   }): Promise<{ otpCode: string }> {
-    const contact = props.userContactsPlainEntity.getContact();
-    if (!contact) throw new ErrorInvalidContacts();
+    const contact = this.#getContactOrThrow(props.userContactsPlainEntity);
 
     await this.#registrationStartRateLimiterService.checkLimitOrThrow({ key: contact });
 
     const otpCode = generateNumericCode(CONFIG.codesLength.registration);
     await this.#registrationOtpCodesService.saveCode({ key: contact, code: otpCode });
+    props.logger.debug({ otpCode, contact }, 'registration code saved');
 
-    props.logger.debug({ otpCode, contact }, 'code saved');
     return { otpCode };
   }
 
@@ -68,8 +67,7 @@ export class AuthUseCases implements IAuthUseCases {
     otpCode: string;
     logger: FastifyBaseLogger;
   }): Promise<UserEntity> {
-    const contact = props.userCreatePlainEntity.contactsPlain?.getContact();
-    if (!contact) throw new ErrorInvalidContacts();
+    const contact = this.#getContactOrThrow(props.userCreatePlainEntity.contactsPlain);
 
     if (this.#pendRegistrationEndRequests.has(contact)) throw new ErrorDoubleRegistration();
 
@@ -78,15 +76,8 @@ export class AuthUseCases implements IAuthUseCases {
       await this.#registrationEndRateLimiterService.checkLimitOrThrow({ key: contact });
 
       const storeOtpCode = await this.#registrationOtpCodesService.getCode({ key: contact });
-
-      if (!storeOtpCode || !props.otpCode || storeOtpCode !== props.otpCode) {
-        props.logger.debug({ userOtpCode: props.otpCode, storeOtpCode }, 'invalid code');
-        throw new ErrorInvalidCode();
-      }
-
+      this.#compareOtpCodes(storeOtpCode, props.otpCode);
       this.#registrationOtpCodesService.deleteCode({ key: contact });
-
-      props.logger.debug({ contact }, 'code compare success, saving user');
 
       const userFindOnePlainEntity = new UserFindOnePlainEntity({
         contactsPlain: props.userCreatePlainEntity.contactsPlain,
@@ -95,8 +86,8 @@ export class AuthUseCases implements IAuthUseCases {
       if (foundUser) throw new ErrorUserExists();
 
       const createdUser = await this.#userService.createOne({ userCreatePlainEntity: props.userCreatePlainEntity });
-
       props.logger.debug({ contact }, 'user created');
+
       return createdUser;
     } finally {
       this.#pendRegistrationEndRequests.delete(contact);
@@ -114,14 +105,10 @@ export class AuthUseCases implements IAuthUseCases {
 
     const userFindOnePlainEntity = new UserFindOnePlainEntity({ contactsPlain: props.userContactsPlainEntity });
     const foundUser = await this.#userService.findOne({ userFindOnePlainEntity });
-    if (!foundUser) {
-      props.logger.debug({ contact }, 'user not found');
-      throw new ErrorUserNotExists();
-    }
+    if (!foundUser) throw new ErrorUserNotExists();
 
     const otpCode = generateNumericCode(CONFIG.codesLength.forgotPassword);
     await this.#forgotPasswordOtpCodesService.saveCode({ key: contact, code: otpCode });
-
     props.logger.debug({ otpCode, contact }, 'code saved');
 
     return { otpCode };
@@ -139,13 +126,8 @@ export class AuthUseCases implements IAuthUseCases {
     await this.#forgotPasswordEndRateLimiterService.checkLimitOrThrow({ key: contact });
 
     const storeOtpCode = await this.#forgotPasswordOtpCodesService.getCode({ key: contact });
-
-    if (!storeOtpCode || !props.otpCode || storeOtpCode !== props.otpCode) {
-      props.logger.debug({ userOtpCode: props.otpCode, storeOtpCode }, 'invalid code');
-      throw new ErrorInvalidCode();
-    }
-
-    props.logger.debug({ contact }, 'code compare success, updating password');
+    this.#compareOtpCodes(storeOtpCode, props.otpCode);
+    await this.#forgotPasswordOtpCodesService.deleteCode({ key: contact });
 
     const user = await this.#userService.patchOne({
       userFindOnePlainEntity: new UserFindOnePlainEntity({ contactsPlain: props.userContactsPlainEntity }),
@@ -154,10 +136,18 @@ export class AuthUseCases implements IAuthUseCases {
       }),
     });
 
-    await this.#forgotPasswordOtpCodesService.deleteCode({ key: contact });
-
     props.logger.debug({ contact }, 'code compare success, password updated');
 
     return user;
+  }
+
+  #compareOtpCodes(storeOtpCode: string | null | undefined, userOtpCode: string | null | undefined) {
+    if (!storeOtpCode || !userOtpCode || storeOtpCode !== userOtpCode) throw new ErrorInvalidCode();
+  }
+
+  #getContactOrThrow(userContactsPlainEntity?: UserContactsPlainEntity): string {
+    const contact = userContactsPlainEntity?.getContact();
+    if (!contact) throw new ErrorInvalidContacts();
+    return contact;
   }
 }
