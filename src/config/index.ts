@@ -3,7 +3,7 @@ import yaml from 'js-yaml';
 import { z } from 'zod';
 
 const ConfigSchema = z.object({
-  env: z.string(),
+  nodeEnv: z.enum(['local', 'development', 'production']),
   server: z.object({
     port: z.number(),
   }),
@@ -62,3 +62,11 @@ export const CONFIG = ((): Config => {
 
   return result.data;
 })();
+
+export const isProd = () => {
+  return CONFIG.nodeEnv === 'production';
+};
+
+export const isDev = () => {
+  return ['local', 'development'].includes(CONFIG.nodeEnv);
+}

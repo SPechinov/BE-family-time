@@ -1,5 +1,5 @@
 import { ILogger, newFastify, RedisClient } from '@/pkg';
-import { CONFIG } from '@/config';
+import { CONFIG, isDev } from '@/config';
 import { Pool } from 'pg';
 import { globalErrorHandler } from './utils';
 import { AuthComposite } from './composites';
@@ -26,7 +26,9 @@ export const newApiRest = async (props: Props) => {
   fastify.listen({ port: CONFIG.server.port });
 
   await fastify.ready();
-  fastify.swagger();
+  if (isDev()) {
+    fastify.swagger();
+  }
 
   return fastify;
 };

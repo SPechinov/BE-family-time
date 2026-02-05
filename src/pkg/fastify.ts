@@ -4,9 +4,9 @@ import { jsonSchemaTransform, serializerCompiler, validatorCompiler } from 'fast
 import fastifySwagger, { FastifyDynamicSwaggerOptions } from '@fastify/swagger';
 import fastifySwaggerUi from '@fastify/swagger-ui';
 import cookie from '@fastify/cookie';
-import { CONFIG } from '@/config';
+import { CONFIG, isDev } from '@/config';
 import { ILogger } from '@/pkg/logger';
-import { onPreHandler, onRequest, onResponse } from '@/api/rest/hooks';
+import { onPreHandler, onRequest, onResponse, onSend } from '@/api/rest/hooks';
 
 const OPEN_API_CONFIG: FastifyDynamicSwaggerOptions['openapi'] = {
   info: {
@@ -68,22 +68,20 @@ export const newFastify = (props: {
   fastify.addHook('onRequest', onRequest);
   fastify.addHook('preHandler', onPreHandler);
   fastify.addHook('onResponse', onResponse);
-
-  fastify.addHook('onSend', (request, reply, payload, done) => {
-    reply.header('X-Request-ID', request.id);
-    done(null, payload);
-  });
+  fastify.addHook('onSend', onSend);
 
   fastify.setErrorHandler(props.errorHandler);
 
-  fastify.register(fastifySwagger, {
-    openapi: OPEN_API_CONFIG,
-    transform: customJsonSchemaTransform,
-  });
+  if (isDev()) {
+    fastify.register(fastifySwagger, {
+      openapi: OPEN_API_CONFIG,
+      transform: customJsonSchemaTransform,
+    });
 
-  fastify.register(fastifySwaggerUi, {
-    routePrefix: '/doc',
-  });
+    fastify.register(fastifySwaggerUi, {
+      routePrefix: '/doc',
+    });
+  }
 
   return fastify;
 };

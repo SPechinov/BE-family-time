@@ -8,7 +8,7 @@ import {
   UserPasswordPlainEntity,
   UserPersonalInfoPlainEntity,
 } from '@/entities';
-import { CONFIG } from '@/config';
+import { CONFIG, isDev } from '@/config';
 import { HEADER } from '../../constants';
 import { ErrorUserNotExists } from '@/pkg';
 
@@ -45,7 +45,7 @@ export class AuthRoutesController {
               logger: request.log,
               userContactsPlainEntity: new UserContactsPlainEntity({ email: request.body.email }),
             });
-            if (CONFIG.env === 'local') {
+            if (isDev()) {
               reply.header(HEADER.headerDevOtpCode, result.otpCode);
             }
             reply.status(200).send();
@@ -85,7 +85,7 @@ export class AuthRoutesController {
                 userContactsPlainEntity: new UserContactsPlainEntity({ email: request.body.email }),
               });
 
-              if (CONFIG.env === 'local') {
+              if (isDev()) {
                 reply.header(HEADER.headerDevOtpCode, otpCode);
               }
               reply.status(200).send();

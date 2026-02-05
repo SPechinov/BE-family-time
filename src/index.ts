@@ -1,10 +1,10 @@
-import { CONFIG } from '@/config';
+import { CONFIG, isDev } from '@/config';
 import { Logger, newPostgresConnection, newRedisConnection } from '@/pkg';
 import { newApiRest } from '@/api/rest';
 
 const run = async () => {
   const logger = new Logger({
-    level: 'debug',
+    level: isDev() ? 'debug' : 'info',
     transport: {
       target: 'pino-pretty',
       options: {
@@ -14,6 +14,8 @@ const run = async () => {
       },
     },
   });
+
+  logger.info(`Environment: ${CONFIG.nodeEnv.toUpperCase()}`);
 
   const [redis, postgres] = await Promise.all([
     newRedisConnection({
