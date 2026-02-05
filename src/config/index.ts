@@ -69,4 +69,4 @@ export const isProd = () => {
 
 export const isDev = () => {
   return ['local', 'development'].includes(CONFIG.nodeEnv);
-}
+};

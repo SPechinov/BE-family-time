@@ -8,7 +8,7 @@ import {
   UserPasswordPlainEntity,
   UserPersonalInfoPlainEntity,
 } from '@/entities';
-import { CONFIG, isDev } from '@/config';
+import { isDev } from '@/config';
 import { HEADER } from '../../constants';
 import { ErrorUserNotExists } from '@/pkg';
 
