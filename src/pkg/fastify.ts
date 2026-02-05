@@ -6,6 +6,7 @@ import fastifySwaggerUi from '@fastify/swagger-ui';
 import cookie from '@fastify/cookie';
 import { CONFIG } from '@/config';
 import { ILogger } from '@/pkg/logger';
+import { onPreHandler, onRequest, onResponse } from '@/api/rest/hooks';
 
 const OPEN_API_CONFIG: FastifyDynamicSwaggerOptions['openapi'] = {
   info: {
@@ -63,6 +64,10 @@ export const newFastify = (props: {
 
   fastify.setValidatorCompiler(validatorCompiler);
   fastify.setSerializerCompiler(serializerCompiler);
+
+  fastify.addHook('onRequest', onRequest);
+  fastify.addHook('preHandler', onPreHandler);
+  fastify.addHook('onResponse', onResponse);
 
   fastify.addHook('onSend', (request, reply, payload, done) => {
     reply.header('X-Request-ID', request.id);
