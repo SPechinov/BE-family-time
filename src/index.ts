@@ -1,19 +1,30 @@
 import { CONFIG, isDev } from '@/config';
 import { Logger, newPostgresConnection, newRedisConnection } from '@/pkg';
 import { newApiRest } from '@/api/rest';
+import { LoggerOptions } from 'pino';
+
+const loggerConfig = ((): LoggerOptions => {
+  if (isDev()) {
+    return {
+      level: 'debug',
+      transport: {
+        target: 'pino-pretty',
+        options: {
+          colorize: true,
+          translateTime: 'HH:MM:ss',
+          ignore: 'pid,hostname',
+        },
+      },
+    };
+  }
+
+  return {
+    level: 'info',
+  };
+})();
 
 const run = async () => {
-  const logger = new Logger({
-    level: isDev() ? 'debug' : 'info',
-    transport: {
-      target: 'pino-pretty',
-      options: {
-        colorize: true,
-        translateTime: 'HH:MM:ss',
-        ignore: 'pid,hostname',
-      },
-    },
-  });
+  const logger = new Logger(loggerConfig);
 
   logger.info(`Environment: ${CONFIG.nodeEnv.toUpperCase()}`);
 
