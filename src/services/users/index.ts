@@ -110,7 +110,7 @@ export class UsersService implements IUsersService {
     }
 
     if (!contactsPlain?.getContact()) {
-      throw new Error('Not enough data in UserFindOnePlainEntity');
+      throw new Error('Either id or contacts must be provided to find a user.');
     }
 
     return new UserFindOneEntity({
@@ -129,68 +129,36 @@ export class UsersService implements IUsersService {
     encryptionSalt: string;
   }): Promise<UserPatchOneEntity> {
     const { personalInfoPlain, contactsPlain, passwordPlain } = userPatchOnePlainEntity;
-    let personalInfoEncrypted: UserPersonalInfoEncryptedEntity | undefined | null;
 
-    if (personalInfoPlain) {
-      const firstName = personalInfoPlain.firstName
-        ? await this.#cryptoService.encrypt(personalInfoPlain.firstName, encryptionSalt)
-        : personalInfoPlain.firstName;
-
-      const lastName = personalInfoPlain.lastName
-        ? await this.#cryptoService.encrypt(personalInfoPlain.lastName, encryptionSalt)
-        : personalInfoPlain.lastName;
-
-      if (typeof firstName !== 'undefined' || typeof lastName !== 'undefined') {
-        personalInfoEncrypted = new UserPersonalInfoEncryptedEntity({
-          firstName,
-          lastName,
-        });
-      } else if (userPatchOnePlainEntity.personalInfoPlain === null) {
-        personalInfoEncrypted = null;
-      }
-    }
+    const personalInfoEncrypted = await this.#preparePersonalInfo(personalInfoPlain, encryptionSalt);
+    const passwordHashed = await this.#preparePasswordHashed(passwordPlain);
 
     let contactsEncrypted: UserContactsEncryptedEntity | undefined | null;
     let contactsHashed: UserContactsHashedEntity | undefined | null;
-    if (contactsPlain) {
-      const emailEncrypted = contactsPlain.email
-        ? await this.#cryptoService.encrypt(contactsPlain.email, encryptionSalt)
-        : contactsPlain.email;
-      const phoneEncrypted = contactsPlain.phone
-        ? await this.#cryptoService.encrypt(contactsPlain.phone, encryptionSalt)
-        : contactsPlain.phone;
-      const emailHashed = contactsPlain.email ? this.#hashService.hash(contactsPlain.email) : contactsPlain.email;
-      const phoneHashed = contactsPlain.email ? this.#hashService.hash(contactsPlain.email) : contactsPlain.email;
 
-      contactsEncrypted = new UserContactsEncryptedEntity({
-        email: emailEncrypted,
-        phone: phoneEncrypted,
-      });
+    if (contactsPlain) {
+      const { email, phone } = contactsPlain;
+      const [emailEncrypted, phoneEncrypted] = await Promise.all([
+        email ? this.#cryptoService.encrypt(email, encryptionSalt) : email,
+        phone ? this.#cryptoService.encrypt(phone, encryptionSalt) : phone,
+      ]);
+      contactsEncrypted = new UserContactsEncryptedEntity({ email: emailEncrypted, phone: phoneEncrypted });
       contactsHashed = new UserContactsHashedEntity({
-        email: emailHashed,
-        phone: phoneHashed,
+        email: email ? this.#hashService.hash(email) : email,
+        phone: phone ? this.#hashService.hash(phone) : phone,
       });
     } else if (contactsPlain === null) {
       contactsEncrypted = null;
       contactsHashed = null;
     }
 
-    let passwordHashed: UserPasswordHashedEntity | undefined | null;
-    if (passwordPlain) {
-      passwordHashed = new UserPasswordHashedEntity(
-        await this.#hashPasswordService.hashPassword(passwordPlain.password),
-      );
-    } else if (passwordPlain === null) {
-      passwordHashed = null;
-    }
-
     if (
-      typeof personalInfoEncrypted === 'undefined' &&
-      typeof contactsEncrypted === 'undefined' &&
-      typeof contactsHashed == 'undefined' &&
-      typeof passwordHashed === 'undefined'
+      personalInfoEncrypted === undefined &&
+      contactsEncrypted === undefined &&
+      contactsHashed === undefined &&
+      passwordHashed === undefined
     ) {
-      throw new Error('Not enough data in UserPatchOnePlainEntity');
+      throw new Error('At least one field must be provided to update a user.');
     }
 
     return new UserPatchOneEntity({
@@ -199,5 +167,37 @@ export class UsersService implements IUsersService {
       contactsHashed,
       passwordHashed,
     });
+  }
+
+  async #preparePersonalInfo(
+    personalInfoPlain: UserPatchOnePlainEntity['personalInfoPlain'],
+    encryptionSalt: string,
+  ): Promise<UserPersonalInfoEncryptedEntity | undefined | null> {
+    if (personalInfoPlain === undefined) return undefined;
+    if (personalInfoPlain === null) return null;
+
+    const { firstName, lastName } = personalInfoPlain;
+    const [encryptedFirstName, encryptedLastName] = await Promise.all([
+      firstName ? this.#cryptoService.encrypt(firstName, encryptionSalt) : firstName,
+      lastName ? this.#cryptoService.encrypt(lastName, encryptionSalt) : lastName,
+    ]);
+
+    if (encryptedFirstName !== undefined || encryptedLastName !== undefined) {
+      return new UserPersonalInfoEncryptedEntity({
+        firstName: encryptedFirstName,
+        lastName: encryptedLastName,
+      });
+    }
+    return undefined;
+  }
+
+  async #preparePasswordHashed(
+    passwordPlain: UserPatchOnePlainEntity['passwordPlain'],
+  ): Promise<UserPasswordHashedEntity | undefined | null> {
+    if (passwordPlain === undefined) return undefined;
+    if (passwordPlain === null) return null;
+
+    const hashedPassword = await this.#hashPasswordService.hashPassword(passwordPlain.password);
+    return new UserPasswordHashedEntity(hashedPassword);
   }
 }
