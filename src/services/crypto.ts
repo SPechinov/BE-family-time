@@ -1,12 +1,13 @@
 import crypto from 'crypto';
 import { CONFIG } from '@/config';
 import { ICryptoService } from '@/domains/services';
+import { LRUCache } from 'lru-cache';
 
 const ALGORITHM = 'aes-256-gcm';
 const KEY_LENGTH = 32;
 const IV_LENGTH = 16;
 
-const cache = new Map<string, Buffer>();
+const derivedKeyCache = new LRUCache<string, Buffer>({ max: 1_000_000, ttl: 1000 * 60 * 60 * 24 });
 
 export class CryptoService implements ICryptoService {
   #password = CONFIG.salts.cryptoCredentials;
@@ -46,7 +47,7 @@ export class CryptoService implements ICryptoService {
   }
 
   async #deriveKey(salt: string): Promise<Buffer> {
-    const cachedKey = cache.get(salt);
+    const cachedKey = derivedKeyCache.get(salt);
     if (cachedKey) return cachedKey;
 
     return new Promise((resolve, reject) => {
@@ -55,7 +56,7 @@ export class CryptoService implements ICryptoService {
           reject(error);
           return;
         }
-        cache.set(salt, Buffer.from(key));
+        derivedKeyCache.set(salt, Buffer.from(key));
         resolve(key);
       });
     });
