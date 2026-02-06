@@ -1,0 +1,39 @@
+meta {
+  name: login
+  type: http
+  seq: 1
+}
+
+post {
+  url: {{url}}/auth/login
+  body: formUrlEncoded
+  auth: inherit
+}
+
+body:form-urlencoded {
+  email: test@test.test
+  password: 123123123
+}
+
+script:pre-request {
+  const emailElement = req.body.find((element) => {
+    return element.name === 'email'
+  });
+  
+  if (emailElement) {
+    bru.setVar("registrationEmail", emailElement.value)
+  }
+}
+
+script:post-response {
+  if (res.status === 200) {
+    bru.setVar("registrationOtpCode", res.getHeader("x-dev-otp-code"));
+  }
+  
+  
+}
+
+settings {
+  encodeUrl: true
+  timeout: 0
+}
