@@ -1,9 +1,17 @@
-export class Times {
-  static millisecond = 1;
-  static second = 1000 * Times.millisecond;
-  static minute = 60 * Times.second;
-  static hour = 60 * Times.minute;
-  static day = 24 * Times.hour;
-  static week = 7 * Times.day;
-  static month = 30 * Times.day;
-}
+const millisecond = 1;
+const second = 1000 * millisecond;
+const minute = 60 * second;
+const hour = 60 * minute;
+const day = 24 * hour;
+const week = 7 * day;
+const month = 30 * day;
+
+export const TIMES = Object.freeze({
+  millisecond,
+  second,
+  minute,
+  hour,
+  day,
+  week,
+  month,
+} as const);
