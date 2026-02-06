@@ -16,7 +16,6 @@ export class HashPasswordService implements IHashPasswordService {
           reject(error);
           return;
         }
-        console.log('asdasdasd');
         resolve(`${salt.toString('hex')}:${hash.toString('hex')}`);
       });
     });
