@@ -13,6 +13,8 @@ import {
 import { CONFIG } from '@/config';
 import { UsersRepository } from '@/repositories/db';
 import { AuthUseCases } from '@/useCases';
+import { JwtService } from '@/services/jwt';
+import { RefreshTokensStore } from '@/repositories/stores';
 
 export class AuthComposite {
   #fastifyInstance: FastifyInstance;
@@ -70,19 +72,12 @@ export class AuthComposite {
       windowSec: 600,
     });
 
-    const userHashService = new HashService({
-      salt: CONFIG.salts.hashCredentials,
-    });
-
-    const hashPasswordService = new HashPasswordService();
-    const cryptoService = new CryptoService();
-
     const usersRepository = new UsersRepository({ pool: this.#postgres });
     const userService = new UsersService({
       usersRepository,
-      hashService: userHashService,
-      hashPasswordService,
-      cryptoService,
+      hashService: new HashService({ salt: CONFIG.salts.hashCredentials }),
+      hashPasswordService: new HashPasswordService(),
+      cryptoService: new CryptoService(),
     });
     const authUseCases = new AuthUseCases({
       usersService: userService,
@@ -92,6 +87,8 @@ export class AuthComposite {
       registrationEndRateLimiterService,
       forgotPasswordStartRateLimiterService,
       forgotPasswordEndRateLimiterService,
+      refreshTokensStore: new RefreshTokensStore({ redis: this.#redis }),
+      jwtService: new JwtService(),
     });
 
     new AuthRoutesController({ fastify: this.#fastifyInstance, useCases: authUseCases }).register();

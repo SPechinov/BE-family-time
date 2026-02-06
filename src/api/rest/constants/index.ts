@@ -1,5 +1,8 @@
-const HEADER_DEV_OTP_CODE = 'X-Dev-Otp-Code';
+export const HEADER_NAME = Object.freeze({
+  devHeaderOtpCode: 'X-Dev-Otp-Code',
+  authorization: 'Authorization',
+} as const);
 
-export const HEADER = Object.freeze({
-  headerDevOtpCode: HEADER_DEV_OTP_CODE,
+export const COOKIE_NAME = Object.freeze({
+  refreshToken: 'refreshToken',
 } as const);

@@ -3,6 +3,18 @@ import { createResponseSchema } from '../../utils';
 import { CONFIG } from '@/config';
 import { GLOBAL_SCHEMAS } from '../../schemas';
 
+const SCHEMA_LOGIN = {
+  tags: ['Auth'],
+  security: [],
+  body: z.object({
+    email: GLOBAL_SCHEMAS.email.nonempty().describe('Email адрес'),
+    password: GLOBAL_SCHEMAS.password.nonempty(),
+  }),
+  response: createResponseSchema({
+    200: z.undefined(),
+  }),
+};
+
 const SCHEMA_REGISTRATION_START = {
   tags: ['Auth'],
   security: [],
@@ -53,6 +65,7 @@ const SCHEMA_FORGOT_PASSWORD_END = {
 };
 
 export const AUTH_SCHEMAS = Object.freeze({
+  login: SCHEMA_LOGIN,
   registrationStart: SCHEMA_REGISTRATION_START,
   registrationEnd: SCHEMA_REGISTRATION_END,
   forgotPasswordStart: SCHEMA_FORGOT_PASSWORD_START,

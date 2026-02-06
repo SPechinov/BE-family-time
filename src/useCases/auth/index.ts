@@ -1,5 +1,5 @@
 import { CONFIG } from '@/config';
-import { IOtpCodesService, IRateLimiterService, IUsersService } from '@/domains/services';
+import { IJwtService, IOtpCodesService, IRateLimiterService, IUsersService } from '@/domains/services';
 import { IAuthUseCases } from '@/domains/useCases';
 import {
   UserContactsPlainEntity,
@@ -17,7 +17,9 @@ import {
   generateNumericCode,
   ErrorDoubleRegistration,
   ILogger,
+  ErrorInvalidLoginOrPassword,
 } from '@/pkg';
+import { IRefreshTokensStore } from '@/domains/repositories/stores';
 
 export class AuthUseCases implements IAuthUseCases {
   readonly #userService: IUsersService;
@@ -27,6 +29,8 @@ export class AuthUseCases implements IAuthUseCases {
   readonly #registrationEndRateLimiterService: IRateLimiterService;
   readonly #forgotPasswordStartRateLimiterService: IRateLimiterService;
   readonly #forgotPasswordEndRateLimiterService: IRateLimiterService;
+  readonly #refreshTokensStore: IRefreshTokensStore;
+  readonly #jwtService: IJwtService;
   readonly #pendRegistrationEndRequests = new Set<string>();
 
   constructor(props: {
@@ -37,6 +41,8 @@ export class AuthUseCases implements IAuthUseCases {
     registrationEndRateLimiterService: IRateLimiterService;
     forgotPasswordStartRateLimiterService: IRateLimiterService;
     forgotPasswordEndRateLimiterService: IRateLimiterService;
+    refreshTokensStore: IRefreshTokensStore;
+    jwtService: IJwtService;
   }) {
     this.#userService = props.usersService;
     this.#registrationOtpCodesService = props.registrationOtpCodesService;
@@ -45,6 +51,37 @@ export class AuthUseCases implements IAuthUseCases {
     this.#registrationEndRateLimiterService = props.registrationEndRateLimiterService;
     this.#forgotPasswordStartRateLimiterService = props.forgotPasswordStartRateLimiterService;
     this.#forgotPasswordEndRateLimiterService = props.forgotPasswordEndRateLimiterService;
+    this.#refreshTokensStore = props.refreshTokensStore;
+    this.#jwtService = props.jwtService;
+  }
+
+  async login(props: {
+    userContactsPlainEntity: UserContactsPlainEntity;
+    userPasswordPlainEntity: UserPasswordPlainEntity;
+    logger: ILogger;
+  }): Promise<{ accessToken: string; refreshToken: string }> {
+    this.#getContactOrThrow(props.userContactsPlainEntity);
+    const user = await this.#userService.findOne({
+      userFindOnePlainEntity: new UserFindOnePlainEntity({ contactsPlain: props.userContactsPlainEntity }),
+    });
+
+    if (!user || !user.passwordHashed) throw new ErrorInvalidLoginOrPassword();
+    const verified = this.#userService.verifyPassword(
+      props.userPasswordPlainEntity.password,
+      user.passwordHashed.password,
+    );
+    if (!verified) throw new ErrorInvalidLoginOrPassword();
+
+    const accessToken = this.#jwtService.generateAccessToken({ userId: user.id });
+    const refreshToken = this.#jwtService.generateRefreshToken({ userId: user.id });
+
+    await this.#refreshTokensStore.save({
+      userId: user.id,
+      refreshToken,
+      expiresAt: new Date(Date.now() + CONFIG.jwt.refreshTokenExpiry),
+    });
+
+    return { accessToken, refreshToken };
   }
 
   async registrationStart(props: {
@@ -77,7 +114,9 @@ export class AuthUseCases implements IAuthUseCases {
 
       const storeOtpCode = await this.#registrationOtpCodesService.getCode({ key: contact });
       this.#compareOtpCodes(storeOtpCode, props.otpCode);
-      this.#registrationOtpCodesService.deleteCode({ key: contact });
+      this.#registrationOtpCodesService.deleteCode({ key: contact }).catch((error = {}) => {
+        props.logger.error({ error }, 'code did not deleted');
+      });
 
       const userFindOnePlainEntity = new UserFindOnePlainEntity({
         contactsPlain: props.userCreatePlainEntity.contactsPlain,
@@ -127,7 +166,9 @@ export class AuthUseCases implements IAuthUseCases {
 
     const storeOtpCode = await this.#forgotPasswordOtpCodesService.getCode({ key: contact });
     this.#compareOtpCodes(storeOtpCode, props.otpCode);
-    await this.#forgotPasswordOtpCodesService.deleteCode({ key: contact });
+    this.#forgotPasswordOtpCodesService.deleteCode({ key: contact }).catch((error = {}) => {
+      props.logger.error({ error }, 'code did not deleted');
+    });
 
     const user = await this.#userService.patchOne({
       userFindOnePlainEntity: new UserFindOnePlainEntity({ contactsPlain: props.userContactsPlainEntity }),

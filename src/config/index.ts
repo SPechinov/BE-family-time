@@ -28,8 +28,8 @@ const ConfigSchema = z.object({
   jwt: z.object({
     accessTokenSecret: z.string().min(1),
     refreshTokenSecret: z.string().min(1),
-    accessTokenExpiry: z.string().min(1),
-    refreshTokenExpiry: z.string().min(1),
+    accessTokenExpiry: z.number(),
+    refreshTokenExpiry: z.number(),
     issuer: z.string().min(1),
   }),
   cookie: z.object({

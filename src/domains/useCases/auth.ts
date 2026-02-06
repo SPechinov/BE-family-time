@@ -2,6 +2,12 @@ import { UserContactsPlainEntity, UserCreatePlainEntity, UserEntity, UserPasswor
 import { ILogger } from '@/pkg';
 
 export interface IAuthUseCases {
+  login(props: {
+    userContactsPlainEntity: UserContactsPlainEntity;
+    userPasswordPlainEntity: UserPasswordPlainEntity;
+    logger: ILogger;
+  }): Promise<{ accessToken: string; refreshToken: string }>;
+
   registrationStart(props: {
     userContactsPlainEntity: UserContactsPlainEntity;
     logger: ILogger;

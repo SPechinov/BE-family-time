@@ -1,4 +1,4 @@
-import { FastifyInstance } from 'fastify';
+import { FastifyInstance, FastifyReply } from 'fastify';
 import { ZodTypeProvider } from 'fastify-type-provider-zod';
 import { AUTH_SCHEMAS } from './schemas';
 import { IAuthUseCases } from '@/domains/useCases';
@@ -8,18 +8,28 @@ import {
   UserPasswordPlainEntity,
   UserPersonalInfoPlainEntity,
 } from '@/entities';
-import { isDev } from '@/config';
-import { HEADER } from '../../constants';
+import { isDev, isProd } from '@/config';
+import { COOKIE_NAME, HEADER_NAME } from '../../constants';
 import { ErrorUserNotExists } from '@/pkg';
+import { CookieSerializeOptions } from '@fastify/cookie';
 
 const PREFIX = '/auth';
 
 const ROUTES = Object.freeze({
+  login: '/login',
   registrationStart: '/registration-start',
   registrationEnd: '/registration-end',
   forgotPasswordStart: '/forgot-password-start',
   forgotPasswordEnd: '/forgot-password-end',
 });
+
+const REFRESH_TOKEN_COOKIE_CONFIG: CookieSerializeOptions = {
+  httpOnly: true,
+  secure: isProd(),
+  sameSite: 'strict',
+  maxAge: 30 * 24 * 60 * 60 * 1000,
+  path: '/',
+};
 
 export class AuthRoutesController {
   #fastify: FastifyInstance;
@@ -36,6 +46,25 @@ export class AuthRoutesController {
         const router = instance.withTypeProvider<ZodTypeProvider>();
 
         router.post(
+          ROUTES.login,
+          {
+            schema: AUTH_SCHEMAS.login,
+          },
+          async (request, reply) => {
+            const tokens = await this.#useCases.login({
+              logger: request.log,
+              userContactsPlainEntity: new UserContactsPlainEntity({
+                email: request.body.email,
+              }),
+              userPasswordPlainEntity: new UserPasswordPlainEntity(request.body.password),
+            });
+            this.#setAccessToken(reply, tokens.accessToken);
+            this.#setRefreshToken(reply, tokens.refreshToken);
+            reply.status(200).send();
+          },
+        );
+
+        router.post(
           ROUTES.registrationStart,
           {
             schema: AUTH_SCHEMAS.registrationStart,
@@ -46,7 +75,7 @@ export class AuthRoutesController {
               userContactsPlainEntity: new UserContactsPlainEntity({ email: request.body.email }),
             });
             if (isDev()) {
-              reply.header(HEADER.headerDevOtpCode, result.otpCode);
+              reply.header(HEADER_NAME.devHeaderOtpCode, result.otpCode);
             }
             reply.status(200).send();
           },
@@ -86,7 +115,7 @@ export class AuthRoutesController {
               });
 
               if (isDev()) {
-                reply.header(HEADER.headerDevOtpCode, otpCode);
+                reply.header(HEADER_NAME.devHeaderOtpCode, otpCode);
               }
               reply.status(200).send();
             } catch (error: unknown) {
@@ -125,5 +154,17 @@ export class AuthRoutesController {
       },
       { prefix: PREFIX },
     );
+  }
+
+  #setAccessToken(reply: FastifyReply, token: string) {
+    reply.header(HEADER_NAME.authorization, token);
+  }
+
+  #setRefreshToken(reply: FastifyReply, token: string) {
+    reply.setCookie(COOKIE_NAME.refreshToken, token, REFRESH_TOKEN_COOKIE_CONFIG);
+  }
+
+  #removeRefreshToken(reply: FastifyReply) {
+    reply.setCookie(COOKIE_NAME.refreshToken, '', { ...REFRESH_TOKEN_COOKIE_CONFIG, maxAge: 0 });
   }
 }

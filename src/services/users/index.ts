@@ -82,6 +82,10 @@ export class UsersService implements IUsersService {
     return userEntity;
   }
 
+  verifyPassword(passwordPlain: string, passwordHashed: string): Promise<boolean> {
+    return this.#hashPasswordService.verifyPassword(passwordPlain, passwordHashed);
+  }
+
   #convertUserFindOnePlainToHashedOrThrow(userFindOnePlainEntity: UserFindOnePlainEntity): UserFindOneEntity {
     const { id, contactsPlain } = userFindOnePlainEntity;
     if (id) {

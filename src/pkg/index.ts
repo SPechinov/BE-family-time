@@ -4,3 +4,4 @@ export * from './fastify';
 export * from './errors';
 export * from './generators';
 export * from './logger';
+export * from './times';

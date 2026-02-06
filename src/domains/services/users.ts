@@ -7,4 +7,5 @@ export interface IUsersService {
     userFindOnePlainEntity: UserFindOnePlainEntity;
     userPatchOnePlainEntity: UserPatchOnePlainEntity;
   }): Promise<UserEntity>;
+  verifyPassword(passwordPlain: string, passwordHashed: string): Promise<boolean>;
 }
