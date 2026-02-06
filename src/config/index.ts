@@ -24,7 +24,6 @@ const ConfigSchema = z.object({
   salts: z.object({
     hashCredentials: z.string().min(1),
     cryptoCredentials: z.string().min(1),
-    keyDerivation: z.string().min(1),
   }),
   jwt: z.object({
     accessTokenSecret: z.string().min(1),

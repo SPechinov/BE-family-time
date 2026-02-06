@@ -7,7 +7,7 @@ const ALGORITHM = 'aes-256-gcm';
 const KEY_LENGTH = 32;
 const IV_LENGTH = 16;
 
-const derivedKeyCache = new LRUCache<string, Buffer>({ max: 1_000_000, ttl: 1000 * 60 * 60 * 24 });
+const derivedKeyCache = new LRUCache<string, Buffer>({ max: 1_000_000, ttl: 1000 * 60 * 60 * 24 * 7 });
 
 export class CryptoService implements ICryptoService {
   #password = CONFIG.salts.cryptoCredentials;
