@@ -8,8 +8,8 @@ export const newPostgresConnection = async (props: {
   const pool = new Pool({
     connectionString: props.uri,
     max: 20,
-    idleTimeoutMillis: 30000,
-    connectionTimeoutMillis: 2000,
+    connectionTimeoutMillis: 5000,
+    idleTimeoutMillis: 10000,
   });
 
   pool.on('error', (error) => {
