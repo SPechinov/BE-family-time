@@ -1,49 +1,36 @@
 import { IHashPasswordService } from '@/domains/services';
-import crypto from 'crypto';
+import argon2 from 'argon2';
+import { ILogger } from '@/pkg';
 
-const HASH_ALGORITHM = 'sha512';
-const ITERATIONS = 600000;
-const KEY_LENGTH = 64;
-const SALT_LENGTH = 32;
+const OPTIONS = Object.freeze({
+  type: argon2.argon2id,
+  memoryCost: 32768,
+  timeCost: 6,
+  parallelism: 1,
+  hashLength: 64,
+} as const);
 
 export class HashPasswordService implements IHashPasswordService {
   async hashPassword(passwordPlain: string): Promise<string> {
-    const salt = crypto.randomBytes(SALT_LENGTH);
-
-    return new Promise((resolve, reject) => {
-      crypto.pbkdf2(passwordPlain, salt, ITERATIONS, KEY_LENGTH, HASH_ALGORITHM, (error, hash) => {
-        if (error) {
-          reject(error);
-          return;
-        }
-        resolve(`${salt.toString('hex')}:${hash.toString('hex')}`);
-      });
-    });
+    this.#validateStringOrThrow(passwordPlain);
+    return argon2.hash(passwordPlain, OPTIONS);
   }
 
-  async verifyPassword(passwordPlain: string, passwordHashed: string): Promise<boolean> {
+  async verifyPassword(passwordPlain: string, passwordHashed: string, logger?: ILogger): Promise<boolean> {
+    this.#validateStringOrThrow(passwordPlain);
+    this.#validateStringOrThrow(passwordHashed);
+
     try {
-      const [saltHex, hashHex] = passwordHashed.split(':');
-
-      if (!saltHex || !hashHex) {
-        return false;
-      }
-
-      const salt = Buffer.from(saltHex, 'hex');
-      const originalHash = Buffer.from(hashHex, 'hex');
-
-      return new Promise((resolve, reject) => {
-        crypto.pbkdf2(passwordPlain, salt, ITERATIONS, KEY_LENGTH, HASH_ALGORITHM, (error, hash) => {
-          if (error) {
-            reject(error);
-            return;
-          }
-
-          resolve(crypto.timingSafeEqual(originalHash, hash));
-        });
-      });
-    } catch {
+      return await argon2.verify(passwordHashed, passwordPlain);
+    } catch (error) {
+      logger?.error({ error });
       return false;
+    }
+  }
+
+  #validateStringOrThrow(password: string) {
+    if (typeof password !== 'string' || password.length < 1) {
+      throw new Error('Invalid password');
     }
   }
 }
