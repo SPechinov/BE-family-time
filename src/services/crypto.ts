@@ -7,7 +7,7 @@ const ALGORITHM = 'aes-256-gcm';
 const KEY_LENGTH = 32;
 const IV_LENGTH = 12;
 
-const derivedKeyCache = new LRUCache<string, Buffer>({ max: 1_000_000, ttl: 1000 * 60 * 60 * 24 * 7 });
+const derivedKeyCache = new LRUCache<string, Promise<Buffer>>({ max: 1_000_000, ttl: 1000 * 60 * 60 * 24 });
 
 export class CryptoService implements ICryptoService {
   #password = Buffer.from(CONFIG.salts.cryptoCredentials);
@@ -54,16 +54,22 @@ export class CryptoService implements ICryptoService {
     const cachedKey = derivedKeyCache.get(salt);
     if (cachedKey) return cachedKey;
 
-    return new Promise((resolve, reject) => {
+    const promise = new Promise<Buffer>((resolve, reject) => {
       crypto.scrypt(this.#password, salt, KEY_LENGTH, (error, key) => {
         if (error) {
           reject(error);
           return;
         }
-        derivedKeyCache.set(salt, Buffer.from(key));
-        resolve(key);
+        resolve(Buffer.from(key));
       });
+    }).catch((error) => {
+      derivedKeyCache.delete(salt);
+      throw error;
     });
+
+    derivedKeyCache.set(salt, promise);
+
+    return promise;
   }
 
   #validateSaltOrThrow(salt: string) {
