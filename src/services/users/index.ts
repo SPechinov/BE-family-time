@@ -14,7 +14,7 @@ import {
   UserPatchOnePlainEntity,
   UserPersonalInfoEncryptedEntity,
 } from '@/entities';
-import { ErrorUserNotExists } from '@/pkg';
+import { ErrorUserNotExists, ILogger } from '@/pkg';
 
 export class UsersService implements IUsersService {
   readonly #usersRepository: IUsersRepository;
@@ -82,8 +82,8 @@ export class UsersService implements IUsersService {
     return userEntity;
   }
 
-  verifyPassword(passwordPlain: string, passwordHashed: string): Promise<boolean> {
-    return this.#hashPasswordService.verifyPassword(passwordPlain, passwordHashed);
+  verifyPassword(props: { passwordPlain: string; passwordHashed: string; logger: ILogger }): Promise<boolean> {
+    return this.#hashPasswordService.verify(props);
   }
 
   #convertUserFindOnePlainToHashedOrThrow(userFindOnePlainEntity: UserFindOnePlainEntity): UserFindOneEntity {
@@ -185,7 +185,7 @@ export class UsersService implements IUsersService {
     if (passwordPlain === undefined) return undefined;
     if (passwordPlain === null) return null;
 
-    const hashedPassword = await this.#hashPasswordService.hashPassword(passwordPlain.password);
+    const hashedPassword = await this.#hashPasswordService.hash(passwordPlain.password);
     return new UserPasswordHashedEntity(hashedPassword);
   }
 }

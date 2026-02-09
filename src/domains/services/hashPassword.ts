@@ -1,4 +1,6 @@
+import { ILogger } from '@/pkg';
+
 export interface IHashPasswordService {
-  hashPassword(passwordPlain: string): Promise<string>;
-  verifyPassword(passwordPlain: string, passwordHashed: string): Promise<boolean>;
+  hash(passwordPlain: string): Promise<string>;
+  verify(props: { passwordPlain: string; passwordHashed: string; logger: ILogger }): Promise<boolean>;
 }

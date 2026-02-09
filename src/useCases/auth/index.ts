@@ -66,10 +66,11 @@ export class AuthUseCases implements IAuthUseCases {
     });
 
     if (!user || !user.passwordHashed) throw new ErrorInvalidLoginOrPassword();
-    const verified = this.#userService.verifyPassword(
-      props.userPasswordPlainEntity.password,
-      user.passwordHashed.password,
-    );
+    const verified = this.#userService.verifyPassword({
+      logger: props.logger,
+      passwordPlain: props.userPasswordPlainEntity.password,
+      passwordHashed: user.passwordHashed.password,
+    });
     if (!verified) throw new ErrorInvalidLoginOrPassword();
 
     const accessToken = this.#jwtService.generateAccessToken({ userId: user.id });

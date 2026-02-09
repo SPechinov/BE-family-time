@@ -11,19 +11,19 @@ const OPTIONS = Object.freeze({
 } as const);
 
 export class HashPasswordService implements IHashPasswordService {
-  async hashPassword(passwordPlain: string): Promise<string> {
+  async hash(passwordPlain: string): Promise<string> {
     this.#validateStringOrThrow(passwordPlain);
     return argon2.hash(passwordPlain, OPTIONS);
   }
 
-  async verifyPassword(passwordPlain: string, passwordHashed: string, logger?: ILogger): Promise<boolean> {
-    this.#validateStringOrThrow(passwordPlain);
-    this.#validateStringOrThrow(passwordHashed);
+  async verify(props: { passwordPlain: string; passwordHashed: string; logger: ILogger }): Promise<boolean> {
+    this.#validateStringOrThrow(props.passwordPlain);
+    this.#validateStringOrThrow(props.passwordHashed);
 
     try {
-      return await argon2.verify(passwordHashed, passwordPlain);
+      return await argon2.verify(props.passwordHashed, props.passwordPlain);
     } catch (error) {
-      logger?.error({ error });
+      props.logger.error({ error });
       return false;
     }
   }
