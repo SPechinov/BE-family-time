@@ -44,10 +44,13 @@ export class CryptoService implements ICryptoService {
     const decipher = crypto.createDecipheriv(ALGORITHM, key, iv);
     decipher.setAuthTag(tag);
 
-    let decrypted = decipher.update(encrypted, 'hex', 'utf8');
-    decrypted += decipher.final('utf8');
-
-    return decrypted;
+    try {
+      let decrypted = decipher.update(encrypted, 'hex', 'utf8');
+      decrypted += decipher.final('utf8');
+      return decrypted;
+    } catch {
+      throw new Error('Decryption failed');
+    }
   }
 
   async #deriveKey(salt: string): Promise<Buffer> {
@@ -73,7 +76,7 @@ export class CryptoService implements ICryptoService {
   }
 
   #validateSaltOrThrow(salt: string) {
-    if (!salt || salt.length < 8) throw new Error('Invalid salt');
+    if (typeof salt !== 'string' || salt.length < 8) throw new Error('Invalid salt');
   }
 
   #validateEncryptedTextOrThrow(encryptedText: string) {

@@ -7,6 +7,7 @@
     "dev": "nodemon",
     "build": "tsc",
     "test": "npx jest",
+    "test:services": "npx jest src/services",
     "test:api": "npx jest src/tests/api",
     "test:units": "npx jest src/tests/units",
     "migrations:up": "cross-env DATABASE_URL=postgresql://root:root@localhost:5432/postgres node-pg-migrate up",
