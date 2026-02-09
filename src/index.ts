@@ -60,16 +60,22 @@ const run = async () => {
     logger.info('API сервер выключен');
 
     redis.destroy();
-    logger.info('Redis отключен');
+    logger.info('Redis disconnected');
 
     postgres.end();
-    logger.info('PostgreSQL отключен');
+    logger.info('PostgreSQL disconnected');
 
-    process.exit(0);
+    logger.info('Server stopping...');
+    setTimeout(() => {
+      process.exit(0);
+    }, 100);
   };
 
   process.on('SIGINT', destroyApp);
   process.on('SIGTERM', destroyApp);
 };
 
-run();
+run().catch((error) => {
+  console.error('Critical error during startup:', error);
+  process.exit(1);
+});
