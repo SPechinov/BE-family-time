@@ -5,14 +5,15 @@ import { LRUCache } from 'lru-cache';
 
 const ALGORITHM = 'aes-256-gcm';
 const KEY_LENGTH = 32;
-const IV_LENGTH = 16;
+const IV_LENGTH = 12;
 
 const derivedKeyCache = new LRUCache<string, Buffer>({ max: 1_000_000, ttl: 1000 * 60 * 60 * 24 * 7 });
 
 export class CryptoService implements ICryptoService {
-  #password = CONFIG.salts.cryptoCredentials;
+  #password = Buffer.from(CONFIG.salts.cryptoCredentials);
 
   async encrypt(text: string, salt: string): Promise<string> {
+    this.#validateSaltOrThrow(salt);
     const key = await this.#deriveKey(salt);
     const iv = crypto.randomBytes(IV_LENGTH);
 
@@ -27,6 +28,9 @@ export class CryptoService implements ICryptoService {
   }
 
   async decrypt(encryptedText: string, salt: string): Promise<string> {
+    this.#validateSaltOrThrow(salt);
+    this.#validateEncryptedTextOrThrow(encryptedText);
+
     const [ivHex, tagHex, encrypted] = encryptedText.split(':');
 
     if (!ivHex || !tagHex || !encrypted) {
@@ -60,5 +64,17 @@ export class CryptoService implements ICryptoService {
         resolve(key);
       });
     });
+  }
+
+  #validateSaltOrThrow(salt: string) {
+    if (salt.length < 8) {
+      throw new Error('Invalid salt');
+    }
+  }
+
+  #validateEncryptedTextOrThrow(encryptedText: string) {
+    if (encryptedText.split(':').length !== 3) {
+      throw new Error('Invalid encrypted format');
+    }
   }
 }
