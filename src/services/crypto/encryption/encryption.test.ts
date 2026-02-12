@@ -27,24 +27,52 @@ describe('EncryptionService', () => {
       expect(decrypted).toBe(text);
     });
 
+    const expectInvalidSalt = async (salt: unknown) => {
+      await expect((encryptionService as any).encrypt(text, salt)).rejects.toThrow('Invalid salt');
+    };
+
     it('should throw error if salt is null', async () => {
-      // @ts-expect-error — testing runtime validation
-      await expect(encryptionService.encrypt(text, null)).rejects.toThrow('Invalid salt');
+      await expectInvalidSalt(null);
     });
 
     it('should throw error if salt is undefined', async () => {
-      // @ts-expect-error — testing runtime validation
-      await expect(encryptionService.encrypt(text, undefined)).rejects.toThrow('Invalid salt');
+      await expectInvalidSalt(undefined);
     });
 
     it('should throw error if salt is 0', async () => {
-      // @ts-expect-error — testing runtime validation
-      await expect(encryptionService.encrypt(text, 1)).rejects.toThrow('Invalid salt');
+      await expectInvalidSalt(0);
     });
 
     it('should throw error if salt is 1', async () => {
-      // @ts-expect-error — testing runtime validation
-      await expect(encryptionService.encrypt(text, 1)).rejects.toThrow('Invalid salt');
+      await expectInvalidSalt(1);
+    });
+
+    it('should throw error if salt is empty string', async () => {
+      await expectInvalidSalt('');
+    });
+
+    it('should throw error if salt is object', async () => {
+      await expectInvalidSalt({});
+    });
+
+    it('should throw error if salt is array', async () => {
+      await expectInvalidSalt([]);
+    });
+
+    it('should throw error if salt is boolean true', async () => {
+      await expectInvalidSalt(true);
+    });
+
+    it('should throw error if salt is boolean false', async () => {
+      await expectInvalidSalt(false);
+    });
+
+    it('should throw error if salt is symbol', async () => {
+      await expectInvalidSalt(Symbol('test'));
+    });
+
+    it('should throw error if salt is function', async () => {
+      await expectInvalidSalt(() => {});
     });
 
     it('should produce different IVs for same text and salt', async () => {

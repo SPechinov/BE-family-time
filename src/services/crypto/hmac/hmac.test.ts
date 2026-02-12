@@ -33,7 +33,7 @@ describe('HmacService', () => {
 
       const invalidTypeMessage = 'Salt must be a string';
       const expectInvalidTypeSalt = (salt: unknown) => {
-        expect(() => new HmacService({ salt: salt as any })).toThrow(invalidTypeMessage);
+        expect(() => new (HmacService as any)({ salt })).toThrow(invalidTypeMessage);
       };
 
       it('should throw if salt is null', () => expectInvalidTypeSalt(null));
@@ -41,6 +41,10 @@ describe('HmacService', () => {
       it('should throw if salt is number', () => expectInvalidTypeSalt(123));
       it('should throw if salt is object', () => expectInvalidTypeSalt({}));
       it('should throw if salt is array', () => expectInvalidTypeSalt([]));
+      it('should throw if salt is boolean true', () => expectInvalidTypeSalt(true));
+      it('should throw if salt is boolean false', () => expectInvalidTypeSalt(false));
+      it('should throw if salt is symbol', () => expectInvalidTypeSalt(Symbol('test')));
+      it('should throw if salt is function', () => expectInvalidTypeSalt(() => {}));
     });
   });
 
@@ -88,13 +92,17 @@ describe('HmacService', () => {
 
       const invalidTypeMessage = 'Value must be a string';
       const expectInvalidTypeValue = (value: unknown) => {
-        expect(() => service.hash(value as any)).toThrow(invalidTypeMessage);
+        expect(() => (service as any).hash(value)).toThrow(invalidTypeMessage);
       };
       it('should throw if value is null', () => expectInvalidTypeValue(null));
       it('should throw if value is undefined', () => expectInvalidTypeValue(undefined));
       it('should throw if value is number', () => expectInvalidTypeValue(123));
       it('should throw if value is object', () => expectInvalidTypeValue({}));
       it('should throw if value is array', () => expectInvalidTypeValue([]));
+      it('should throw if value is boolean true', () => expectInvalidTypeValue(true));
+      it('should throw if value is boolean false', () => expectInvalidTypeValue(false));
+      it('should throw if value is symbol', () => expectInvalidTypeValue(Symbol('test')));
+      it('should throw if value is function', () => expectInvalidTypeValue(() => {}));
     });
   });
 });

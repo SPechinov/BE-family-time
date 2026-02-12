@@ -55,6 +55,22 @@ describe('HashPasswordService', () => {
       it('should throw if password is array', async () => {
         await expectInvalidInput([]);
       });
+
+      it('should throw if password is boolean true', async () => {
+        await expectInvalidInput(true);
+      });
+
+      it('should throw if password is boolean false', async () => {
+        await expectInvalidInput(false);
+      });
+
+      it('should throw if password is symbol', async () => {
+        await expectInvalidInput(Symbol('test'));
+      });
+
+      it('should throw if password is function', async () => {
+        await expectInvalidInput(() => {});
+      });
     });
   });
 
