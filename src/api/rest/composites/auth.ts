@@ -5,7 +5,7 @@ import { AuthRoutesController } from '../routes/auth';
 import {
   EncryptionService,
   HashPasswordService,
-  HashService,
+  HmacService,
   OtpCodesService,
   RateLimiterService,
   UsersService,
@@ -75,7 +75,7 @@ export class AuthComposite {
     const usersRepository = new UsersRepository({ pool: this.#postgres });
     const userService = new UsersService({
       usersRepository,
-      hashService: new HashService({ salt: CONFIG.salts.hashCredentials }),
+      hmacService: new HmacService({ salt: CONFIG.salts.hashCredentials }),
       hashPasswordService: new HashPasswordService(),
       encryptionService: new EncryptionService(),
     });

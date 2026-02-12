@@ -1,9 +1,9 @@
-import { IHashService } from '@/domains/services';
+import { IHmacService } from '@/domains/services';
 import crypto from 'crypto';
 
 const ALGORITHM = 'sha512';
 
-export class HashService implements IHashService {
+export class HmacService implements IHmacService {
   readonly #salt: string;
 
   constructor(props: { salt: string }) {

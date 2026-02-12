@@ -1,6 +1,6 @@
 import { randomUUID } from 'node:crypto';
 import { IUsersRepository } from '@/domains/repositories/db';
-import { IEncryptionService, IHashPasswordService, IHashService, IUsersService } from '@/domains/services';
+import { IEncryptionService, IHashPasswordService, IHmacService, IUsersService } from '@/domains/services';
 import {
   UserContactsEncryptedEntity,
   UserContactsHashedEntity,
@@ -18,18 +18,18 @@ import { ErrorUserNotExists, ILogger } from '@/pkg';
 
 export class UsersService implements IUsersService {
   readonly #usersRepository: IUsersRepository;
-  readonly #hashService: IHashService;
+  readonly #hmacService: IHmacService;
   readonly #encryptionService: IEncryptionService;
   readonly #hashPasswordService: IHashPasswordService;
 
   constructor(props: {
     usersRepository: IUsersRepository;
-    hashService: IHashService;
+    hmacService: IHmacService;
     encryptionService: IEncryptionService;
     hashPasswordService: IHashPasswordService;
   }) {
     this.#usersRepository = props.usersRepository;
-    this.#hashService = props.hashService;
+    this.#hmacService = props.hmacService;
     this.#encryptionService = props.encryptionService;
     this.#hashPasswordService = props.hashPasswordService;
   }
@@ -98,8 +98,8 @@ export class UsersService implements IUsersService {
 
     return new UserFindOneEntity({
       contactsHashed: new UserContactsHashedEntity({
-        email: contactsPlain.email ? this.#hashService.hash(contactsPlain.email) : undefined,
-        phone: contactsPlain.phone ? this.#hashService.hash(contactsPlain.phone) : undefined,
+        email: contactsPlain.email ? this.#hmacService.hash(contactsPlain.email) : undefined,
+        phone: contactsPlain.phone ? this.#hmacService.hash(contactsPlain.phone) : undefined,
       }),
     });
   }
@@ -153,8 +153,8 @@ export class UsersService implements IUsersService {
 
     const contactsEncrypted = new UserContactsEncryptedEntity({ email: emailEncrypted, phone: phoneEncrypted });
     const contactsHashed = new UserContactsHashedEntity({
-      email: email ? this.#hashService.hash(email) : email,
-      phone: phone ? this.#hashService.hash(phone) : phone,
+      email: email ? this.#hmacService.hash(email) : email,
+      phone: phone ? this.#hmacService.hash(phone) : phone,
     });
 
     return { contactsEncrypted, contactsHashed };

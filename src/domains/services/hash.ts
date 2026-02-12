@@ -1,3 +1,3 @@
-export interface IHashService {
+export interface IHmacService {
   hash(value: string): string;
 }

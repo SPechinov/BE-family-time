@@ -1,13 +1,13 @@
-import { HashService } from '@/services';
+import { HmacService } from '@/services';
 import { benchmark } from '../utils';
 
-const hashService = new HashService({
+const hmacService = new HmacService({
   salt: 'test-salt',
 });
 
 const benchmarkHash = async () => {
   const hash = () => {
-    hashService.hash('test-data');
+    hmacService.hash('test-data');
   };
 
   const { avg, median } = await benchmark(hash, 100);
