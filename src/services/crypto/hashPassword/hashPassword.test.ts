@@ -15,26 +15,46 @@ describe('HashPasswordService', () => {
   });
 
   describe('hash', () => {
+    const validPassword = 'validPassword123';
+
     it('should hash a valid password', async () => {
-      const password = 'validPassword123';
-      const hashed = await service.hash(password);
+      const hashed = await service.hash(validPassword);
 
       expect(hashed).toBeDefined();
       expect(hashed.length).toBeGreaterThan(0);
-      expect(await service.verify({ password: password, hash: hashed, logger: mockLogger })).toBe(true);
+      expect(await service.verify({ password: validPassword, hash: hashed, logger: mockLogger })).toBe(true);
     });
 
-    it('should throw error for empty password', async () => {
-      await expect(service.hash('')).rejects.toThrow('Invalid password');
-    });
+    describe('invalid inputs', () => {
+      const invalidTypeMessage = 'Invalid password';
 
-    it('should throw error for non-string password', async () => {
-      // @ts-expect-error Testing invalid input
-      await expect(service.hash(null)).rejects.toThrow('Invalid password');
-      // @ts-expect-error Testing invalid input
-      await expect(service.hash(undefined)).rejects.toThrow('Invalid password');
-      // @ts-expect-error Testing invalid input
-      await expect(service.hash(123)).rejects.toThrow('Invalid password');
+      it('should throw if password is empty', async () => {
+        await expect(service.hash('')).rejects.toThrow(invalidTypeMessage);
+      });
+
+      const expectInvalidInput = async (input: unknown) => {
+        await expect((service as any).hash(input)).rejects.toThrow('Invalid password');
+      };
+
+      it('should throw if password is null', async () => {
+        await expectInvalidInput(null);
+      });
+
+      it('should throw if password is undefined', async () => {
+        await expectInvalidInput(undefined);
+      });
+
+      it('should throw if password is number', async () => {
+        await expectInvalidInput(123);
+      });
+
+      it('should throw if password is object', async () => {
+        await expectInvalidInput({});
+      });
+
+      it('should throw if password is array', async () => {
+        await expectInvalidInput([]);
+      });
     });
   });
 
