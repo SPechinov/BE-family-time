@@ -1,6 +1,6 @@
 import { randomUUID } from 'node:crypto';
 import { IUsersRepository } from '@/domains/repositories/db';
-import { ICryptoService, IHashPasswordService, IHashService, IUsersService } from '@/domains/services';
+import { IEncryptionService, IHashPasswordService, IHashService, IUsersService } from '@/domains/services';
 import {
   UserContactsEncryptedEntity,
   UserContactsHashedEntity,
@@ -19,18 +19,18 @@ import { ErrorUserNotExists, ILogger } from '@/pkg';
 export class UsersService implements IUsersService {
   readonly #usersRepository: IUsersRepository;
   readonly #hashService: IHashService;
-  readonly #cryptoService: ICryptoService;
+  readonly #encryptionService: IEncryptionService;
   readonly #hashPasswordService: IHashPasswordService;
 
   constructor(props: {
     usersRepository: IUsersRepository;
     hashService: IHashService;
-    cryptoService: ICryptoService;
+    encryptionService: IEncryptionService;
     hashPasswordService: IHashPasswordService;
   }) {
     this.#usersRepository = props.usersRepository;
     this.#hashService = props.hashService;
-    this.#cryptoService = props.cryptoService;
+    this.#encryptionService = props.encryptionService;
     this.#hashPasswordService = props.hashPasswordService;
   }
 
@@ -82,7 +82,7 @@ export class UsersService implements IUsersService {
     return userEntity;
   }
 
-  verifyPassword(props: { passwordPlain: string; passwordHashed: string; logger: ILogger }): Promise<boolean> {
+  verifyPassword(props: { password: string; hash: string; logger: ILogger }): Promise<boolean> {
     return this.#hashPasswordService.verify(props);
   }
 
@@ -147,8 +147,8 @@ export class UsersService implements IUsersService {
     const { email, phone } = contactsPlain;
 
     const [emailEncrypted, phoneEncrypted] = await Promise.all([
-      email ? this.#cryptoService.encrypt(email, encryptionSalt) : Promise.resolve(email),
-      phone ? this.#cryptoService.encrypt(phone, encryptionSalt) : Promise.resolve(phone),
+      email ? this.#encryptionService.encrypt(email, encryptionSalt) : Promise.resolve(email),
+      phone ? this.#encryptionService.encrypt(phone, encryptionSalt) : Promise.resolve(phone),
     ]);
 
     const contactsEncrypted = new UserContactsEncryptedEntity({ email: emailEncrypted, phone: phoneEncrypted });
@@ -169,8 +169,8 @@ export class UsersService implements IUsersService {
 
     const { firstName, lastName } = personalInfoPlain;
     const [encryptedFirstName, encryptedLastName] = await Promise.all([
-      firstName ? this.#cryptoService.encrypt(firstName, encryptionSalt) : Promise.resolve(firstName),
-      lastName ? this.#cryptoService.encrypt(lastName, encryptionSalt) : Promise.resolve(lastName),
+      firstName ? this.#encryptionService.encrypt(firstName, encryptionSalt) : Promise.resolve(firstName),
+      lastName ? this.#encryptionService.encrypt(lastName, encryptionSalt) : Promise.resolve(lastName),
     ]);
 
     return new UserPersonalInfoEncryptedEntity({

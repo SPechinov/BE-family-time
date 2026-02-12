@@ -1,6 +1,6 @@
 import crypto from 'crypto';
 import { CONFIG } from '@/config';
-import { ICryptoService } from '@/domains/services';
+import { IEncryptionService } from '@/domains/services';
 import { LRUCache } from 'lru-cache';
 
 const ALGORITHM = 'aes-256-gcm';
@@ -9,7 +9,7 @@ const IV_LENGTH = 12;
 
 export const derivedKeyCache = new LRUCache<string, Promise<Buffer>>({ max: 1_000_000, ttl: 1000 * 60 * 60 * 24 });
 
-export class CryptoService implements ICryptoService {
+export class EncryptionService implements IEncryptionService {
   #password = Buffer.from(CONFIG.salts.cryptoCredentials);
 
   async encrypt(text: string, salt: string): Promise<string> {

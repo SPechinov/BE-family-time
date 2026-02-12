@@ -3,7 +3,7 @@ import { FastifyInstance } from 'fastify';
 import { Pool } from 'pg';
 import { AuthRoutesController } from '../routes/auth';
 import {
-  CryptoService,
+  EncryptionService,
   HashPasswordService,
   HashService,
   OtpCodesService,
@@ -77,7 +77,7 @@ export class AuthComposite {
       usersRepository,
       hashService: new HashService({ salt: CONFIG.salts.hashCredentials }),
       hashPasswordService: new HashPasswordService(),
-      cryptoService: new CryptoService(),
+      encryptionService: new EncryptionService(),
     });
     const authUseCases = new AuthUseCases({
       usersService: userService,

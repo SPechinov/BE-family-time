@@ -1,0 +1,1 @@
+export { HashPasswordService } from './hashPassword';
