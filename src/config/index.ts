@@ -22,7 +22,7 @@ const ConfigSchema = z.object({
     forgotPassword: z.number(),
   }),
   salts: z.object({
-    hashCredentials: z.string().min(1),
+    hashCredentials: z.string().min(16),
     cryptoCredentials: z.string().min(1),
   }),
   jwt: z.object({
