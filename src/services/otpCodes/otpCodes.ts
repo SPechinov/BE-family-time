@@ -1,10 +1,7 @@
 import { IOtpCodesService } from '@/domains/services';
 import { REDIS_STATUS_SUCCESS_RESPONSE, RedisClient } from '@/pkg';
 
-const ERRORS = Object.freeze({
-  FAILED_TO_SAVE_CODE: 'Failed to save code',
-  INVALID_CODE_LENGTH: 'Invalid code length',
-});
+type RedisKey = `otp:${string}:${string}`;
 
 export class OtpCodesService implements IOtpCodesService {
   readonly #redis: RedisClient;
@@ -20,25 +17,33 @@ export class OtpCodesService implements IOtpCodesService {
   }
 
   async saveCode(props: { code: string; key: string }) {
-    this.#validateCode(props.code);
+    this.#validateCodeOrThrow(props.code);
+    this.#validateKeyOrThrow(props.key);
     const result = await this.#redis.setEx(this.#buildRedisKey(props), this.#ttlSec, props.code);
-    if (result !== REDIS_STATUS_SUCCESS_RESPONSE) throw new Error(ERRORS.FAILED_TO_SAVE_CODE);
+    if (result !== REDIS_STATUS_SUCCESS_RESPONSE) throw new Error('Failed to save code');
   }
 
   getCode(props: { key: string }) {
+    this.#validateCodeOrThrow(props.key);
     return this.#redis.get(this.#buildRedisKey(props));
   }
 
   deleteCode(props: { key: string }) {
+    this.#validateCodeOrThrow(props.key);
     return this.#redis.del(this.#buildRedisKey(props));
   }
 
-  #validateCode(code: string) {
-    if (code.length === this.#codeLength) return;
-    throw new Error(ERRORS.INVALID_CODE_LENGTH);
+  #validateCodeOrThrow(code: string) {
+    if (typeof code !== 'string') throw new Error('Code must be a string');
+    if (code.length !== this.#codeLength) throw new Error('Invalid code length');
   }
 
-  #buildRedisKey(props: { key: string }): string {
+  #validateKeyOrThrow(key: string) {
+    if (typeof key !== 'string') throw new Error('Key must be a string');
+    if (key.length < 1) throw new Error('Invalid key length');
+  }
+
+  #buildRedisKey(props: { key: string }): RedisKey {
     return `otp:${this.#prefix}:${props.key}`;
   }
 }
