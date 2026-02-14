@@ -37,6 +37,20 @@ describe('JwtService', () => {
       });
       expect(result).toBe(expectedToken);
     });
+
+    it('should generate token with different userId', () => {
+      const payload = { userId: 'another-user-456' };
+      const expectedToken = 'another-access-token';
+      (jwt.sign as jest.Mock).mockReturnValue(expectedToken);
+
+      const result = service.generateAccessToken(payload);
+
+      expect(jwt.sign).toHaveBeenCalledWith(payload, 'access-token-secret', {
+        expiresIn: '15m',
+        issuer: 'family-time-app',
+      });
+      expect(result).toBe(expectedToken);
+    });
   });
 
   describe('generateRefreshToken', () => {
@@ -44,6 +58,20 @@ describe('JwtService', () => {
 
     it('should generate refresh token with correct payload and options', () => {
       const expectedToken = 'refresh-token';
+      (jwt.sign as jest.Mock).mockReturnValue(expectedToken);
+
+      const result = service.generateRefreshToken(payload);
+
+      expect(jwt.sign).toHaveBeenCalledWith(payload, 'refresh-token-secret', {
+        expiresIn: '7d',
+        issuer: 'family-time-app',
+      });
+      expect(result).toBe(expectedToken);
+    });
+
+    it('should generate refresh token with different userId', () => {
+      const payload = { userId: 'another-user-789' };
+      const expectedToken = 'another-refresh-token';
       (jwt.sign as jest.Mock).mockReturnValue(expectedToken);
 
       const result = service.generateRefreshToken(payload);
@@ -69,9 +97,53 @@ describe('JwtService', () => {
       expect(result).toEqual(payload);
     });
 
-    it('should return null for invalid access token', () => {
+    it('should return null for expired access token', () => {
+      const expiredError = new jwt.TokenExpiredError('jwt expired', new Date());
       (jwt.verify as jest.Mock).mockImplementationOnce(() => {
-        throw new Error('Invalid token');
+        throw expiredError;
+      });
+
+      const result = service.verifyAccessToken(token);
+
+      expect(result).toBeNull();
+    });
+
+    it('should return null for malformed access token', () => {
+      const malformedError = new jwt.JsonWebTokenError('jwt malformed');
+      (jwt.verify as jest.Mock).mockImplementationOnce(() => {
+        throw malformedError;
+      });
+
+      const result = service.verifyAccessToken(token);
+
+      expect(result).toBeNull();
+    });
+
+    it('should return null for access token with invalid signature', () => {
+      const invalidSignatureError = new jwt.JsonWebTokenError('invalid signature');
+      (jwt.verify as jest.Mock).mockImplementationOnce(() => {
+        throw invalidSignatureError;
+      });
+
+      const result = service.verifyAccessToken(token);
+
+      expect(result).toBeNull();
+    });
+
+    it('should return null for access token used before not-before time', () => {
+      const notBeforeError = new jwt.NotBeforeError('jwt not active', new Date());
+      (jwt.verify as jest.Mock).mockImplementationOnce(() => {
+        throw notBeforeError;
+      });
+
+      const result = service.verifyAccessToken(token);
+
+      expect(result).toBeNull();
+    });
+
+    it('should return null for generic error when verifying access token', () => {
+      (jwt.verify as jest.Mock).mockImplementationOnce(() => {
+        throw new Error('Unknown error');
       });
 
       const result = service.verifyAccessToken(token);
@@ -93,14 +165,122 @@ describe('JwtService', () => {
       expect(result).toEqual(payload);
     });
 
-    it('should return null for invalid refresh token', () => {
+    it('should return null for expired refresh token', () => {
+      const expiredError = new jwt.TokenExpiredError('jwt expired', new Date());
       (jwt.verify as jest.Mock).mockImplementationOnce(() => {
-        throw new Error('Invalid token');
+        throw expiredError;
       });
 
       const result = service.verifyRefreshToken(token);
 
       expect(result).toBeNull();
+    });
+
+    it('should return null for malformed refresh token', () => {
+      const malformedError = new jwt.JsonWebTokenError('jwt malformed');
+      (jwt.verify as jest.Mock).mockImplementationOnce(() => {
+        throw malformedError;
+      });
+
+      const result = service.verifyRefreshToken(token);
+
+      expect(result).toBeNull();
+    });
+
+    it('should return null for refresh token with invalid signature', () => {
+      const invalidSignatureError = new jwt.JsonWebTokenError('invalid signature');
+      (jwt.verify as jest.Mock).mockImplementationOnce(() => {
+        throw invalidSignatureError;
+      });
+
+      const result = service.verifyRefreshToken(token);
+
+      expect(result).toBeNull();
+    });
+
+    it('should return null for refresh token used before not-before time', () => {
+      const notBeforeError = new jwt.NotBeforeError('jwt not active', new Date());
+      (jwt.verify as jest.Mock).mockImplementationOnce(() => {
+        throw notBeforeError;
+      });
+
+      const result = service.verifyRefreshToken(token);
+
+      expect(result).toBeNull();
+    });
+
+    it('should return null for generic error when verifying refresh token', () => {
+      (jwt.verify as jest.Mock).mockImplementationOnce(() => {
+        throw new Error('Unknown error');
+      });
+
+      const result = service.verifyRefreshToken(token);
+
+      expect(result).toBeNull();
+    });
+  });
+
+  describe('issuer validation', () => {
+    it('should include issuer in access token generation', () => {
+      const payload = { userId: 'user-123' };
+      (jwt.sign as jest.Mock).mockReturnValue('token');
+
+      service.generateAccessToken(payload);
+
+      expect(jwt.sign).toHaveBeenCalledWith(
+        payload,
+        'access-token-secret',
+        expect.objectContaining({
+          issuer: 'family-time-app',
+        }),
+      );
+    });
+
+    it('should include issuer in refresh token generation', () => {
+      const payload = { userId: 'user-123' };
+      (jwt.sign as jest.Mock).mockReturnValue('token');
+
+      service.generateRefreshToken(payload);
+
+      expect(jwt.sign).toHaveBeenCalledWith(
+        payload,
+        'refresh-token-secret',
+        expect.objectContaining({
+          issuer: 'family-time-app',
+        }),
+      );
+    });
+  });
+
+  describe('token expiry', () => {
+    it('should use correct expiry time for access token', () => {
+      const payload = { userId: 'user-123' };
+      (jwt.sign as jest.Mock).mockReturnValue('token');
+
+      service.generateAccessToken(payload);
+
+      expect(jwt.sign).toHaveBeenCalledWith(
+        payload,
+        'access-token-secret',
+        expect.objectContaining({
+          expiresIn: '15m',
+        }),
+      );
+    });
+
+    it('should use correct expiry time for refresh token', () => {
+      const payload = { userId: 'user-123' };
+      (jwt.sign as jest.Mock).mockReturnValue('token');
+
+      service.generateRefreshToken(payload);
+
+      expect(jwt.sign).toHaveBeenCalledWith(
+        payload,
+        'refresh-token-secret',
+        expect.objectContaining({
+          expiresIn: '7d',
+        }),
+      );
     });
   });
 });

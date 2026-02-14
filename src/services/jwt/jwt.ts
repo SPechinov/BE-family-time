@@ -23,16 +23,16 @@ export class JwtService implements IJwtService {
   }
 
   verifyAccessToken(token: string) {
-    try {
-      return jwt.verify(token, this.#accessTokenSecret) as { userId: string };
-    } catch {
-      return null;
-    }
+    return this.#verifyToken(token, this.#accessTokenSecret);
   }
 
   verifyRefreshToken(token: string) {
+    return this.#verifyToken(token, this.#refreshTokenSecret);
+  }
+
+  #verifyToken(token: string, secret: string) {
     try {
-      return jwt.verify(token, this.#refreshTokenSecret) as { userId: string };
+      return jwt.verify(token, secret) as { userId: string };
     } catch {
       return null;
     }
