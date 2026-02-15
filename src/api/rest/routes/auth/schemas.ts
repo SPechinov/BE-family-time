@@ -73,6 +73,20 @@ const SCHEMA_GET_ALL_SESSIONS = {
   }),
 };
 
+const SCHEMA_LOGOUT_ALL_SESSIONS = {
+  tags: ['Auth'],
+  response: createResponseSchema({
+    200: z.undefined(),
+  }),
+};
+
+const SCHEMA_LOGOUT_SESSION = {
+  tags: ['Auth'],
+  response: createResponseSchema({
+    200: z.undefined(),
+  }),
+};
+
 export const AUTH_SCHEMAS = Object.freeze({
   login: SCHEMA_LOGIN,
   registrationStart: SCHEMA_REGISTRATION_START,
@@ -80,4 +94,6 @@ export const AUTH_SCHEMAS = Object.freeze({
   forgotPasswordStart: SCHEMA_FORGOT_PASSWORD_START,
   forgotPasswordEnd: SCHEMA_FORGOT_PASSWORD_END,
   getAllSession: SCHEMA_GET_ALL_SESSIONS,
+  logoutAllSession: SCHEMA_LOGOUT_ALL_SESSIONS,
+  logoutSession: SCHEMA_LOGOUT_SESSION,
 });

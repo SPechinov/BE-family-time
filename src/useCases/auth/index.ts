@@ -196,6 +196,14 @@ export class AuthUseCases implements IAuthUseCases {
     }));
   }
 
+  async logoutAllSessions(props: { userId: string }): Promise<void> {
+    await this.#refreshTokensStore.deleteAll({ userId: props.userId });
+  }
+
+  async logoutSession(props: { userId: string; refreshToken: string }): Promise<void> {
+    await this.#refreshTokensStore.delete({ userId: props.userId, refreshToken: props.refreshToken });
+  }
+
   #compareOtpCodes(storeOtpCode: string | null | undefined, userOtpCode: string | null | undefined) {
     if (!storeOtpCode || !userOtpCode || storeOtpCode !== userOtpCode) throw new ErrorInvalidCode();
   }

@@ -21,11 +21,9 @@ export class RefreshTokensStore implements IRefreshTokensStore {
     return exists === 1;
   }
 
-  async delete(props: { userId: string; refreshToken?: string }): Promise<void> {
-    if (props.refreshToken) {
-      const key = this.#generateRedisKey(props.userId, props.refreshToken);
-      await this.#redis.del(key);
-    }
+  async delete(props: { userId: string; refreshToken: string }): Promise<void> {
+    const key = this.#generateRedisKey(props.userId, props.refreshToken);
+    await this.#redis.del(key);
   }
 
   async deleteAll(props: { userId: string }): Promise<void> {

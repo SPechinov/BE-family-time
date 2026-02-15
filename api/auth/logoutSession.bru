@@ -1,17 +1,22 @@
 meta {
-  name: getAllSession
+  name: logoutSession
   type: http
-  seq: 6
+  seq: 8
 }
 
-get {
-  url: {{url}}/auth/get-all-sessions
+post {
+  url: {{url}}/auth/logout-session
   body: formUrlEncoded
   auth: bearer
 }
 
 auth:bearer {
   token: {{authToken}}
+}
+
+script:post-response {
+  bru.setVar("authToken", undefined)
+  
 }
 
 settings {

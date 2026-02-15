@@ -34,4 +34,8 @@ export interface IAuthUseCases {
   }): Promise<UserEntity>;
 
   getAllSessionsPayloads(props: { userId: string }): Promise<{ payload: JwtPayload | string | null; jwt: string }[]>;
+
+  logoutAllSessions(props: { userId: string }): Promise<void>;
+
+  logoutSession(props: { userId: string; refreshToken: string }): Promise<void>;
 }
