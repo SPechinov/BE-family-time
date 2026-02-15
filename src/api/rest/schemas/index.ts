@@ -10,3 +10,9 @@ export const GLOBAL_SCHEMAS = {
       .length(length)
       .refine((v) => !isNaN(Number(v)), { message: 'Invalid number' }),
 };
+
+export const SESSION_SCHEMA = z.object({
+  expiresAt: z.number(),
+  userAgent: z.string().nullable(),
+  isCurrent: z.boolean().optional(),
+});

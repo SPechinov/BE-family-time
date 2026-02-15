@@ -10,14 +10,14 @@ export class JwtService implements IJwtService {
 
   generateAccessToken(payload: { userId: string }) {
     return jwt.sign(payload, this.#accessTokenSecret, {
-      expiresIn: this.#accessTokenExpiry,
+      expiresIn: this.#accessTokenExpiry / 1000,
       issuer: CONFIG.jwt.issuer,
     });
   }
 
   generateRefreshToken(payload: { userId: string }) {
     return jwt.sign(payload, this.#refreshTokenSecret, {
-      expiresIn: this.#refreshTokenExpiry,
+      expiresIn: this.#refreshTokenExpiry / 1000,
       issuer: CONFIG.jwt.issuer,
     });
   }
@@ -28,6 +28,14 @@ export class JwtService implements IJwtService {
 
   verifyRefreshToken(token: string) {
     return this.#verifyToken(token, this.#refreshTokenSecret);
+  }
+
+  parseToken(token: string) {
+    try {
+      return jwt.decode(token);
+    } catch {
+      return null;
+    }
   }
 
   #verifyToken(token: string, secret: string) {

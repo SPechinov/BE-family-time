@@ -20,6 +20,7 @@ import {
   ErrorInvalidLoginOrPassword,
 } from '@/pkg';
 import { IRefreshTokensStore } from '@/domains/repositories/stores';
+import { JwtPayload } from 'jsonwebtoken';
 
 export class AuthUseCases implements IAuthUseCases {
   readonly #userService: IUsersService;
@@ -183,6 +184,16 @@ export class AuthUseCases implements IAuthUseCases {
     props.logger.debug({ contact }, 'code compare success, password updated');
 
     return user;
+  }
+
+  async getAllSessionsPayloads(props: {
+    userId: string;
+  }): Promise<{ payload: JwtPayload | string | null; jwt: string }[]> {
+    const jwts = await this.#refreshTokensStore.getAllByUserId({ userId: props.userId });
+    return jwts.map((jwt) => ({
+      jwt,
+      payload: this.#jwtService.parseToken(jwt),
+    }));
   }
 
   #compareOtpCodes(storeOtpCode: string | null | undefined, userOtpCode: string | null | undefined) {

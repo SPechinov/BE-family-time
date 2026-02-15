@@ -15,6 +15,7 @@ import { UsersRepository } from '@/repositories/db';
 import { AuthUseCases } from '@/useCases';
 import { JwtService } from '@/services/jwt';
 import { RefreshTokensStore } from '@/repositories/stores';
+import { AuthMiddleware } from '@/api/rest/middlewares';
 
 export class AuthComposite {
   #fastifyInstance: FastifyInstance;
@@ -72,6 +73,10 @@ export class AuthComposite {
       windowSec: 600,
     });
 
+    const jwtService = new JwtService();
+
+    const authMiddleware = new AuthMiddleware({ jwtService });
+
     const usersRepository = new UsersRepository({ pool: this.#postgres });
     const userService = new UsersService({
       usersRepository,
@@ -88,9 +93,9 @@ export class AuthComposite {
       forgotPasswordStartRateLimiterService,
       forgotPasswordEndRateLimiterService,
       refreshTokensStore: new RefreshTokensStore({ redis: this.#redis }),
-      jwtService: new JwtService(),
+      jwtService,
     });
 
-    new AuthRoutesController({ fastify: this.#fastifyInstance, useCases: authUseCases }).register();
+    new AuthRoutesController({ fastify: this.#fastifyInstance, useCases: authUseCases, authMiddleware }).register();
   }
 }

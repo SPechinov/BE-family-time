@@ -1,4 +1,4 @@
-import { FastifyInstance, FastifyReply } from 'fastify';
+import { FastifyInstance, FastifyReply, FastifyRequest } from 'fastify';
 import { ZodTypeProvider } from 'fastify-type-provider-zod';
 import { AUTH_SCHEMAS } from './schemas';
 import { IAuthUseCases } from '@/domains/useCases';
@@ -12,6 +12,7 @@ import { isDev, isProd } from '@/config';
 import { COOKIE_NAME, HEADER_NAME } from '../../constants';
 import { ErrorInvalidUserAgent, ErrorUserNotExists } from '@/pkg';
 import { CookieSerializeOptions } from '@fastify/cookie';
+import { IAuthMiddleware } from '@/api/rest/domains';
 
 const PREFIX = '/auth';
 
@@ -21,6 +22,7 @@ const ROUTES = Object.freeze({
   registrationEnd: '/registration-end',
   forgotPasswordStart: '/forgot-password-start',
   forgotPasswordEnd: '/forgot-password-end',
+  getAllSessions: '/get-all-sessions',
 });
 
 const REFRESH_TOKEN_COOKIE_CONFIG: CookieSerializeOptions = {
@@ -34,10 +36,12 @@ const REFRESH_TOKEN_COOKIE_CONFIG: CookieSerializeOptions = {
 export class AuthRoutesController {
   #fastify: FastifyInstance;
   #useCases: IAuthUseCases;
+  #authMiddleware: IAuthMiddleware;
 
-  constructor(props: { fastify: FastifyInstance; useCases: IAuthUseCases }) {
+  constructor(props: { fastify: FastifyInstance; useCases: IAuthUseCases; authMiddleware: IAuthMiddleware }) {
     this.#fastify = props.fastify;
     this.#useCases = props.useCases;
+    this.#authMiddleware = props.authMiddleware;
   }
 
   register() {
@@ -158,6 +162,37 @@ export class AuthRoutesController {
             }
           },
         );
+
+        router.get(
+          ROUTES.getAllSessions,
+          {
+            preHandler: [this.#authMiddleware.authenticate],
+            schema: AUTH_SCHEMAS.getAllSession,
+          },
+          async (request, reply) => {
+            const sessionsPayloads = await this.#useCases.getAllSessionsPayloads({ userId: request.userId });
+            const currentJwt = this.#getRefreshToken(request);
+
+            const sessions = sessionsPayloads.reduce<
+              { expiresAt: number; userAgent: string | null; isCurrent: boolean }[]
+            >((acc, session) => {
+              if (
+                typeof session.payload === 'object' &&
+                session.payload !== null &&
+                typeof session.payload.exp === 'number'
+              ) {
+                acc.push({
+                  isCurrent: session.jwt === currentJwt,
+                  expiresAt: session.payload.exp,
+                  userAgent: typeof session.payload.userAgent === 'string' ? session.payload.userAgent : null,
+                });
+              }
+              return acc;
+            }, []);
+
+            reply.status(200).send({ sessions });
+          },
+        );
       },
       { prefix: PREFIX },
     );
@@ -173,5 +208,9 @@ export class AuthRoutesController {
 
   #removeRefreshToken(reply: FastifyReply) {
     reply.setCookie(COOKIE_NAME.refreshToken, '', { ...REFRESH_TOKEN_COOKIE_CONFIG, maxAge: 0 });
+  }
+
+  #getRefreshToken(request: FastifyRequest): string | null {
+    return request.cookies?.[COOKIE_NAME.refreshToken] || null;
   }
 }

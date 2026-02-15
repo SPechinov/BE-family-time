@@ -3,4 +3,5 @@ export interface IRefreshTokensStore {
   isValid(props: { userId: string; refreshToken: string }): Promise<boolean>;
   delete(props: { userId: string; refreshToken?: string }): Promise<void>;
   deleteAll(props: { userId: string }): Promise<void>;
+  getAllByUserId(props: { userId: string }): Promise<string[]>;
 }

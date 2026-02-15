@@ -16,12 +16,14 @@ export const newApiRest = async (props: Props) => {
     logger: props.logger,
   });
 
-  fastify.register(
-    (instance) => {
-      new AuthComposite({ fastifyInstance: instance, redis: props.redis, postgres: props.postgres });
-    },
-    { prefix: '/api' },
-  );
+  fastify.after(() => {
+    fastify.register(
+      (instance) => {
+        new AuthComposite({ fastifyInstance: instance, redis: props.redis, postgres: props.postgres });
+      },
+      { prefix: '/api' },
+    );
+  });
 
   fastify.listen({ port: CONFIG.server.port });
 

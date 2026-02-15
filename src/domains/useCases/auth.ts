@@ -1,5 +1,6 @@
 import { UserContactsPlainEntity, UserCreatePlainEntity, UserEntity, UserPasswordPlainEntity } from '@/entities';
 import { ILogger } from '@/pkg';
+import { JwtPayload } from 'jsonwebtoken';
 
 export interface IAuthUseCases {
   login(props: {
@@ -31,4 +32,6 @@ export interface IAuthUseCases {
     otpCode: string;
     logger: ILogger;
   }): Promise<UserEntity>;
+
+  getAllSessionsPayloads(props: { userId: string }): Promise<{ payload: JwtPayload | string | null; jwt: string }[]>;
 }

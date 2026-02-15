@@ -15,21 +15,8 @@ body:form-urlencoded {
   password: 123123123
 }
 
-script:pre-request {
-  const emailElement = req.body.find((element) => {
-    return element.name === 'email'
-  });
-  
-  if (emailElement) {
-    bru.setVar("registrationEmail", emailElement.value)
-  }
-}
-
 script:post-response {
-  if (res.status === 200) {
-    bru.setVar("registrationOtpCode", res.getHeader("x-dev-otp-code"));
-  }
-  
+  bru.setVar("authToken", res.headers.authorization)
   
 }
 

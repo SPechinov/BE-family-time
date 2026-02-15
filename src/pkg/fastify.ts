@@ -1,6 +1,11 @@
 import Fastify, { FastifyError, FastifyReply, FastifyRequest } from 'fastify';
 import formBody from '@fastify/formbody';
-import { jsonSchemaTransform, serializerCompiler, validatorCompiler } from 'fastify-type-provider-zod';
+import {
+  jsonSchemaTransformObject,
+  jsonSchemaTransform,
+  serializerCompiler,
+  validatorCompiler,
+} from 'fastify-type-provider-zod';
 import fastifySwagger, { FastifyDynamicSwaggerOptions } from '@fastify/swagger';
 import fastifySwaggerUi from '@fastify/swagger-ui';
 import cookie from '@fastify/cookie';
@@ -76,6 +81,7 @@ export const newFastify = (props: {
     fastify.register(fastifySwagger, {
       openapi: OPEN_API_CONFIG,
       transform: customJsonSchemaTransform,
+      transformObject: jsonSchemaTransformObject,
     });
 
     fastify.register(fastifySwaggerUi, {

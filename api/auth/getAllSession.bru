@@ -1,0 +1,30 @@
+meta {
+  name: getAllSession
+  type: http
+  seq: 6
+}
+
+get {
+  url: {{url}}/auth/get-all-sessions
+  body: formUrlEncoded
+  auth: bearer
+}
+
+auth:bearer {
+  token: {{authToken}}
+}
+
+script:pre-request {
+  const emailElement = req.body.find((element) => {
+    return element.name === 'email'
+  });
+  
+  if (emailElement) {
+    bru.setVar("registrationEmail", emailElement.value)
+  }
+}
+
+settings {
+  encodeUrl: true
+  timeout: 0
+}

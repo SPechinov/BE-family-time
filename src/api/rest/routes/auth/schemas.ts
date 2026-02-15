@@ -1,7 +1,7 @@
 import z from 'zod';
 import { createResponseSchema } from '../../utils';
 import { CONFIG } from '@/config';
-import { GLOBAL_SCHEMAS } from '../../schemas';
+import { GLOBAL_SCHEMAS, SESSION_SCHEMA } from '../../schemas';
 
 const SCHEMA_LOGIN = {
   tags: ['Auth'],
@@ -64,10 +64,20 @@ const SCHEMA_FORGOT_PASSWORD_END = {
   }),
 };
 
+const SCHEMA_GET_ALL_SESSIONS = {
+  tags: ['Auth'],
+  response: createResponseSchema({
+    200: z.object({
+      sessions: SESSION_SCHEMA.array(),
+    }),
+  }),
+};
+
 export const AUTH_SCHEMAS = Object.freeze({
   login: SCHEMA_LOGIN,
   registrationStart: SCHEMA_REGISTRATION_START,
   registrationEnd: SCHEMA_REGISTRATION_END,
   forgotPasswordStart: SCHEMA_FORGOT_PASSWORD_START,
   forgotPasswordEnd: SCHEMA_FORGOT_PASSWORD_END,
+  getAllSession: SCHEMA_GET_ALL_SESSIONS,
 });

@@ -6,4 +6,6 @@ export interface IJwtService {
   verifyAccessToken(token: string): { userId: string } | null;
 
   verifyRefreshToken(token: string): { userId: string } | null;
+
+  parseToken(token: string): Record<string, unknown> | string | null;
 }
