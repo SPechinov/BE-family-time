@@ -107,7 +107,7 @@ describe('RateLimiterService', () => {
             window: 60000,
             prefix: 'test',
           }),
-      ).toThrow('"maxAttempts" should be greater than 0');
+      ).toThrow('maxAttempts should be greater than 0');
     });
 
     it('should throw if window is less than 1', () => {
@@ -119,7 +119,7 @@ describe('RateLimiterService', () => {
             window: 0,
             prefix: 'test',
           }),
-      ).toThrow('"window" should be greater than 0');
+      ).toThrow('window should be greater than 0');
     });
 
     it('should throw if prefix is empty', () => {
@@ -158,7 +158,7 @@ describe('RateLimiterService', () => {
             prefix: 'test',
             onceInInterval: 0,
           }),
-      ).toThrow('"onceInInterval" should be greater than 0');
+      ).toThrow('onceInInterval should be greater than 0');
     });
 
     it('should throw if onceInInterval is greater than window', () => {
@@ -171,7 +171,7 @@ describe('RateLimiterService', () => {
             prefix: 'test',
             onceInInterval: 70000,
           }),
-      ).toThrow('"onceInInterval" should be smaller than "window"');
+      ).toThrow('onceInInterval should be smaller than window');
     });
 
     it('should initialize with onceInInterval when valid', () => {
@@ -194,9 +194,12 @@ describe('RateLimiterService', () => {
       mockRedis.hmGet.mockResolvedValue([undefined, undefined]);
       mockRedis.exec.mockResolvedValue([]);
 
-      await expect(serviceWithInterval.checkLimitOrThrow({ key: validKey })).resolves.not.toThrow();
+      await expect(service.checkLimitOrThrow({ key: validKey })).resolves.not.toThrow();
 
-      expect(mockRedis.hmGet).toHaveBeenCalledWith(`rate-limit:test:${validKey}`, ['attempts', 'lastTime']);
+      expect(mockRedis.hmGet).toHaveBeenCalledWith(`rate-limit:${mockConfig.prefix}:${validKey}`, [
+        'attempts',
+        'lastTime',
+      ]);
       expect(mockRedis.multi).toHaveBeenCalled();
       expect(mockRedis.hIncrBy).toHaveBeenCalledWith(`rate-limit:${mockConfig.prefix}:${validKey}`, 'attempts', 1);
       expect(mockRedis.hSet).toHaveBeenCalledWith(
@@ -250,7 +253,7 @@ describe('RateLimiterService', () => {
       });
 
       const currentTime = Date.now();
-      const lastTime = currentTime - 15000; // outside 10s interval
+      const lastTime = (currentTime - 15000) / 1000;
 
       mockRedis.hmGet.mockResolvedValue(['2', lastTime.toString()]);
       mockRedis.exec.mockResolvedValue([]);
