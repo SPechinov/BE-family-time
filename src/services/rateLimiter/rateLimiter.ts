@@ -85,21 +85,50 @@ export class RateLimiterService implements IRateLimiterService {
   }
 
   #validatePropsOrThrow(props: Props) {
-    if (typeof props.onceInInterval === 'number') {
-      if (props.onceInInterval < 1) {
-        throw new Error('"onceInInterval" should be greater than 0');
-      }
-      if (props.onceInInterval > props.window) {
-        throw new Error('"onceInInterval" should be smaller than "window"');
-      }
+    if (!props) {
+      throw new Error('Props object is required');
+    }
+
+    if (!props.redis) {
+      throw new Error('Redis client is required');
+    }
+
+    if (typeof props.maxAttempts !== 'number') {
+      throw new Error('maxAttempts must be a number');
+    }
+
+    if (typeof props.window !== 'number') {
+      throw new Error('window must be a number');
+    }
+
+    if (typeof props.prefix !== 'string') {
+      throw new Error('prefix must be a string');
+    }
+
+    if (props.maxAttempts < 1) {
+      throw new Error('"maxAttempts" should be greater than 0');
     }
 
     if (props.window < 1) {
       throw new Error('"window" should be greater than 0');
     }
 
-    if (props.maxAttempts < 1) {
-      throw new Error('"maxAttempts" should be greater than 0');
+    if (!props.prefix) {
+      throw new Error('prefix cannot be empty');
+    }
+
+    if (props.onceInInterval !== undefined) {
+      if (typeof props.onceInInterval !== 'number') {
+        throw new Error('onceInInterval must be a number if provided');
+      }
+
+      if (props.onceInInterval < 1) {
+        throw new Error('"onceInInterval" should be greater than 0');
+      }
+
+      if (props.onceInInterval > props.window) {
+        throw new Error('"onceInInterval" should be smaller than "window"');
+      }
     }
   }
 }
