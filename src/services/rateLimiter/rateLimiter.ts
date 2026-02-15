@@ -87,19 +87,19 @@ export class RateLimiterService implements IRateLimiterService {
   #validatePropsOrThrow(props: Props) {
     if (typeof props.onceInInterval === 'number') {
       if (props.onceInInterval < 1) {
-        throw new Error('"onceInInterval" should be greater then 0');
+        throw new Error('"onceInInterval" should be greater than 0');
       }
       if (props.onceInInterval > props.window) {
-        throw new Error('"onceInInterval" should be greater then "window"');
+        throw new Error('"onceInInterval" should be smaller than "window"');
       }
     }
 
     if (props.window < 1) {
-      throw new Error('"window" should be greater then 0');
+      throw new Error('"window" should be greater than 0');
     }
 
     if (props.maxAttempts < 1) {
-      throw new Error('"onceInInterval" should be greater then 0');
+      throw new Error('"maxAttempts" should be greater than 0');
     }
   }
 }
