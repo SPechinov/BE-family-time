@@ -7,8 +7,8 @@ jest.mock('@/config', () => ({
     jwt: {
       accessTokenSecret: 'access-token-secret',
       refreshTokenSecret: 'refresh-token-secret',
-      accessTokenExpiry: '15m',
-      refreshTokenExpiry: '7d',
+      accessTokenExpiry: 900000,
+      refreshTokenExpiry: 604800000,
       issuer: 'family-time-app',
     },
   },
@@ -32,7 +32,7 @@ describe('JwtService', () => {
       const result = service.generateAccessToken(payload);
 
       expect(jwt.sign).toHaveBeenCalledWith(payload, 'access-token-secret', {
-        expiresIn: '15m',
+        expiresIn: 900,
         issuer: 'family-time-app',
       });
       expect(result).toBe(expectedToken);
@@ -46,7 +46,7 @@ describe('JwtService', () => {
       const result = service.generateAccessToken(payload);
 
       expect(jwt.sign).toHaveBeenCalledWith(payload, 'access-token-secret', {
-        expiresIn: '15m',
+        expiresIn: 900,
         issuer: 'family-time-app',
       });
       expect(result).toBe(expectedToken);
@@ -63,7 +63,7 @@ describe('JwtService', () => {
       const result = service.generateRefreshToken(payload);
 
       expect(jwt.sign).toHaveBeenCalledWith(payload, 'refresh-token-secret', {
-        expiresIn: '7d',
+        expiresIn: 604800,
         issuer: 'family-time-app',
       });
       expect(result).toBe(expectedToken);
@@ -77,7 +77,7 @@ describe('JwtService', () => {
       const result = service.generateRefreshToken(payload);
 
       expect(jwt.sign).toHaveBeenCalledWith(payload, 'refresh-token-secret', {
-        expiresIn: '7d',
+        expiresIn: 604800,
         issuer: 'family-time-app',
       });
       expect(result).toBe(expectedToken);
@@ -263,7 +263,7 @@ describe('JwtService', () => {
         payload,
         'access-token-secret',
         expect.objectContaining({
-          expiresIn: '15m',
+          expiresIn: 900,
         }),
       );
     });
@@ -278,9 +278,57 @@ describe('JwtService', () => {
         payload,
         'refresh-token-secret',
         expect.objectContaining({
-          expiresIn: '7d',
+          expiresIn: 604800,
         }),
       );
+    });
+  });
+
+  describe('parseToken', () => {
+    const token = 'valid-token';
+    const payload = { userId: 'user-123' };
+
+    it('should parse valid token and return payload', () => {
+      (jwt.decode as jest.Mock).mockReturnValue(payload);
+
+      const result = service.parseToken(token);
+
+      expect(jwt.decode).toHaveBeenCalledWith(token);
+      expect(result).toEqual(payload);
+    });
+
+    it('should return null for invalid token', () => {
+      (jwt.decode as jest.Mock).mockImplementationOnce(() => {
+        throw new Error('Invalid token');
+      });
+
+      const result = service.parseToken(token);
+
+      expect(result).toBeNull();
+    });
+
+    it('should return null for malformed token', () => {
+      (jwt.decode as jest.Mock).mockReturnValueOnce(null);
+
+      const result = service.parseToken(token);
+
+      expect(result).toBeNull();
+    });
+
+    it('should return null for null token', () => {
+      (jwt.decode as jest.Mock).mockReturnValueOnce(null);
+      const result = service.parseToken(null as any);
+
+      expect(jwt.decode).toHaveBeenCalledWith(null);
+      expect(result).toBeNull();
+    });
+
+    it('should return null for empty token', () => {
+      (jwt.decode as jest.Mock).mockReturnValueOnce(null);
+      const result = service.parseToken('');
+
+      expect(jwt.decode).toHaveBeenCalledWith('');
+      expect(result).toBeNull();
     });
   });
 });
