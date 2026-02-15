@@ -5,6 +5,7 @@ export interface IAuthUseCases {
   login(props: {
     userContactsPlainEntity: UserContactsPlainEntity;
     userPasswordPlainEntity: UserPasswordPlainEntity;
+    jwtPayload?: Record<string, string>;
     logger: ILogger;
   }): Promise<{ accessToken: string; refreshToken: string }>;
 

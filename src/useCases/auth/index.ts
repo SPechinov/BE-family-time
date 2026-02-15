@@ -58,6 +58,7 @@ export class AuthUseCases implements IAuthUseCases {
   async login(props: {
     userContactsPlainEntity: UserContactsPlainEntity;
     userPasswordPlainEntity: UserPasswordPlainEntity;
+    jwtPayload?: Record<string, string>;
     logger: ILogger;
   }): Promise<{ accessToken: string; refreshToken: string }> {
     this.#getContactOrThrow(props.userContactsPlainEntity);
@@ -73,8 +74,9 @@ export class AuthUseCases implements IAuthUseCases {
     });
     if (!verified) throw new ErrorInvalidLoginOrPassword();
 
-    const accessToken = this.#jwtService.generateAccessToken({ userId: user.id });
-    const refreshToken = this.#jwtService.generateRefreshToken({ userId: user.id });
+    const jwtPayload = { userId: user.id, ...(props.jwtPayload ?? {}) };
+    const accessToken = this.#jwtService.generateAccessToken(jwtPayload);
+    const refreshToken = this.#jwtService.generateRefreshToken(jwtPayload);
 
     await this.#refreshTokensStore.save({
       userId: user.id,

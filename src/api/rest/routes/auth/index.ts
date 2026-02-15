@@ -10,7 +10,7 @@ import {
 } from '@/entities';
 import { isDev, isProd } from '@/config';
 import { COOKIE_NAME, HEADER_NAME } from '../../constants';
-import { ErrorUserNotExists } from '@/pkg';
+import { ErrorInvalidUserAgent, ErrorUserNotExists } from '@/pkg';
 import { CookieSerializeOptions } from '@fastify/cookie';
 
 const PREFIX = '/auth';
@@ -51,12 +51,19 @@ export class AuthRoutesController {
             schema: AUTH_SCHEMAS.login,
           },
           async (request, reply) => {
+            const userAgent = request.headers['user-agent'];
+            if (typeof userAgent !== 'string') {
+              request.log.warn('User agent not found');
+              throw new ErrorInvalidUserAgent();
+            }
+
             const tokens = await this.#useCases.login({
               logger: request.log,
               userContactsPlainEntity: new UserContactsPlainEntity({
                 email: request.body.email,
               }),
               userPasswordPlainEntity: new UserPasswordPlainEntity(request.body.password),
+              jwtPayload: { userAgent },
             });
             this.#setAccessToken(reply, tokens.accessToken);
             this.#setRefreshToken(reply, tokens.refreshToken);

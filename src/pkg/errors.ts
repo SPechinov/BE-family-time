@@ -9,11 +9,18 @@ const CODES = {
   tokenExpired: 'tokenExpired',
   userNotExists: 'userNotExists',
   doubleRegistration: 'doubleRegistration',
+  invalidUserAgent: 'invalidUserAgent',
 };
 
 export class ErrorInvalidCode extends Error {
   constructor() {
     super(CODES.invalidCode);
+  }
+}
+
+export class ErrorInvalidUserAgent extends Error {
+  constructor() {
+    super(CODES.invalidUserAgent);
   }
 }
 
