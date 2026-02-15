@@ -1,4 +1,4 @@
-import { RedisClient } from '@/pkg';
+import { RedisClient, TIMES } from '@/pkg';
 import { FastifyInstance } from 'fastify';
 import { Pool } from 'pg';
 import { AuthRoutesController } from '../routes/auth';
@@ -38,18 +38,26 @@ export class AuthComposite {
       ttlSec: CONFIG.ttls.registrationSec,
     });
 
+    const loginRateLimiterService = new RateLimiterService({
+      redis: this.#redis,
+      prefix: 'auth-login',
+      maxAttempts: 10,
+      window: 10 * TIMES.minute,
+      onceInInterval: 5 * TIMES.second,
+    });
+
     const registrationStartRateLimiterService = new RateLimiterService({
       redis: this.#redis,
       prefix: 'auth-registration-start-rate-limiter',
       maxAttempts: 3,
-      windowSec: 600,
+      window: 10 * TIMES.minute,
     });
 
     const registrationEndRateLimiterService = new RateLimiterService({
       redis: this.#redis,
       prefix: 'auth-registration-end-rate-limiter',
       maxAttempts: 3,
-      windowSec: 600,
+      window: 10 * TIMES.minute,
     });
 
     const forgotPasswordOtpCodesService = new OtpCodesService({
@@ -63,14 +71,14 @@ export class AuthComposite {
       redis: this.#redis,
       prefix: 'auth-forgot-password-rate-limiter',
       maxAttempts: 3,
-      windowSec: 600,
+      window: 10 * TIMES.minute,
     });
 
     const forgotPasswordEndRateLimiterService = new RateLimiterService({
       redis: this.#redis,
       prefix: 'auth-forgot-password-rate-limiter',
       maxAttempts: 3,
-      windowSec: 600,
+      window: 10 * TIMES.minute,
     });
 
     const jwtService = new JwtService();
@@ -88,6 +96,7 @@ export class AuthComposite {
       usersService: userService,
       registrationOtpCodesService,
       forgotPasswordOtpCodesService,
+      loginRateLimiterService,
       registrationStartRateLimiterService,
       registrationEndRateLimiterService,
       forgotPasswordStartRateLimiterService,

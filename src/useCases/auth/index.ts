@@ -26,6 +26,7 @@ export class AuthUseCases implements IAuthUseCases {
   readonly #userService: IUsersService;
   readonly #registrationOtpCodesService: IOtpCodesService;
   readonly #forgotPasswordOtpCodesService: IOtpCodesService;
+  readonly #loginRateLimiterService: IRateLimiterService;
   readonly #registrationStartRateLimiterService: IRateLimiterService;
   readonly #registrationEndRateLimiterService: IRateLimiterService;
   readonly #forgotPasswordStartRateLimiterService: IRateLimiterService;
@@ -38,6 +39,7 @@ export class AuthUseCases implements IAuthUseCases {
     usersService: IUsersService;
     registrationOtpCodesService: IOtpCodesService;
     forgotPasswordOtpCodesService: IOtpCodesService;
+    loginRateLimiterService: IRateLimiterService;
     registrationStartRateLimiterService: IRateLimiterService;
     registrationEndRateLimiterService: IRateLimiterService;
     forgotPasswordStartRateLimiterService: IRateLimiterService;
@@ -48,6 +50,7 @@ export class AuthUseCases implements IAuthUseCases {
     this.#userService = props.usersService;
     this.#registrationOtpCodesService = props.registrationOtpCodesService;
     this.#forgotPasswordOtpCodesService = props.forgotPasswordOtpCodesService;
+    this.#loginRateLimiterService = props.loginRateLimiterService;
     this.#registrationStartRateLimiterService = props.registrationStartRateLimiterService;
     this.#registrationEndRateLimiterService = props.registrationEndRateLimiterService;
     this.#forgotPasswordStartRateLimiterService = props.forgotPasswordStartRateLimiterService;
@@ -62,7 +65,10 @@ export class AuthUseCases implements IAuthUseCases {
     jwtPayload?: Record<string, string>;
     logger: ILogger;
   }): Promise<{ accessToken: string; refreshToken: string }> {
-    this.#getContactOrThrow(props.userContactsPlainEntity);
+    const contact = this.#getContactOrThrow(props.userContactsPlainEntity);
+
+    await this.#loginRateLimiterService.checkLimitOrThrow({ key: contact });
+
     const user = await this.#userService.findOne({
       userFindOnePlainEntity: new UserFindOnePlainEntity({ contactsPlain: props.userContactsPlainEntity }),
     });
