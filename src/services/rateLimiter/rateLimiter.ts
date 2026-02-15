@@ -4,68 +4,102 @@ import { ErrorTooManyRequests, RedisClient } from '@/pkg';
 const KEY = 'rate-limit';
 
 interface KeyInfo {
-  attempts: number | null;
-  lastTime: number | null;
+  attempts: number;
+  lastTime: number;
+}
+
+interface Props {
+  redis: RedisClient;
+  maxAttempts: number;
+  window: number;
+  prefix: string;
+  onceInInterval?: number;
 }
 
 export class RateLimiterService implements IRateLimiterService {
   readonly #redis: RedisClient;
-  readonly #maxAttempts?: number;
-  readonly #window?: number;
+  readonly #maxAttempts: number;
+  readonly #window: number;
   readonly #onceInInterval?: number;
   readonly #prefix: string;
 
-  constructor(props: {
-    redis: RedisClient;
-    maxAttempts?: number;
-    window?: number;
-    prefix: string;
-    onceInInterval?: number;
-  }) {
+  constructor(props: Props) {
+    this.#validatePropsOrThrow(props);
     this.#redis = props.redis;
     this.#maxAttempts = props.maxAttempts;
-    this.#window = props.window ? props.window / 1000 : undefined;
+    this.#window = this.#normalizeTime(props.window);
     this.#prefix = props.prefix;
-    this.#onceInInterval = props.onceInInterval ? props.onceInInterval / 1000 : props.onceInInterval;
+    this.#onceInInterval = this.#normalizeTime(props.onceInInterval);
   }
 
   async checkLimitOrThrow(props: { key: string }): Promise<void> {
     const redisKey = this.#buildRedisKey(props.key);
-    const { attempts, lastTime } = await this.#getKeyInfo(redisKey);
+    const keyInfo = await this.#getKeyInfo(redisKey);
 
-    this.#checkAttemptsInInterval(attempts);
-    this.#checkOnceInInterval(lastTime);
+    if (keyInfo) {
+      this.#checkAttemptsInInterval(keyInfo.attempts);
+      this.#checkOnceInInterval(keyInfo.lastTime);
+    }
 
     await this.#redis
       .multi()
       .hIncrBy(redisKey, 'attempts', 1)
-      .hSet(redisKey, 'lastTime', Math.floor(Date.now() / 1000))
-      .expire(redisKey, this.#window || this.#onceInInterval || 0)
+      .hSet(redisKey, 'lastTime', this.#normalizeTime(Date.now()))
+      .expire(redisKey, this.#window || 0)
       .exec();
   }
 
-  async #getKeyInfo(redisKey: string): Promise<KeyInfo> {
+  async #getKeyInfo(redisKey: string): Promise<KeyInfo | null> {
     const [attemptsStr, lastTimeStr] = await this.#redis.hmGet(redisKey, ['attempts', 'lastTime']);
+    if (!attemptsStr || !lastTimeStr) {
+      return null;
+    }
 
     return {
-      attempts: attemptsStr ? parseInt(attemptsStr, 10) : null,
-      lastTime: lastTimeStr ? parseInt(lastTimeStr, 10) : null,
+      attempts: parseInt(attemptsStr, 10),
+      lastTime: parseInt(lastTimeStr, 10),
     };
   }
 
   #checkAttemptsInInterval(currentAttempts: KeyInfo['attempts']) {
-    if (this.#maxAttempts && this.#window && currentAttempts && currentAttempts >= this.#maxAttempts) {
+    if (currentAttempts && currentAttempts >= this.#maxAttempts) {
       throw new ErrorTooManyRequests();
     }
   }
 
   #checkOnceInInterval(lastTime: KeyInfo['lastTime']) {
-    if (this.#onceInInterval && lastTime && Date.now() / 1000 - lastTime <= this.#onceInInterval) {
+    if (this.#onceInInterval && lastTime && this.#normalizeTime(Date.now()) - lastTime <= this.#onceInInterval) {
       throw new ErrorTooManyRequests();
     }
   }
 
   #buildRedisKey(key: string): string {
     return `${KEY}:${this.#prefix}:${key}`;
+  }
+
+  #normalizeTime<T extends number | undefined>(time: T): T | number {
+    if (typeof time === 'number') {
+      return Math.floor(time / 1000);
+    }
+    return time;
+  }
+
+  #validatePropsOrThrow(props: Props) {
+    if (typeof props.onceInInterval === 'number') {
+      if (props.onceInInterval < 1) {
+        throw new Error('"onceInInterval" should be greater then 0');
+      }
+      if (props.onceInInterval > props.window) {
+        throw new Error('"onceInInterval" should be greater then "window"');
+      }
+    }
+
+    if (props.window < 1) {
+      throw new Error('"window" should be greater then 0');
+    }
+
+    if (props.maxAttempts < 1) {
+      throw new Error('"onceInInterval" should be greater then 0');
+    }
   }
 }
