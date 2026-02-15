@@ -106,11 +106,11 @@ export class RateLimiterService implements IRateLimiterService {
     }
 
     if (props.maxAttempts < 1) {
-      throw new Error('"maxAttempts" should be greater than 0');
+      throw new Error('maxAttempts should be greater than 0');
     }
 
     if (props.window < 1) {
-      throw new Error('"window" should be greater than 0');
+      throw new Error('window should be greater than 0');
     }
 
     if (!props.prefix) {
@@ -123,11 +123,11 @@ export class RateLimiterService implements IRateLimiterService {
       }
 
       if (props.onceInInterval < 1) {
-        throw new Error('"onceInInterval" should be greater than 0');
+        throw new Error('onceInInterval should be greater than 0');
       }
 
       if (props.onceInInterval > props.window) {
-        throw new Error('"onceInInterval" should be smaller than "window"');
+        throw new Error('onceInInterval should be smaller than window');
       }
     }
   }
