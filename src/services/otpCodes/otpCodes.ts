@@ -24,12 +24,12 @@ export class OtpCodesService implements IOtpCodesService {
   }
 
   getCode(props: { key: string }) {
-    this.#validateCodeOrThrow(props.key);
+    this.#validateKeyOrThrow(props.key);
     return this.#redis.get(this.#buildRedisKey(props));
   }
 
   deleteCode(props: { key: string }) {
-    this.#validateCodeOrThrow(props.key);
+    this.#validateKeyOrThrow(props.key);
     return this.#redis.del(this.#buildRedisKey(props));
   }
 
