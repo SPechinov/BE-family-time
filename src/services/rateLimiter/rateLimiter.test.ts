@@ -42,7 +42,7 @@ describe('RateLimiterService', () => {
     });
 
     it('should throw if props is not provided', () => {
-      // @ts-ignore
+      // @ts-expect-error Testing invalid type for validation
       expect(() => new RateLimiterService(undefined)).toThrow('Props object is required');
     });
 
@@ -50,7 +50,7 @@ describe('RateLimiterService', () => {
       expect(
         () =>
           new RateLimiterService({
-            // @ts-ignore
+            // @ts-expect-error Testing invalid type for validation
             redis: undefined,
             maxAttempts: 5,
             window: 60000,
@@ -64,7 +64,7 @@ describe('RateLimiterService', () => {
         () =>
           new RateLimiterService({
             redis: mockRedis,
-            // @ts-ignore
+            // @ts-expect-error Testing invalid type for validation
             maxAttempts: '5',
             window: 60000,
             prefix: 'test',
@@ -78,7 +78,7 @@ describe('RateLimiterService', () => {
           new RateLimiterService({
             redis: mockRedis,
             maxAttempts: 5,
-            // @ts-ignore
+            // @ts-expect-error Testing invalid type for validation
             window: '60000',
             prefix: 'test',
           }),
@@ -92,7 +92,7 @@ describe('RateLimiterService', () => {
             redis: mockRedis,
             maxAttempts: 5,
             window: 60000,
-            // @ts-ignore
+            // @ts-expect-error Testing invalid type for validation
             prefix: 123,
           }),
       ).toThrow('prefix must be a string');
@@ -142,7 +142,7 @@ describe('RateLimiterService', () => {
             maxAttempts: 5,
             window: 60000,
             prefix: 'test',
-            // @ts-ignore
+            // @ts-expect-error Testing invalid type for validation
             onceInInterval: '1000',
           }),
       ).toThrow('onceInInterval must be a number if provided');
