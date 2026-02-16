@@ -12,6 +12,7 @@ export const ROUTES = Object.freeze({
   getAllSessions: '/get-all-sessions',
   logoutAllSessions: '/logout-all-sessions',
   logoutSession: '/logout-session',
+  refreshTokens: '/refresh-tokens',
 });
 
 export const REFRESH_TOKEN_COOKIE_CONFIG: CookieSerializeOptions = {

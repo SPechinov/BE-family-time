@@ -1,18 +1,17 @@
 meta {
-  name: login
+  name: refreshTokens
   type: http
-  seq: 1
+  seq: 9
 }
 
 post {
-  url: {{url}}/auth/login
+  url: {{url}}/auth/refresh-tokens
   body: formUrlEncoded
-  auth: inherit
+  auth: bearer
 }
 
-body:form-urlencoded {
-  email: test1@test.com
-  password: 123123123
+auth:bearer {
+  token: {{authToken}}
 }
 
 script:post-response {

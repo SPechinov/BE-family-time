@@ -9,17 +9,31 @@ export class JwtService implements IJwtService {
   #refreshTokenExpiry = CONFIG.jwt.refreshTokenExpiry;
 
   generateAccessToken(payload: { userId: string }) {
-    return jwt.sign(payload, this.#accessTokenSecret, {
-      expiresIn: this.#accessTokenExpiry / 1000,
-      issuer: CONFIG.jwt.issuer,
-    });
+    return jwt.sign(
+      {
+        createdAt: new Date().toISOString(),
+        ...payload,
+      },
+      this.#accessTokenSecret,
+      {
+        expiresIn: this.#accessTokenExpiry / 1000,
+        issuer: CONFIG.jwt.issuer,
+      },
+    );
   }
 
   generateRefreshToken(payload: { userId: string }) {
-    return jwt.sign(payload, this.#refreshTokenSecret, {
-      expiresIn: this.#refreshTokenExpiry / 1000,
-      issuer: CONFIG.jwt.issuer,
-    });
+    return jwt.sign(
+      {
+        createdAt: new Date().toISOString(),
+        ...payload,
+      },
+      this.#refreshTokenSecret,
+      {
+        expiresIn: this.#refreshTokenExpiry / 1000,
+        issuer: CONFIG.jwt.issuer,
+      },
+    );
   }
 
   verifyAccessToken(token: string) {

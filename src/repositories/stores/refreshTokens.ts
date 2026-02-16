@@ -15,7 +15,7 @@ export class RefreshTokensStore implements IRefreshTokensStore {
     await this.#redis.setEx(key, ttl, '1');
   }
 
-  async isValid(props: { userId: string; refreshToken: string }): Promise<boolean> {
+  async hasInStore(props: { userId: string; refreshToken: string }): Promise<boolean> {
     const key = this.#generateRedisKey(props.userId, props.refreshToken);
     const exists = await this.#redis.exists(key);
     return exists === 1;

@@ -18,6 +18,7 @@ import {
   ErrorDoubleRegistration,
   ILogger,
   ErrorInvalidLoginOrPassword,
+  ErrorUnauthorized,
 } from '@/pkg';
 import { IRefreshTokensStore } from '@/domains/repositories/stores';
 import { JwtPayload } from 'jsonwebtoken';
@@ -208,6 +209,49 @@ export class AuthUseCases implements IAuthUseCases {
 
   async logoutSession(props: { userId: string; refreshToken: string }): Promise<void> {
     await this.#refreshTokensStore.delete({ userId: props.userId, refreshToken: props.refreshToken });
+  }
+
+  async refreshTokens(props: {
+    refreshToken: string;
+    jwtPayload?: Record<string, string>;
+    logger: ILogger;
+  }): Promise<{ accessToken: string; refreshToken: string }> {
+    const oldJwtPayload = this.#jwtService.verifyRefreshToken(props.refreshToken);
+    if (!oldJwtPayload?.userId) {
+      props.logger.warn({ jwtRefreshToken: props.refreshToken }, 'refresh token invalid payload');
+      throw new ErrorUnauthorized();
+    }
+
+    const hasJwtInStore = await this.#refreshTokensStore.hasInStore({
+      userId: oldJwtPayload.userId,
+      refreshToken: props.refreshToken,
+    });
+    if (!hasJwtInStore) {
+      props.logger.warn({ jwtRefreshToken: props.refreshToken }, 'refresh token has not in store');
+      throw new ErrorUnauthorized();
+    }
+
+    const user = await this.#userService.findOne({
+      userFindOnePlainEntity: new UserFindOnePlainEntity({ id: oldJwtPayload.userId }),
+    });
+    if (!user) {
+      props.logger.warn('user does not exist');
+      throw new ErrorUserNotExists();
+    }
+
+    const jwtPayload = { userId: user.id, ...(props.jwtPayload ?? {}) };
+    const accessToken = this.#jwtService.generateAccessToken(jwtPayload);
+    const refreshToken = this.#jwtService.generateRefreshToken(jwtPayload);
+
+    await this.#refreshTokensStore.save({
+      userId: user.id,
+      refreshToken,
+      expiresAt: new Date(Date.now() + CONFIG.jwt.refreshTokenExpiry),
+    });
+
+    this.#refreshTokensStore.delete({ userId: user.id, refreshToken: props.refreshToken });
+
+    return { accessToken, refreshToken };
   }
 
   #compareOtpCodes(storeOtpCode: string | null | undefined, userOtpCode: string | null | undefined) {

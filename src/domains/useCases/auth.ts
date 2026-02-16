@@ -38,4 +38,10 @@ export interface IAuthUseCases {
   logoutAllSessions(props: { userId: string }): Promise<void>;
 
   logoutSession(props: { userId: string; refreshToken: string }): Promise<void>;
+
+  refreshTokens(props: {
+    refreshToken: string;
+    jwtPayload?: Record<string, string>;
+    logger: ILogger;
+  }): Promise<{ accessToken: string; refreshToken: string }>;
 }

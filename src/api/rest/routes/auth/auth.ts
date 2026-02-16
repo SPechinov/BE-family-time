@@ -10,7 +10,7 @@ import {
 } from '@/entities';
 import { isDev } from '@/config';
 import { COOKIE_NAME, HEADER_NAME } from '../../constants';
-import { ErrorInvalidUserAgent, ErrorUserNotExists } from '@/pkg';
+import { ErrorInvalidUserAgent, ErrorUnauthorized, ErrorUserNotExists } from '@/pkg';
 import { IAuthMiddleware } from '@/api/rest/domains';
 import { PREFIX, REFRESH_TOKEN_COOKIE_CONFIG, ROUTES } from './constants';
 
@@ -36,11 +36,7 @@ export class AuthRoutesController {
             schema: AUTH_SCHEMAS.login,
           },
           async (request, reply) => {
-            const userAgent = request.headers['user-agent'];
-            if (typeof userAgent !== 'string') {
-              request.log.warn('User agent not found');
-              throw new ErrorInvalidUserAgent();
-            }
+            const userAgent = this.#getUserAgent(request);
 
             const tokens = await this.#useCases.login({
               logger: request.log,
@@ -206,6 +202,29 @@ export class AuthRoutesController {
             reply.status(200).send();
           },
         );
+
+        router.post(
+          ROUTES.refreshTokens,
+          {
+            schema: AUTH_SCHEMAS.refreshTokens,
+          },
+          async (request, reply) => {
+            const refreshToken = this.#getRefreshToken(request);
+            if (!refreshToken) throw new ErrorUnauthorized();
+
+            const userAgent = this.#getUserAgent(request);
+            const tokens = await this.#useCases.refreshTokens({
+              refreshToken,
+              logger: request.log,
+              jwtPayload: { userAgent },
+            });
+
+            this.#setAccessToken(reply, tokens.accessToken);
+            this.#setRefreshToken(reply, tokens.refreshToken);
+
+            reply.status(200).send();
+          },
+        );
       },
       { prefix: PREFIX },
     );
@@ -225,5 +244,15 @@ export class AuthRoutesController {
 
   #getRefreshToken(request: FastifyRequest): string | null {
     return request.cookies?.[COOKIE_NAME.refreshToken] || null;
+  }
+
+  #getUserAgent(request: FastifyRequest) {
+    const userAgent = request.headers['user-agent'];
+    if (typeof userAgent !== 'string') {
+      request.log.warn('User agent not found');
+      throw new ErrorInvalidUserAgent();
+    }
+
+    return userAgent;
   }
 }

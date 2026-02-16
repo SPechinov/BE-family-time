@@ -87,6 +87,13 @@ const SCHEMA_LOGOUT_SESSION = {
   }),
 };
 
+const SCHEMA_REFRESH_TOKENS = {
+  tags: ['Auth'],
+  response: createResponseSchema({
+    200: z.undefined(),
+  }),
+};
+
 export const AUTH_SCHEMAS = Object.freeze({
   login: SCHEMA_LOGIN,
   registrationStart: SCHEMA_REGISTRATION_START,
@@ -96,4 +103,5 @@ export const AUTH_SCHEMAS = Object.freeze({
   getAllSession: SCHEMA_GET_ALL_SESSIONS,
   logoutAllSession: SCHEMA_LOGOUT_ALL_SESSIONS,
   logoutSession: SCHEMA_LOGOUT_SESSION,
+  refreshTokens: SCHEMA_REFRESH_TOKENS,
 });

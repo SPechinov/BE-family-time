@@ -20,6 +20,7 @@ export class AuthMiddleware implements IAuthMiddleware {
 
     if (!decoded) throw new ErrorTokenExpired();
 
+    request.log = request.log.child({ userId: decoded.userId });
     (request as any).userId = decoded.userId;
   };
 }
