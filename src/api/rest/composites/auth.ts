@@ -42,22 +42,24 @@ export class AuthComposite {
       redis: this.#redis,
       prefix: 'auth-login',
       maxAttempts: 10,
-      window: 10 * TIMES.minute,
-      onceInInterval: 5 * TIMES.second,
+      window: 5 * TIMES.minute,
+      onceInInterval: 3 * TIMES.second,
     });
 
     const registrationStartRateLimiterService = new RateLimiterService({
       redis: this.#redis,
       prefix: 'auth-registration-start-rate-limiter',
-      maxAttempts: 3,
+      maxAttempts: 5,
       window: 10 * TIMES.minute,
+      onceInInterval: 25 * TIMES.second,
     });
 
     const registrationEndRateLimiterService = new RateLimiterService({
       redis: this.#redis,
       prefix: 'auth-registration-end-rate-limiter',
-      maxAttempts: 3,
+      maxAttempts: 5,
       window: 10 * TIMES.minute,
+      onceInInterval: 25 * TIMES.second,
     });
 
     const forgotPasswordOtpCodesService = new OtpCodesService({
@@ -70,15 +72,17 @@ export class AuthComposite {
     const forgotPasswordStartRateLimiterService = new RateLimiterService({
       redis: this.#redis,
       prefix: 'auth-forgot-password-rate-limiter',
-      maxAttempts: 3,
+      maxAttempts: 5,
       window: 10 * TIMES.minute,
+      onceInInterval: 25 * TIMES.second,
     });
 
     const forgotPasswordEndRateLimiterService = new RateLimiterService({
       redis: this.#redis,
       prefix: 'auth-forgot-password-rate-limiter',
-      maxAttempts: 3,
+      maxAttempts: 5,
       window: 10 * TIMES.minute,
+      onceInInterval: 25 * TIMES.second,
     });
 
     const jwtService = new JwtService();
