@@ -82,6 +82,10 @@ export class UsersService implements IUsersService {
     return userEntity;
   }
 
+  parseUser(userEntity: UserEntity): UserEntity {
+
+  }
+
   verifyPassword(props: { password: string; hash: string; logger: ILogger }): Promise<boolean> {
     return this.#hashPasswordService.verify(props);
   }

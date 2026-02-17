@@ -8,5 +8,6 @@ export interface IUsersService {
     userFindOnePlainEntity: UserFindOnePlainEntity;
     userPatchOnePlainEntity: UserPatchOnePlainEntity;
   }): Promise<UserEntity>;
+  parseUser(userEntity: UserEntity): UserEntity;
   verifyPassword(props: { password: string; hash: string; logger: ILogger }): Promise<boolean>;
 }

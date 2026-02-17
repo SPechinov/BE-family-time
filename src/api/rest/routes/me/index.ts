@@ -1,0 +1,1 @@
+export { MeRoutesController } from './controller';

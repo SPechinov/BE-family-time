@@ -1,0 +1,20 @@
+meta {
+  name: me
+  type: http
+  seq: 1
+}
+
+get {
+  url: {{url}}/me
+  body: formUrlEncoded
+  auth: bearer
+}
+
+auth:bearer {
+  token: {{authToken}}
+}
+
+settings {
+  encodeUrl: true
+  timeout: 0
+}
