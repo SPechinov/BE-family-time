@@ -204,8 +204,8 @@ export class UsersRepository implements IUsersRepository {
 
   #buildUserEntity(row: IUserRowData) {
     const personalInfoEncrypted = new UserPersonalInfoEncryptedEntity({
-      firstName: row.first_name_encrypted,
-      lastName: row.last_name_encrypted || undefined,
+      firstName: row.first_name_encrypted?.toString('utf-8'),
+      lastName: row.last_name_encrypted?.toString('utf-8'),
     });
 
     const contactsHashed = new UserContactsHashedEntity({

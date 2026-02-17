@@ -16,6 +16,6 @@ export class MeUseCase implements IMeUseCases {
     });
     if (!user) throw new ErrorUserNotExists();
 
-    return this.#usersService.parseUser(user);
+    return this.#usersService.decryptUser(user);
   }
 }

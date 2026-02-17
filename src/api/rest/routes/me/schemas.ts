@@ -4,7 +4,13 @@ import { z } from 'zod';
 const GET_ME = {
   tags: ['Me'],
   response: createResponseSchema({
-    200: z.undefined(),
+    200: z.object({
+      id: z.string(),
+      email: z.string().nullable(),
+      phone: z.string().nullable(),
+      firstName: z.string().nullable(),
+      lastName: z.string().nullable(),
+    }),
   }),
 };
 

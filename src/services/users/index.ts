@@ -4,6 +4,7 @@ import { IEncryptionService, IHashPasswordService, IHmacService, IUsersService }
 import {
   UserContactsEncryptedEntity,
   UserContactsHashedEntity,
+  UserContactsPlainEntity,
   UserCreateEntity,
   UserCreatePlainEntity,
   UserEntity,
@@ -13,6 +14,7 @@ import {
   UserPatchOneEntity,
   UserPatchOnePlainEntity,
   UserPersonalInfoEncryptedEntity,
+  UserPersonalInfoPlainEntity,
 } from '@/entities';
 import { ErrorUserNotExists, ILogger } from '@/pkg';
 
@@ -82,12 +84,58 @@ export class UsersService implements IUsersService {
     return userEntity;
   }
 
-  parseUser(userEntity: UserEntity): UserEntity {
+  async decryptUser(userEntity: UserEntity): Promise<UserEntity> {
+    const [contactsPlain, personalInfoPlain] = await Promise.all([
+      this.#decryptContacts(userEntity.encryptionSalt, userEntity.contactsEncrypted),
+      this.#decryptPersonalInfo(userEntity.encryptionSalt, userEntity.personalInfoEncrypted),
+    ]);
 
+    return new UserEntity({
+      id: userEntity.id,
+      encryptionSalt: userEntity.encryptionSalt,
+      createdAt: userEntity.createdAt,
+      updatedAt: userEntity.updatedAt,
+      contactsPlain,
+      personalInfoPlain,
+    });
   }
 
   verifyPassword(props: { password: string; hash: string; logger: ILogger }): Promise<boolean> {
     return this.#hashPasswordService.verify(props);
+  }
+
+  async #decryptContacts(
+    encryptionSalt: string,
+    contactsEncrypted?: UserContactsEncryptedEntity,
+  ): Promise<UserContactsPlainEntity | undefined> {
+    if (!(contactsEncrypted instanceof UserContactsEncryptedEntity)) {
+      return;
+    }
+
+    if (!contactsEncrypted.getContact()) return;
+
+    const { email, phone } = contactsEncrypted;
+    return new UserContactsPlainEntity({
+      email: email ? await this.#encryptionService.decrypt(email, encryptionSalt) : undefined,
+      phone: phone ? await this.#encryptionService.decrypt(phone, encryptionSalt) : undefined,
+    });
+  }
+
+  async #decryptPersonalInfo(
+    encryptionSalt: string,
+    personalInfoEncrypted?: UserPersonalInfoEncryptedEntity,
+  ): Promise<UserPersonalInfoPlainEntity | undefined> {
+    if (!(personalInfoEncrypted instanceof UserPersonalInfoEncryptedEntity)) {
+      return;
+    }
+
+    if (!personalInfoEncrypted.firstName && !personalInfoEncrypted.lastName) return;
+
+    const { firstName, lastName } = personalInfoEncrypted;
+    return new UserPersonalInfoPlainEntity({
+      firstName: firstName ? await this.#encryptionService.decrypt(firstName, encryptionSalt) : undefined,
+      lastName: lastName ? await this.#encryptionService.decrypt(lastName, encryptionSalt) : undefined,
+    });
   }
 
   #convertUserFindOnePlainToHashedOrThrow(userFindOnePlainEntity: UserFindOnePlainEntity): UserFindOneEntity {

@@ -24,11 +24,18 @@ export class MeRoutesController {
         router.get(
           ROUTES.getMe,
           {
+            preHandler: [this.#authMiddleware.authenticate],
             schema: SCHEMAS.getMe,
           },
           async (request, reply) => {
             const user = await this.#meUseCases.getMe({ userId: request.userId });
-            reply.status(200).send();
+            reply.status(200).send({
+              id: user.id,
+              email: user.contactsPlain?.email ?? null,
+              phone: user.contactsPlain?.phone ?? null,
+              firstName: user.personalInfoPlain?.firstName ?? null,
+              lastName: user.personalInfoPlain?.lastName ?? null,
+            });
           },
         );
       },
