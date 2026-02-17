@@ -16,3 +16,13 @@ export const SESSION_SCHEMA = z.object({
   userAgent: z.string().nullable(),
   isCurrent: z.boolean().optional(),
 });
+
+export const USER_SCHEMA = z
+  .object({
+    id: z.string(),
+    email: z.email().nullable(),
+    phone: z.string().nullable(),
+    firstName: z.string().nullable(),
+    lastName: z.string().nullable(),
+  })
+  .register(z.globalRegistry, { id: 'USER_SCHEMA' });
