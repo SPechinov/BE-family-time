@@ -162,28 +162,24 @@ describe('HmacService', () => {
     describe('✓ Hash consistency', () => {
       it('should produce consistent hashes across multiple calls', () => {
         const value = 'consistent-test';
-        const hashes = Array(10).fill(null).map(() => service.hash(value));
+        const hashes = Array(10)
+          .fill(null)
+          .map(() => service.hash(value));
 
         expect(new Set(hashes).size).toBe(1);
       });
 
       it('should produce unique hashes for sequential inputs', () => {
         const inputs = ['input1', 'input2', 'input3', 'input4', 'input5'];
-        const hashes = inputs.map(input => service.hash(input));
+        const hashes = inputs.map((input) => service.hash(input));
 
         const uniqueHashes = new Set(hashes);
         expect(uniqueHashes.size).toBe(inputs.length);
       });
 
       it('should produce unique hashes for similar inputs', () => {
-        const similarInputs = [
-          'password',
-          'password ',
-          ' password',
-          'Password',
-          'PASSWORD',
-        ];
-        const hashes = similarInputs.map(input => service.hash(input));
+        const similarInputs = ['password', 'password ', ' password', 'Password', 'PASSWORD'];
+        const hashes = similarInputs.map((input) => service.hash(input));
 
         const uniqueHashes = new Set(hashes);
         expect(uniqueHashes.size).toBe(similarInputs.length);
@@ -349,15 +345,11 @@ describe('HmacService', () => {
 
     describe('✓ Real-world scenarios', () => {
       it('should hash email addresses', () => {
-        const emails = [
-          'user@example.com',
-          'admin@test.org',
-          'test.user@domain.co.uk',
-        ];
+        const emails = ['user@example.com', 'admin@test.org', 'test.user@domain.co.uk'];
 
-        const hashes = emails.map(email => service.hash(email));
+        const hashes = emails.map((email) => service.hash(email));
 
-        hashes.forEach(hash => {
+        hashes.forEach((hash) => {
           expect(hash.length).toBe(128);
           expect(hash).toMatch(/^[a-f0-9]{128}$/);
         });
@@ -369,9 +361,9 @@ describe('HmacService', () => {
       it('should hash user IDs', () => {
         const userIds = ['user-1', 'user-2', 'user-3', 'uuid-12345'];
 
-        const hashes = userIds.map(id => service.hash(id));
+        const hashes = userIds.map((id) => service.hash(id));
 
-        hashes.forEach(hash => {
+        hashes.forEach((hash) => {
           expect(hash.length).toBe(128);
         });
 
@@ -379,15 +371,11 @@ describe('HmacService', () => {
       });
 
       it('should hash session tokens', () => {
-        const tokens = [
-          'session-abc-123',
-          'session-def-456',
-          'jwt-token-xyz-789',
-        ];
+        const tokens = ['session-abc-123', 'session-def-456', 'jwt-token-xyz-789'];
 
-        const hashes = tokens.map(token => service.hash(token));
+        const hashes = tokens.map((token) => service.hash(token));
 
-        hashes.forEach(hash => {
+        hashes.forEach((hash) => {
           expect(hash.length).toBe(128);
         });
 
