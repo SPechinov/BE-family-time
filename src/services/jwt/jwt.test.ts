@@ -242,7 +242,7 @@ describe('JwtService', () => {
 
         expect(accessCall).toBeDefined();
         expect(refreshCall).toBeDefined();
-        expect(refreshCall![2]!.expiresIn).toBeGreaterThan(accessCall![2]!.expiresIn);
+        expect(refreshCall?.[2]?.expiresIn).toBeGreaterThan(accessCall?.[2]?.expiresIn ?? 0);
       });
     });
   });
@@ -544,7 +544,7 @@ describe('JwtService', () => {
 
         expect(accessCall).toBeDefined();
         expect(refreshCall).toBeDefined();
-        expect(accessCall![1]).not.toBe(refreshCall![1]);
+        expect(accessCall?.[1]).not.toBe(refreshCall?.[1]);
       });
 
       it('should not verify token with wrong secret', () => {
