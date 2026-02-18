@@ -20,7 +20,7 @@ export class RateLimiterService implements IRateLimiterService {
       points: options.points,
       duration: options.duration,
       blockDuration: options.blockDuration,
-      keyPrefix: `rate-limiter-${options.keyPrefix}`,
+      keyPrefix: `rate-limiter:${options.keyPrefix}`,
     });
   }
 
