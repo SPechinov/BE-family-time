@@ -9,10 +9,10 @@ import {
   UserPersonalInfoPlainEntity,
 } from '@/entities';
 import { isDev } from '@/config';
-import { COOKIE_NAME, HEADER_NAME } from '../../constants';
+import { COOKIE_NAME, HEADER_NAME, REFRESH_TOKEN_COOKIE_CONFIG } from '../../constants';
 import { ErrorInvalidUserAgent, ErrorUnauthorized, ErrorUserNotExists } from '@/pkg';
 import { IAuthMiddleware } from '@/api/rest/domains';
-import { PREFIX, REFRESH_TOKEN_COOKIE_CONFIG, ROUTES } from './constants';
+import { PREFIX, ROUTES } from './constants';
 
 export class AuthRoutesController {
   #fastify: FastifyInstance;
@@ -36,7 +36,7 @@ export class AuthRoutesController {
             schema: AUTH_SCHEMAS.login,
           },
           async (request, reply) => {
-            const userAgent = this.#getUserAgent(request);
+            const userAgent = this.#getUserAgentOrThrow(request);
 
             const tokens = await this.#useCases.login({
               logger: request.log,
@@ -212,7 +212,7 @@ export class AuthRoutesController {
             const refreshToken = this.#getRefreshToken(request);
             if (!refreshToken) throw new ErrorUnauthorized();
 
-            const userAgent = this.#getUserAgent(request);
+            const userAgent = this.#getUserAgentOrThrow(request);
             const tokens = await this.#useCases.refreshTokens({
               refreshToken,
               logger: request.log,
@@ -246,7 +246,7 @@ export class AuthRoutesController {
     return request.cookies?.[COOKIE_NAME.refreshToken] || null;
   }
 
-  #getUserAgent(request: FastifyRequest) {
+  #getUserAgentOrThrow(request: FastifyRequest) {
     const userAgent = request.headers['user-agent'];
     if (typeof userAgent !== 'string') {
       request.log.warn('User agent not found');

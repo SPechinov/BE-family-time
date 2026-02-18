@@ -1,17 +1,5 @@
 import { hasZodFastifySchemaValidationErrors } from 'fastify-type-provider-zod';
-import {
-  ErrorInvalidCode,
-  ErrorInvalidContacts,
-  ErrorInvalidLoginOrPassword,
-  ErrorInvalidRefreshToken,
-  ErrorUserNotExists,
-  ErrorTokenExpired,
-  ErrorTooManyRequests,
-  ErrorUnauthorized,
-  ErrorUserExists,
-  ErrorDoubleRegistration,
-  ErrorInvalidUserAgent,
-} from '@/pkg';
+import { BusinessError } from '@/pkg';
 import { FastifyError, FastifyReply, FastifyRequest } from 'fastify';
 
 export const globalErrorHandler = (error: FastifyError, request: FastifyRequest, reply: FastifyReply) => {
@@ -21,9 +9,8 @@ export const globalErrorHandler = (error: FastifyError, request: FastifyRequest,
     timestamp: Date.now(),
   };
 
-  const businessError = getBusinessError(error);
-  if (businessError) {
-    params.statusCode = businessError.statusCode;
+  if (error instanceof BusinessError) {
+    params.statusCode = error.statusCode;
     params.code = error.message;
     request.log.debug(error.message);
   } else if (hasZodFastifySchemaValidationErrors(error)) {
@@ -39,23 +26,4 @@ export const globalErrorHandler = (error: FastifyError, request: FastifyRequest,
   }
 
   reply.code(params.statusCode).send(params);
-};
-
-const BUSINESS_ERRORS = new Map([
-  [ErrorInvalidCode.name, { statusCode: 400 }],
-  [ErrorUserExists.name, { statusCode: 400 }],
-  [ErrorInvalidContacts.name, { statusCode: 400 }],
-  [ErrorTooManyRequests.name, { statusCode: 429 }],
-  [ErrorInvalidLoginOrPassword.name, { statusCode: 400 }],
-  [ErrorInvalidRefreshToken.name, { statusCode: 400 }],
-  [ErrorUnauthorized.name, { statusCode: 401 }],
-  [ErrorTokenExpired.name, { statusCode: 401 }],
-  [ErrorUserNotExists.name, { statusCode: 400 }],
-  [ErrorDoubleRegistration.name, { statusCode: 429 }],
-  [ErrorInvalidUserAgent.name, { statusCode: 400 }],
-]);
-
-const getBusinessError = (error: FastifyError) => {
-  const errorConfig = BUSINESS_ERRORS.get(error.constructor.name);
-  return errorConfig || null;
 };

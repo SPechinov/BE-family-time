@@ -1,6 +1,3 @@
-import { isProd } from '@/config';
-import { CookieSerializeOptions } from '@fastify/cookie';
-
 export const PREFIX = '/auth';
 
 export const ROUTES = Object.freeze({
@@ -14,11 +11,3 @@ export const ROUTES = Object.freeze({
   logoutSession: '/logout-session',
   refreshTokens: '/refresh-tokens',
 });
-
-export const REFRESH_TOKEN_COOKIE_CONFIG: CookieSerializeOptions = {
-  httpOnly: true,
-  secure: isProd(),
-  sameSite: 'strict',
-  maxAge: 30 * 24 * 60 * 60 * 1000,
-  path: '/',
-};

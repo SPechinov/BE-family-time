@@ -28,7 +28,6 @@ const OPEN_API_CONFIG: FastifyDynamicSwaggerOptions['openapi'] = {
       },
     },
   },
-  security: [{ bearerAuth: [] }],
 };
 
 const customJsonSchemaTransform = (props: any) => {

@@ -1,21 +1,8 @@
-import { RedisClient, TIMES } from '@/pkg';
+import { RedisClient } from '@/pkg';
 import { FastifyInstance } from 'fastify';
 import { Pool } from 'pg';
 import { AuthRoutesController } from '../routes/auth';
-import {
-  EncryptionService,
-  HashPasswordService,
-  HmacService,
-  OtpCodesService,
-  RateLimiterService,
-  UsersService,
-} from '@/services';
-import { CONFIG } from '@/config';
-import { UsersRepository } from '@/repositories/db';
-import { AuthUseCases } from '@/useCases';
-import { JwtService } from '@/services/jwt';
-import { RefreshTokensStore } from '@/repositories/stores';
-import { AuthMiddleware } from '@/api/rest/middlewares';
+import { createAuthDependencies } from './dependencies';
 
 export class AuthComposite {
   #fastifyInstance: FastifyInstance;
@@ -31,84 +18,12 @@ export class AuthComposite {
   }
 
   #register() {
-    const registrationOtpCodesService = new OtpCodesService({
-      redis: this.#redis,
-      prefix: 'auth-registration-otp',
-      codeLength: CONFIG.codesLength.registration,
-      ttlSec: CONFIG.ttls.registrationSec,
-    });
+    const dependencies = createAuthDependencies(this.#redis, this.#postgres);
 
-    const loginRateLimiterService = new RateLimiterService({
-      redis: this.#redis,
-      prefix: 'auth-login',
-      maxAttempts: 10,
-      window: 5 * TIMES.minute,
-      onceInInterval: 3 * TIMES.second,
-    });
-
-    const registrationStartRateLimiterService = new RateLimiterService({
-      redis: this.#redis,
-      prefix: 'auth-registration-start-rate-limiter',
-      maxAttempts: 5,
-      window: 10 * TIMES.minute,
-      onceInInterval: 25 * TIMES.second,
-    });
-
-    const registrationEndRateLimiterService = new RateLimiterService({
-      redis: this.#redis,
-      prefix: 'auth-registration-end-rate-limiter',
-      maxAttempts: 5,
-      window: 10 * TIMES.minute,
-      onceInInterval: 25 * TIMES.second,
-    });
-
-    const forgotPasswordOtpCodesService = new OtpCodesService({
-      redis: this.#redis,
-      prefix: 'auth-forgot-password-otp',
-      codeLength: CONFIG.codesLength.forgotPassword,
-      ttlSec: CONFIG.ttls.forgotPasswordSec,
-    });
-
-    const forgotPasswordStartRateLimiterService = new RateLimiterService({
-      redis: this.#redis,
-      prefix: 'auth-forgot-password-rate-limiter',
-      maxAttempts: 5,
-      window: 10 * TIMES.minute,
-      onceInInterval: 25 * TIMES.second,
-    });
-
-    const forgotPasswordEndRateLimiterService = new RateLimiterService({
-      redis: this.#redis,
-      prefix: 'auth-forgot-password-rate-limiter',
-      maxAttempts: 5,
-      window: 10 * TIMES.minute,
-      onceInInterval: 25 * TIMES.second,
-    });
-
-    const jwtService = new JwtService();
-
-    const authMiddleware = new AuthMiddleware({ jwtService });
-
-    const usersRepository = new UsersRepository({ pool: this.#postgres });
-    const userService = new UsersService({
-      usersRepository,
-      hmacService: new HmacService({ salt: CONFIG.salts.hashCredentials }),
-      hashPasswordService: new HashPasswordService(),
-      encryptionService: new EncryptionService(),
-    });
-    const authUseCases = new AuthUseCases({
-      usersService: userService,
-      registrationOtpCodesService,
-      forgotPasswordOtpCodesService,
-      loginRateLimiterService,
-      registrationStartRateLimiterService,
-      registrationEndRateLimiterService,
-      forgotPasswordStartRateLimiterService,
-      forgotPasswordEndRateLimiterService,
-      refreshTokensStore: new RefreshTokensStore({ redis: this.#redis }),
-      jwtService,
-    });
-
-    new AuthRoutesController({ fastify: this.#fastifyInstance, useCases: authUseCases, authMiddleware }).register();
+    new AuthRoutesController({
+      fastify: this.#fastifyInstance,
+      useCases: dependencies.authUseCases,
+      authMiddleware: dependencies.authMiddleware,
+    }).register();
   }
 }

@@ -6,12 +6,15 @@ import { GLOBAL_SCHEMAS, SESSION_SCHEMA } from '../../schemas';
 const SCHEMA_LOGIN = {
   tags: ['Auth'],
   security: [],
+  headers: z.object({
+    'user-agent': GLOBAL_SCHEMAS.userAgent.describe('User-Agent браузера или клиента'),
+  }),
   body: z.object({
     email: GLOBAL_SCHEMAS.email.nonempty().describe('Email адрес'),
     password: GLOBAL_SCHEMAS.password.nonempty(),
   }),
   response: createResponseSchema({
-    200: z.undefined(),
+    200: z.void(),
   }),
 };
 
@@ -22,7 +25,7 @@ const SCHEMA_REGISTRATION_START = {
     email: GLOBAL_SCHEMAS.email.nonempty().describe('Email адрес'),
   }),
   response: createResponseSchema({
-    200: z.undefined(),
+    200: z.void(),
   }),
 };
 
@@ -36,7 +39,7 @@ const SCHEMA_REGISTRATION_END = {
     password: GLOBAL_SCHEMAS.password.nonempty(),
   }),
   response: createResponseSchema({
-    201: z.undefined(),
+    201: z.void(),
   }),
 };
 
@@ -47,7 +50,7 @@ const SCHEMA_FORGOT_PASSWORD_START = {
     email: GLOBAL_SCHEMAS.email.nonempty().describe('Email адрес'),
   }),
   response: createResponseSchema({
-    200: z.undefined(),
+    200: z.void(),
   }),
 };
 
@@ -56,11 +59,11 @@ const SCHEMA_FORGOT_PASSWORD_END = {
   security: [],
   body: z.object({
     email: GLOBAL_SCHEMAS.email.nonempty().describe('Email адрес'),
-    otpCode: GLOBAL_SCHEMAS.otpCode(CONFIG.codesLength.registration),
+    otpCode: GLOBAL_SCHEMAS.otpCode(CONFIG.codesLength.forgotPassword),
     password: GLOBAL_SCHEMAS.password.nonempty(),
   }),
   response: createResponseSchema({
-    200: z.undefined(),
+    200: z.void(),
   }),
 };
 
@@ -76,21 +79,25 @@ const SCHEMA_GET_ALL_SESSIONS = {
 const SCHEMA_LOGOUT_ALL_SESSIONS = {
   tags: ['Auth'],
   response: createResponseSchema({
-    200: z.undefined(),
+    200: z.void(),
   }),
 };
 
 const SCHEMA_LOGOUT_SESSION = {
   tags: ['Auth'],
   response: createResponseSchema({
-    200: z.undefined(),
+    200: z.void(),
   }),
 };
 
 const SCHEMA_REFRESH_TOKENS = {
   tags: ['Auth'],
+  security: [],
+  headers: z.object({
+    'user-agent': GLOBAL_SCHEMAS.userAgent.describe('User-Agent браузера или клиента'),
+  }),
   response: createResponseSchema({
-    200: z.undefined(),
+    200: z.void(),
   }),
 };
 
