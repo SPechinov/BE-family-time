@@ -4,6 +4,8 @@
 
 Интеграционные тесты для REST API Family Time. Тесты проверяют работу всех эндпоинтов через реальное взаимодействие с приложением.
 
+Тесты используют **in-memory** подход с `fastify.inject()` — сервер не занимает порт, все запросы симулируются внутри процесса.
+
 ## 🚀 Быстрый старт
 
 ### Предварительные требования
@@ -12,10 +14,17 @@
    - PostgreSQL (порт 5432)
    - Redis (порт 6379)
 
-2. **Запущенное приложение:**
-   ```bash
-   npm run dev
-   ```
+```bash
+# Запустить сервисы через Docker
+docker-compose up -d postgres redis
+```
+
+2. **Применить миграции:**
+```bash
+npm run migrations:up
+```
+
+> ⚠️ **Приложение запускать не нужно!** Тесты создают изолированный инстанс сервера.
 
 ### Запуск тестов
 
@@ -26,34 +35,41 @@ npm run test:api
 # Запустить конкретный тестовый файл
 npx jest src/tests/api/auth.test.ts
 
-# Запустить с покрытием
-npx jest src/tests/api --coverage
+# Запустить конкретный тест по имени
+npx jest src/tests/api/auth.test.ts -t "should login with valid credentials"
 
-# Запустить в watch режиме
-npx jest src/tests/api --watch
+# Запустить с покрытием
+npm run test:api -- --coverage
+
+# Запустить в watch режиме (для разработки)
+npm run test:api -- --watch
 ```
+
+> 💡 Тесты запускаются с флагом `--runInBand` для последовательного выполнения (общее состояние БД/Redis).
 
 ## 📁 Структура тестов
 
 ```
 src/tests/api/
 ├── helpers.ts          # Утилиты и хелперы для тестов
-├── auth.test.ts        # Тесты авторизации/регистрации
-└── me.test.ts          # Тесты профиля пользователя
+├── __mocks__/          # Моки для внешних зависимостей
+│   └── nanoid.ts       # Mock для nanoid (ES модуль)
+├── auth.test.ts        # Тесты авторизации/регистрации (35 тестов)
+└── me.test.ts          # Тесты профиля пользователя (14 тестов)
 ```
 
 ## 🔧 Хелперы
 
-### `setupTestServer()`
-Инициализирует тестовый сервер с подключением к БД и Redis.
+### Сервер
 
-### `teardownTestServer()`
-Очищает ресурсы после тестов.
+| Функция | Описание |
+|---------|----------|
+| `setupTestServer()` | Инициализирует тестовый сервер с БД и Redis |
+| `teardownTestServer()` | Очищает ресурсы после всех тестов |
+| `cleanDatabase()` | Очищает БД и Redis перед каждым тестом |
 
-### `cleanDatabase()`
-Очищает базу данных перед каждым тестом.
+### API Client
 
-### `api.*`
 Готовые функции для вызова API:
 
 ```typescript
@@ -82,7 +98,10 @@ const { otpCode } = await api.forgotPasswordStart({ email, userAgent });
 await api.forgotPasswordEnd({ email, password, otpCode, userAgent });
 ```
 
-### `testData.*`
+> 💡 Все методы возвращают `{ response, ...data }`, где `response` — полный ответ Fastify.
+
+### TestData
+
 Генераторы тестовых данных:
 
 ```typescript
@@ -92,66 +111,72 @@ testData.generateFirstName()    // TestUser-{uuid}
 testData.generateUserAgent()    // TestAgent/1.0 ({uuid})
 ```
 
-### `completeRegistrationFlow()`
+### CompleteRegistrationFlow
+
 Полный поток регистрации + вход:
 
 ```typescript
-const { email, password, firstName, tokens } = await completeRegistrationFlow({ userAgent });
+const { email, password, tokens } = await completeRegistrationFlow({ userAgent });
 ```
+
+Возвращает:
+- `email`, `password` — учётные данные
+- `tokens.accessToken` — JWT токен (с префиксом `Bearer`)
+- `tokens.refreshToken` — Refresh токен (в cookie)
 
 ## 📊 Покрытые эндпоинты
 
 ### Auth
 
-| Метод | Endpoint | Описание | Тестов |
-|-------|----------|----------|--------|
-| POST | `/api/auth/registration-start` | Начало регистрации | 6 |
-| POST | `/api/auth/registration-end` | Завершение регистрации | 8 |
-| POST | `/api/auth/login` | Вход | 7 |
-| POST | `/api/auth/forgot-password-start` | Начало восстановления пароля | 3 |
-| POST | `/api/auth/forgot-password-end` | Завершение восстановления пароля | 3 |
-| POST | `/api/auth/refresh-tokens` | Обновление токенов | 4 |
-| GET | `/api/auth/get-all-sessions` | Получить все сессии | 4 |
-| POST | `/api/auth/logout-session` | Выход из текущей сессии | 1 |
-| POST | `/api/auth/logout-all-sessions` | Выход из всех сессий | 2 |
+| Метод | Endpoint | Тестов | Статусы |
+|-------|----------|--------|---------|
+| POST | `/api/auth/registration-start` | 6 | 200, 422 |
+| POST | `/api/auth/registration-end` | 8 | 201, 400, 422 |
+| POST | `/api/auth/login` | 7 | 200, 400, 422 |
+| POST | `/api/auth/forgot-password-start` | 3 | 200, 422 |
+| POST | `/api/auth/forgot-password-end` | 3 | 200, 400, 422 |
+| POST | `/api/auth/refresh-tokens` | 4 | 200, 401 |
+| GET | `/api/auth/get-all-sessions` | 4 | 200, 401 |
+| POST | `/api/auth/logout-session` | 1 | 200 |
+| POST | `/api/auth/logout-all-sessions` | 2 | 200 |
 
 ### Me
 
-| Метод | Endpoint | Описание | Тестов |
-|-------|----------|----------|--------|
-| GET | `/api/me` | Получить профиль пользователя | 10 |
+| Метод | Endpoint | Тестов | Статусы |
+|-------|----------|--------|---------|
+| GET | `/api/me` | 14 | 200, 401 |
 
-**Всего: 48 тестов**
+**Всего: 49 тестов**
 
 ## 🎯 Категории тестов
 
-### ✓ Success cases
-Проверка успешных сценариев использования.
+| Категория | Префикс | Описание |
+|-----------|---------|----------|
+| ✓ Success | `✓ Success cases` | Проверка успешных сценариев |
+| ✗ Validation | `✗ Validation errors` | Проверка валидации (422) |
+| 🔐 Security | `🔐 Security` | Проверки безопасности |
+| ⚡ Performance | `⚡ Performance` | Проверки производительности |
+| Integration | `Integration` | Полные пользовательские сценарии |
 
-### ✗ Validation errors
-Проверка валидации входных данных.
+### Примеры проверок
 
-### 🔐 Security
-Проверки безопасности:
-- Отсутствие user-agent
-- Недоступность чувствительных данных
-- Предотвращение двойной регистрации
-- Инвалидация токенов
+**Security:**
+- Отсутствие user-agent (не валидируется на уровне схемы)
+- Недоступность чувствительных данных (password, hash)
+- Инвалидация refresh токенов
 
-### ⚡ Performance
-Проверки производительности:
+**Performance:**
 - Время ответа < 100ms
-- Обработка параллельных запросов
+- Обработка 10 параллельных запросов
 
-### Integration
-Полные пользовательские сценарии:
+**Integration:**
 - Регистрация → Вход → Профиль → Выход
 - Восстановление пароля
 - Управление множественными сессиями
 
 ## 📝 Примеры тестов
 
-### Полный тест регистрации и входа
+### Базовый тест
 
 ```typescript
 import { api, testData } from './helpers';
@@ -164,22 +189,21 @@ it('should complete registration and login', async () => {
 
   // Start registration
   const { otpCode } = await api.registrationStart({ email, userAgent });
+  expect(otpCode).toHaveLength(6);
 
   // Complete registration
-  await api.registrationEnd({
+  const { response } = await api.registrationEnd({
     email,
     password,
     firstName,
     otpCode,
     userAgent,
   });
+  expect(response.statusCode).toBe(201);
 
   // Login
   const { tokens } = await api.login({ email, password, userAgent });
-
-  // Verify tokens
   expect(tokens.accessToken).toBeDefined();
-  expect(tokens.refreshToken).toBeDefined();
 });
 ```
 
@@ -197,14 +221,37 @@ it('should get user profile', async () => {
   });
 
   expect(user.email).toBeDefined();
-  expect(user.id).toBeDefined();
+  expect(user.firstName).toBeDefined();
+});
+```
+
+### Тест с несколькими сессиями
+
+```typescript
+it('should handle multiple sessions', async () => {
+  const { email, password, tokens } = await completeRegistrationFlow({ userAgent });
+
+  // Login с разных "устройств"
+  const { tokens: device2 } = await api.login({
+    email,
+    password,
+    userAgent: 'Device2/1.0',
+  });
+
+  // Проверка сессий
+  const { sessions } = await api.getAllSessions({
+    accessToken: tokens.accessToken,
+    userAgent,
+  });
+  expect(sessions.length).toBeGreaterThan(1);
 });
 ```
 
 ## 🔍 Отладка
 
 ### Логирование
-Тесты используют silent logger для чистоты вывода. Для отладки:
+
+Тесты используют `silent` logger. Для отладки измените в `helpers.ts`:
 
 ```typescript
 const logger = new Logger({
@@ -216,6 +263,7 @@ const logger = new Logger({
 ```
 
 ### Проверка ответов
+
 ```typescript
 const { response } = await api.login({ email, password, userAgent });
 
@@ -223,14 +271,29 @@ console.log('Status:', response.statusCode);
 console.log('Headers:', response.headers);
 console.log('Body:', response.json());
 console.log('Cookies:', response.cookies);
+console.log('Tokens:', response.tokens);
+```
+
+### Запуск одного теста
+
+```bash
+# По имени теста
+npx jest src/tests/api/auth.test.ts -t "should login"
+
+# По файлу
+npx jest src/tests/api/me.test.ts
+
+# С вывод логов
+npx jest src/tests/api/auth.test.ts --verbose
 ```
 
 ## ⚠️ Важные замечания
 
-1. **Изоляция тестов**: Каждый тест очищает базу данных в `beforeEach`
-2. **OTP коды**: В dev режиме OTP коды возвращаются в заголовке `X-Dev-Otp-Code`
-3. **Токены**: Access токен передаётся в заголовке `Authorization`, refresh токен в cookie
-4. **User-Agent**: Обязательный заголовок для всех запросов
+1. **Токены**: Access токен передаётся с префиксом `Bearer` в заголовке `Authorization`
+2. **Refresh токен**: Возвращается в cookie `Set-Cookie: refreshToken=...`
+3. **OTP коды**: В dev режиме возвращаются в заголовке `X-Dev-Otp-Code`
+4. **Изоляция**: Каждый тест очищает БД и Redis в `beforeEach`
+5. **Последовательность**: Тесты запускаются с `--runInBand` из-за общего состояния
 
 ## 📈 Покрытие
 
@@ -240,25 +303,60 @@ console.log('Cookies:', response.cookies);
 npm run test:api -- --coverage
 ```
 
-Отчёт будет в папке `coverage/`.
+Отчёт будет в папке `coverage/`. Откройте `coverage/lcov-report/index.html` для просмотра.
 
 ## 🐛 Troubleshooting
 
 ### Ошибка: "Cannot connect to Redis"
-Убедитесь, что Redis запущен:
+
 ```bash
+# Проверить статус
+docker-compose ps
+
+# Перезапустить
 docker-compose up -d redis
 ```
 
 ### Ошибка: "Cannot connect to PostgreSQL"
-Убедитесь, что PostgreSQL запущен и миграции применены:
+
 ```bash
+# Проверить статус
+docker-compose ps
+
+# Перезапустить и применить миграции
 docker-compose up -d postgres
 npm run migrations:up
 ```
 
 ### Тесты падают с "401 Unauthorized"
-Проверьте, что передаёте правильный access token в заголовке `Authorization`.
+
+Проверьте формат токена:
+```typescript
+// ✅ Правильно
+authorization: `Bearer ${tokens.accessToken}`
+
+// ❌ Неправильно
+authorization: tokens.accessToken
+```
+
+### Тесты падают с "500 Internal Server Error"
+
+Возможные причины:
+1. БД/Redis не очищены — запустите с `--runInBand`
+2. Миграции не применены — `npm run migrations:up`
+3. Конфликт сессий — используйте уникальный `userAgent`
 
 ### OTP код не возвращается
-Убедитесь, что приложение запущено в режиме `local` или `development`. В production режиме OTP коды не возвращаются.
+
+Убедитесь, что приложение в dev режиме. Проверьте заголовок:
+```typescript
+const { otpCode } = await api.registrationStart({ email, userAgent });
+console.log(otpCode); // Должен быть 6-значный код
+```
+
+### Тесты работают по отдельности, но падают вместе
+
+Это проблема состояния между тестами. Убедитесь:
+1. Запущено с `--runInBand`
+2. `cleanDatabase()` очищает и БД, и Redis
+3. Каждый тест использует уникальные данные (`testData.generateEmail()`)
