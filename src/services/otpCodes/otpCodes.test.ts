@@ -570,4 +570,182 @@ describe('OtpCodesService', () => {
       expect(mockRedis.setEx).toHaveBeenNthCalledWith(2, 'otp:password-reset:user@example.com', 300, '222222');
     });
   });
+
+  // ───────────────────────────────────────────────────────────────────────────
+  // Edge cases
+  // ───────────────────────────────────────────────────────────────────────────
+
+  describe('Edge cases', () => {
+    const validCode = '123456';
+    const validKey = 'user@example.com';
+
+    describe('✗ Invalid code length boundary', () => {
+      it('should throw if code length is 0', async () => {
+        await expect(service.saveCode({ code: '', key: validKey })).rejects.toThrow('Invalid code length');
+
+        expect(mockRedis.setEx).not.toHaveBeenCalled();
+      });
+
+      it('should accept code with length 1', async () => {
+        const singleCharService = new OtpCodesService({
+          redis: mockRedis,
+          prefix: 'test',
+          codeLength: 1,
+          ttlSec: 300,
+        } as any);
+
+        mockRedis.setEx.mockResolvedValue(REDIS_STATUS_SUCCESS_RESPONSE);
+        await expect(singleCharService.saveCode({ code: 'a', key: validKey })).resolves.not.toThrow();
+      });
+    });
+
+    describe('🔑 Key edge cases', () => {
+      it('should handle key with spaces', async () => {
+        mockRedis.setEx.mockResolvedValue(REDIS_STATUS_SUCCESS_RESPONSE);
+        await service.saveCode({ code: validCode, key: 'user with spaces' });
+
+        expect(mockRedis.setEx).toHaveBeenCalledWith(
+          `otp:${mockConfig.prefix}:user with spaces`,
+          mockConfig.ttlSec,
+          validCode,
+        );
+      });
+
+      it('should handle key with cyrillic characters', async () => {
+        mockRedis.setEx.mockResolvedValue(REDIS_STATUS_SUCCESS_RESPONSE);
+        await service.saveCode({ code: validCode, key: 'пользователь@пример.рф' });
+
+        expect(mockRedis.setEx).toHaveBeenCalledWith(
+          `otp:${mockConfig.prefix}:пользователь@пример.рф`,
+          mockConfig.ttlSec,
+          validCode,
+        );
+      });
+
+      it('should handle key with emojis', async () => {
+        mockRedis.setEx.mockResolvedValue(REDIS_STATUS_SUCCESS_RESPONSE);
+        await service.saveCode({ code: validCode, key: 'user🔐@example.com' });
+
+        expect(mockRedis.setEx).toHaveBeenCalledWith(
+          `otp:${mockConfig.prefix}:user🔐@example.com`,
+          mockConfig.ttlSec,
+          validCode,
+        );
+      });
+
+      it('should handle very long key', async () => {
+        const longKey = 'a'.repeat(1000);
+        mockRedis.setEx.mockResolvedValue(REDIS_STATUS_SUCCESS_RESPONSE);
+
+        await service.saveCode({ code: validCode, key: longKey });
+
+        expect(mockRedis.setEx).toHaveBeenCalledWith(
+          `otp:${mockConfig.prefix}:${longKey}`,
+          mockConfig.ttlSec,
+          validCode,
+        );
+      });
+    });
+
+    describe('✗ Redis edge cases', () => {
+      it('should throw if setEx returns empty string', async () => {
+        mockRedis.setEx.mockResolvedValue('');
+
+        await expect(service.saveCode({ code: validCode, key: validKey })).rejects.toThrow('Failed to save code');
+      });
+
+      it('should handle get returning empty string', async () => {
+        mockRedis.get.mockResolvedValue('');
+
+        const result = await service.getCode({ key: validKey });
+
+        expect(result).toBe('');
+      });
+
+      it('should handle del returning > 1 (multiple keys deleted)', async () => {
+        mockRedis.del.mockResolvedValue(5);
+
+        const result = await service.deleteCode({ key: validKey });
+
+        expect(result).toBe(5);
+      });
+    });
+
+    describe('⚡ Performance', () => {
+      it('should handle many sequential operations quickly', async () => {
+        mockRedis.setEx.mockResolvedValue(REDIS_STATUS_SUCCESS_RESPONSE);
+
+        const startTime = Date.now();
+
+        for (let i = 0; i < 100; i++) {
+          await service.saveCode({ code: '123456', key: `user${i}@example.com` });
+        }
+
+        const duration = Date.now() - startTime;
+        expect(duration).toBeLessThan(1000);
+      }, 2000);
+
+      it('should handle parallel operations', async () => {
+        mockRedis.setEx.mockResolvedValue(REDIS_STATUS_SUCCESS_RESPONSE);
+
+        const promises = Array(10)
+          .fill(null)
+          .map((_, i) => service.saveCode({ code: '123456', key: `user${i}@example.com` }));
+
+        await expect(Promise.all(promises)).resolves.not.toThrow();
+      });
+    });
+
+    describe('🔐 Security', () => {
+      it('should use different prefixes for isolation', async () => {
+        const regService = new OtpCodesService({
+          redis: mockRedis,
+          prefix: 'registration',
+          codeLength: 6,
+          ttlSec: 300,
+        } as any);
+
+        const pwdService = new OtpCodesService({
+          redis: mockRedis,
+          prefix: 'password-reset',
+          codeLength: 6,
+          ttlSec: 300,
+        } as any);
+
+        mockRedis.setEx.mockResolvedValue(REDIS_STATUS_SUCCESS_RESPONSE);
+
+        await regService.saveCode({ code: '111111', key: 'user@example.com' });
+        await pwdService.saveCode({ code: '222222', key: 'user@example.com' });
+
+        // Keys should be different
+        expect(mockRedis.setEx).toHaveBeenCalledWith('otp:registration:user@example.com', 300, '111111');
+        expect(mockRedis.setEx).toHaveBeenCalledWith('otp:password-reset:user@example.com', 300, '222222');
+      });
+
+      it('should maintain key format consistency', async () => {
+        mockRedis.setEx.mockResolvedValue(REDIS_STATUS_SUCCESS_RESPONSE);
+
+        // Same key, different services
+        const service1 = new OtpCodesService({
+          redis: mockRedis,
+          prefix: 'prefix1',
+          codeLength: 6,
+          ttlSec: 300,
+        } as any);
+        const service2 = new OtpCodesService({
+          redis: mockRedis,
+          prefix: 'prefix2',
+          codeLength: 6,
+          ttlSec: 300,
+        } as any);
+
+        await service1.saveCode({ code: '111111', key: 'same-key' });
+        await service2.saveCode({ code: '222222', key: 'same-key' });
+
+        // Both should use same key format, different prefixes
+        expect(mockRedis.setEx).toHaveBeenCalledWith('otp:prefix1:same-key', 300, '111111');
+        expect(mockRedis.setEx).toHaveBeenCalledWith('otp:prefix2:same-key', 300, '222222');
+      });
+    });
+  });
 });
