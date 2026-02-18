@@ -37,11 +37,7 @@ export class UsersService implements IUsersService {
     this.#hashPasswordService = props.hashPasswordService;
   }
 
-  async createOne({
-    userCreatePlainEntity,
-  }: {
-    userCreatePlainEntity: UserCreatePlainEntity;
-  }): Promise<UserEntity> {
+  async createOne({ userCreatePlainEntity }: { userCreatePlainEntity: UserCreatePlainEntity }): Promise<UserEntity> {
     const { personalInfoPlain, contactsPlain, passwordPlain } = userCreatePlainEntity;
     const encryptionSalt = randomUUID();
 

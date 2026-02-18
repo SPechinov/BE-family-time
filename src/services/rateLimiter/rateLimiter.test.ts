@@ -292,26 +292,26 @@ describe('RateLimiterService', () => {
 
     describe('🔐 Security & Edge cases', () => {
       it('should handle empty string key', async () => {
-        const rateLimiter = createRateLimiter(redisClient, { points: 1, duration: 60, keyPrefix: 'test-empty' });
+        const rateLimiter = createRateLimiter(redisClient, { points: 10, duration: 60, keyPrefix: 'sec-empty' });
 
         await expect(rateLimiter.checkLimitOrThrow({ key: '' })).resolves.not.toThrow();
       });
 
       it('should handle very long key', async () => {
-        const rateLimiter = createRateLimiter(redisClient, { points: 1, duration: 60, keyPrefix: 'test-long' });
+        const rateLimiter = createRateLimiter(redisClient, { points: 10, duration: 60, keyPrefix: 'sec-long' });
         const longKey = 'a'.repeat(1000);
 
         await expect(rateLimiter.checkLimitOrThrow({ key: longKey })).resolves.not.toThrow();
       });
 
       it('should handle numeric string key', async () => {
-        const rateLimiter = createRateLimiter(redisClient, { points: 1, duration: 60, keyPrefix: 'test-numeric' });
+        const rateLimiter = createRateLimiter(redisClient, { points: 10, duration: 60, keyPrefix: 'sec-numeric' });
 
         await expect(rateLimiter.checkLimitOrThrow({ key: '123456789' })).resolves.not.toThrow();
       });
 
       it('should handle case-sensitive keys', async () => {
-        const rateLimiter = createRateLimiter(redisClient, { points: 1, duration: 60, keyPrefix: 'test-case' });
+        const rateLimiter = createRateLimiter(redisClient, { points: 1, duration: 60, keyPrefix: 'sec-case' });
 
         await rateLimiter.checkLimitOrThrow({ key: 'User' });
         await expect(rateLimiter.checkLimitOrThrow({ key: 'User' })).rejects.toThrow(ErrorTooManyRequests);
@@ -358,7 +358,7 @@ describe('RateLimiterService', () => {
         points: 5,
         duration: 60,
         blockDuration: 300, // 5 minutes block
-        keyPrefix: 'integration-login',
+        keyPrefix: 'integ-login',
       });
 
       const userKey = 'login:user@example.com';
@@ -379,7 +379,7 @@ describe('RateLimiterService', () => {
       const apiLimiter = createRateLimiter(redisClient, {
         points: 100,
         duration: 60,
-        keyPrefix: 'integration-api',
+        keyPrefix: 'integ-api-rate',
       });
 
       const apiKey = 'api-key-12345';
