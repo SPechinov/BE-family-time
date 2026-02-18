@@ -22,41 +22,30 @@ import {
 } from '@/pkg';
 import { IRefreshTokensStore } from '@/domains/repositories/stores';
 import { JwtPayload } from 'jsonwebtoken';
+import { RateLimiterRedis } from 'rate-limiter-flexible';
 
 export class AuthUseCases implements IAuthUseCases {
   readonly #userService: IUsersService;
   readonly #registrationOtpCodesService: IOtpCodesService;
   readonly #forgotPasswordOtpCodesService: IOtpCodesService;
-  readonly #loginRateLimiterService: IRateLimiterService;
-  readonly #registrationStartRateLimiterService: IRateLimiterService;
-  readonly #registrationEndRateLimiterService: IRateLimiterService;
-  readonly #forgotPasswordStartRateLimiterService: IRateLimiterService;
-  readonly #forgotPasswordEndRateLimiterService: IRateLimiterService;
   readonly #refreshTokensStore: IRefreshTokensStore;
   readonly #jwtService: IJwtService;
+  readonly #rateLimiter: RateLimiterRedis;
   readonly #pendRegistrationEndRequests = new Set<string>();
 
   constructor(props: {
     usersService: IUsersService;
     registrationOtpCodesService: IOtpCodesService;
     forgotPasswordOtpCodesService: IOtpCodesService;
-    loginRateLimiterService: IRateLimiterService;
-    registrationStartRateLimiterService: IRateLimiterService;
-    registrationEndRateLimiterService: IRateLimiterService;
-    forgotPasswordStartRateLimiterService: IRateLimiterService;
-    forgotPasswordEndRateLimiterService: IRateLimiterService;
+    rateLimiter: RateLimiterRedis;
     refreshTokensStore: IRefreshTokensStore;
     jwtService: IJwtService;
   }) {
     this.#userService = props.usersService;
     this.#registrationOtpCodesService = props.registrationOtpCodesService;
     this.#forgotPasswordOtpCodesService = props.forgotPasswordOtpCodesService;
-    this.#loginRateLimiterService = props.loginRateLimiterService;
-    this.#registrationStartRateLimiterService = props.registrationStartRateLimiterService;
-    this.#registrationEndRateLimiterService = props.registrationEndRateLimiterService;
-    this.#forgotPasswordStartRateLimiterService = props.forgotPasswordStartRateLimiterService;
-    this.#forgotPasswordEndRateLimiterService = props.forgotPasswordEndRateLimiterService;
     this.#refreshTokensStore = props.refreshTokensStore;
+    this.#rateLimiter = props.rateLimiter;
     this.#jwtService = props.jwtService;
   }
 
@@ -68,7 +57,8 @@ export class AuthUseCases implements IAuthUseCases {
   }): Promise<{ accessToken: string; refreshToken: string }> {
     const contact = this.#getContactOrThrow(props.userContactsPlainEntity);
 
-    await this.#loginRateLimiterService.checkLimitOrThrow({ key: contact });
+    const res = await this.#rateLimiter.consume(contact);
+    console.log(res);
 
     const user = await this.#userService.findOne({
       userFindOnePlainEntity: new UserFindOnePlainEntity({ contactsPlain: props.userContactsPlainEntity }),
@@ -101,7 +91,7 @@ export class AuthUseCases implements IAuthUseCases {
   }): Promise<{ otpCode: string }> {
     const contact = this.#getContactOrThrow(props.userContactsPlainEntity);
 
-    await this.#registrationStartRateLimiterService.checkLimitOrThrow({ key: contact });
+    await this.#rateLimiter.consume(contact);
 
     const otpCode = generateNumericCode(CONFIG.codesLength.registration);
     await this.#registrationOtpCodesService.saveCode({ key: contact, code: otpCode });
@@ -121,7 +111,7 @@ export class AuthUseCases implements IAuthUseCases {
 
     try {
       this.#pendRegistrationEndRequests.add(contact);
-      await this.#registrationEndRateLimiterService.checkLimitOrThrow({ key: contact });
+      await this.#rateLimiter.consume(contact);
 
       const storeOtpCode = await this.#registrationOtpCodesService.getCode({ key: contact });
       this.#compareOtpCodes(storeOtpCode, props.otpCode);
@@ -151,7 +141,7 @@ export class AuthUseCases implements IAuthUseCases {
     const contact = props.userContactsPlainEntity.getContact();
     if (!contact) throw new ErrorInvalidContacts();
 
-    await this.#forgotPasswordStartRateLimiterService.checkLimitOrThrow({ key: contact });
+    await this.#rateLimiter.consume(contact);
 
     const userFindOnePlainEntity = new UserFindOnePlainEntity({ contactsPlain: props.userContactsPlainEntity });
     const foundUser = await this.#userService.findOne({ userFindOnePlainEntity });
@@ -173,7 +163,7 @@ export class AuthUseCases implements IAuthUseCases {
     const contact = props.userContactsPlainEntity.getContact();
     if (!contact) throw new ErrorInvalidContacts();
 
-    await this.#forgotPasswordEndRateLimiterService.checkLimitOrThrow({ key: contact });
+    await this.#rateLimiter.consume(contact);
 
     const storeOtpCode = await this.#forgotPasswordOtpCodesService.getCode({ key: contact });
     this.#compareOtpCodes(storeOtpCode, props.otpCode);

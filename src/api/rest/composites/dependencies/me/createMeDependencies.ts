@@ -3,8 +3,8 @@ import { MeUseCase } from '@/useCases';
 import { IUsersService, IJwtService } from '@/domains/services';
 import { IAuthMiddleware } from '@/api/rest/domains';
 import { createUsersService } from '../common/createUsersService';
-import { createJwtService } from '../common/createJwtService';
-import { createAuthMiddleware } from '../common/createAuthMiddleware';
+import { JwtService } from '@/services/jwt';
+import { AuthMiddleware } from '@/api/rest/middlewares';
 
 export interface MeDependencies {
   jwtService: IJwtService;
@@ -20,9 +20,9 @@ interface CreateMeDependenciesProps {
 export const createMeDependencies = (props: CreateMeDependenciesProps): MeDependencies => {
   const { postgres } = props;
 
-  const jwtService = createJwtService();
+  const jwtService = new JwtService();
   const usersService = createUsersService(postgres);
-  const authMiddleware = createAuthMiddleware(jwtService);
+  const authMiddleware = new AuthMiddleware({ jwtService });
 
   const meUseCases = new MeUseCase({
     usersService,
