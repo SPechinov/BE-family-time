@@ -18,7 +18,7 @@ export class AuthComposite {
   }
 
   #register() {
-    const dependencies = createAuthDependencies(this.#redis, this.#postgres);
+    const dependencies = createAuthDependencies({ redis: this.#redis, postgres: this.#postgres });
 
     new AuthRoutesController({
       fastify: this.#fastifyInstance,
