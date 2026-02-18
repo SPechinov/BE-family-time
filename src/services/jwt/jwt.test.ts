@@ -31,10 +31,17 @@ describe('JwtService', () => {
 
       const result = service.generateAccessToken(payload);
 
-      expect(jwt.sign).toHaveBeenCalledWith(payload, 'access-token-secret', {
-        expiresIn: 900,
-        issuer: 'family-time-app',
-      });
+      expect(jwt.sign).toHaveBeenCalledWith(
+        expect.objectContaining({
+          userId: 'user-123',
+          createdAt: expect.any(String),
+        }),
+        'access-token-secret',
+        {
+          expiresIn: 900,
+          issuer: 'family-time-app',
+        },
+      );
       expect(result).toBe(expectedToken);
     });
 
@@ -45,10 +52,17 @@ describe('JwtService', () => {
 
       const result = service.generateAccessToken(payload);
 
-      expect(jwt.sign).toHaveBeenCalledWith(payload, 'access-token-secret', {
-        expiresIn: 900,
-        issuer: 'family-time-app',
-      });
+      expect(jwt.sign).toHaveBeenCalledWith(
+        expect.objectContaining({
+          userId: 'another-user-456',
+          createdAt: expect.any(String),
+        }),
+        'access-token-secret',
+        {
+          expiresIn: 900,
+          issuer: 'family-time-app',
+        },
+      );
       expect(result).toBe(expectedToken);
     });
   });
@@ -62,10 +76,17 @@ describe('JwtService', () => {
 
       const result = service.generateRefreshToken(payload);
 
-      expect(jwt.sign).toHaveBeenCalledWith(payload, 'refresh-token-secret', {
-        expiresIn: 604800,
-        issuer: 'family-time-app',
-      });
+      expect(jwt.sign).toHaveBeenCalledWith(
+        expect.objectContaining({
+          userId: 'user-123',
+          createdAt: expect.any(String),
+        }),
+        'refresh-token-secret',
+        {
+          expiresIn: 604800,
+          issuer: 'family-time-app',
+        },
+      );
       expect(result).toBe(expectedToken);
     });
 
@@ -76,10 +97,17 @@ describe('JwtService', () => {
 
       const result = service.generateRefreshToken(payload);
 
-      expect(jwt.sign).toHaveBeenCalledWith(payload, 'refresh-token-secret', {
-        expiresIn: 604800,
-        issuer: 'family-time-app',
-      });
+      expect(jwt.sign).toHaveBeenCalledWith(
+        expect.objectContaining({
+          userId: 'another-user-789',
+          createdAt: expect.any(String),
+        }),
+        'refresh-token-secret',
+        {
+          expiresIn: 604800,
+          issuer: 'family-time-app',
+        },
+      );
       expect(result).toBe(expectedToken);
     });
   });
@@ -228,7 +256,10 @@ describe('JwtService', () => {
       service.generateAccessToken(payload);
 
       expect(jwt.sign).toHaveBeenCalledWith(
-        payload,
+        expect.objectContaining({
+          userId: 'user-123',
+          createdAt: expect.any(String),
+        }),
         'access-token-secret',
         expect.objectContaining({
           issuer: 'family-time-app',
@@ -243,7 +274,10 @@ describe('JwtService', () => {
       service.generateRefreshToken(payload);
 
       expect(jwt.sign).toHaveBeenCalledWith(
-        payload,
+        expect.objectContaining({
+          userId: 'user-123',
+          createdAt: expect.any(String),
+        }),
         'refresh-token-secret',
         expect.objectContaining({
           issuer: 'family-time-app',
@@ -260,7 +294,10 @@ describe('JwtService', () => {
       service.generateAccessToken(payload);
 
       expect(jwt.sign).toHaveBeenCalledWith(
-        payload,
+        expect.objectContaining({
+          userId: 'user-123',
+          createdAt: expect.any(String),
+        }),
         'access-token-secret',
         expect.objectContaining({
           expiresIn: 900,
@@ -275,7 +312,10 @@ describe('JwtService', () => {
       service.generateRefreshToken(payload);
 
       expect(jwt.sign).toHaveBeenCalledWith(
-        payload,
+        expect.objectContaining({
+          userId: 'user-123',
+          createdAt: expect.any(String),
+        }),
         'refresh-token-secret',
         expect.objectContaining({
           expiresIn: 604800,

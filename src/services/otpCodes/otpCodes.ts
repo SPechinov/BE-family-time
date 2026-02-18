@@ -1,5 +1,5 @@
 import { IOtpCodesService } from '@/domains/services';
-import { REDIS_STATUS_SUCCESS_RESPONSE, RedisClient } from '@/pkg';
+import { REDIS_STATUS_SUCCESS_RESPONSE, RedisClient } from '@/pkg/redis';
 
 type RedisKey = `otp:${string}:${string}`;
 
