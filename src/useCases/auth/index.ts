@@ -4,8 +4,8 @@ import { IAuthUseCases } from '@/domains/useCases';
 import {
   UserContactsPlainEntity,
   UserCreatePlainEntity,
-  UserEntity,
   UserFindOnePlainEntity,
+  UserHashedEntity,
   UserPasswordPlainEntity,
   UserPatchOnePlainEntity,
 } from '@/entities';
@@ -114,7 +114,7 @@ export class AuthUseCases implements IAuthUseCases {
     userCreatePlainEntity: UserCreatePlainEntity;
     otpCode: string;
     logger: ILogger;
-  }): Promise<UserEntity> {
+  }): Promise<UserHashedEntity> {
     const contact = this.#getContactOrThrow(props.userCreatePlainEntity.contactsPlain);
 
     if (this.#pendRegistrationEndRequests.has(contact)) throw new ErrorDoubleRegistration();
@@ -169,7 +169,7 @@ export class AuthUseCases implements IAuthUseCases {
     password: UserPasswordPlainEntity;
     otpCode: string;
     logger: ILogger;
-  }): Promise<UserEntity> {
+  }): Promise<UserHashedEntity> {
     const contact = props.userContactsPlainEntity.getContact();
     if (!contact) throw new ErrorInvalidContacts();
 

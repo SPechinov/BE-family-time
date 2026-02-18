@@ -1,4 +1,4 @@
-import { UserContactsPlainEntity, UserCreatePlainEntity, UserEntity, UserPasswordPlainEntity } from '@/entities';
+import { UserContactsPlainEntity, UserCreatePlainEntity, UserHashedEntity, UserPasswordPlainEntity } from '@/entities';
 import { ILogger } from '@/pkg';
 import { JwtPayload } from 'jsonwebtoken';
 
@@ -19,7 +19,7 @@ export interface IAuthUseCases {
     userCreatePlainEntity: UserCreatePlainEntity;
     otpCode: string;
     logger: ILogger;
-  }): Promise<UserEntity>;
+  }): Promise<UserHashedEntity>;
 
   forgotPasswordStart(props: {
     userContactsPlainEntity: UserContactsPlainEntity;
@@ -31,7 +31,7 @@ export interface IAuthUseCases {
     password: UserPasswordPlainEntity;
     otpCode: string;
     logger: ILogger;
-  }): Promise<UserEntity>;
+  }): Promise<UserHashedEntity>;
 
   getAllSessionsPayloads(props: { userId: string }): Promise<{ payload: JwtPayload | string | null; jwt: string }[]>;
 

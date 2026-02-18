@@ -7,14 +7,15 @@ import {
   UserContactsPlainEntity,
   UserCreateEntity,
   UserCreatePlainEntity,
-  UserEntity,
   UserFindOneEntity,
   UserFindOnePlainEntity,
+  UserHashedEntity,
   UserPasswordHashedEntity,
   UserPatchOneEntity,
   UserPatchOnePlainEntity,
   UserPersonalInfoEncryptedEntity,
   UserPersonalInfoPlainEntity,
+  UserPlainEntity,
 } from '@/entities';
 import { ErrorUserNotExists, ILogger } from '@/pkg';
 
@@ -36,7 +37,11 @@ export class UsersService implements IUsersService {
     this.#hashPasswordService = props.hashPasswordService;
   }
 
-  async createOne({ userCreatePlainEntity }: { userCreatePlainEntity: UserCreatePlainEntity }): Promise<UserEntity> {
+  async createOne({
+    userCreatePlainEntity,
+  }: {
+    userCreatePlainEntity: UserCreatePlainEntity;
+  }): Promise<UserHashedEntity> {
     const { personalInfoPlain, contactsPlain, passwordPlain } = userCreatePlainEntity;
     const encryptionSalt = randomUUID();
 
@@ -57,7 +62,7 @@ export class UsersService implements IUsersService {
     );
   }
 
-  async findOne(props: { userFindOnePlainEntity: UserFindOnePlainEntity }): Promise<UserEntity | null> {
+  async findOne(props: { userFindOnePlainEntity: UserFindOnePlainEntity }): Promise<UserHashedEntity | null> {
     return this.#usersRepository.findOne(this.#convertUserFindOnePlainToHashedOrThrow(props.userFindOnePlainEntity));
   }
 
@@ -67,7 +72,7 @@ export class UsersService implements IUsersService {
   }: {
     userFindOnePlainEntity: UserFindOnePlainEntity;
     userPatchOnePlainEntity: UserPatchOnePlainEntity;
-  }): Promise<UserEntity> {
+  }): Promise<UserHashedEntity> {
     const userFindOneEntity = this.#convertUserFindOnePlainToHashedOrThrow(userFindOnePlainEntity);
 
     const foundUser = await this.#usersRepository.findOne(userFindOneEntity);
@@ -84,19 +89,18 @@ export class UsersService implements IUsersService {
     return userEntity;
   }
 
-  async decryptUser(userEntity: UserEntity): Promise<UserEntity> {
-    const [contactsPlain, personalInfoPlain] = await Promise.all([
+  async decryptUser(userEntity: UserHashedEntity): Promise<UserPlainEntity> {
+    const [contacts, personalInfo] = await Promise.all([
       this.#decryptContacts(userEntity.encryptionSalt, userEntity.contactsEncrypted),
       this.#decryptPersonalInfo(userEntity.encryptionSalt, userEntity.personalInfoEncrypted),
     ]);
 
-    return new UserEntity({
+    return new UserPlainEntity({
       id: userEntity.id,
-      encryptionSalt: userEntity.encryptionSalt,
       createdAt: userEntity.createdAt,
       updatedAt: userEntity.updatedAt,
-      contactsPlain,
-      personalInfoPlain,
+      contacts,
+      personalInfo,
     });
   }
 

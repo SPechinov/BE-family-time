@@ -1,10 +1,10 @@
-import { UserCreateEntity, UserEntity, UserFindOneEntity, UserPatchOneEntity } from '@/entities';
+import { UserCreateEntity, UserFindOneEntity, UserHashedEntity, UserPatchOneEntity } from '@/entities';
 
 export interface IUsersRepository {
-  createOne(userCreateEntity: UserCreateEntity): Promise<UserEntity>;
-  findOne(userFindEntity: UserFindOneEntity): Promise<UserEntity | null>;
+  createOne(userCreateEntity: UserCreateEntity): Promise<UserHashedEntity>;
+  findOne(userFindEntity: UserFindOneEntity): Promise<UserHashedEntity | null>;
   patchOne(props: {
     userFindOneEntity: UserFindOneEntity;
     userPatchOneEntity: UserPatchOneEntity;
-  }): Promise<UserEntity>;
+  }): Promise<UserHashedEntity>;
 }

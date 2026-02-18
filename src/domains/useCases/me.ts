@@ -1,5 +1,5 @@
-import { UserEntity } from '@/entities';
+import { UserPlainEntity } from '@/entities';
 
 export interface IMeUseCases {
-  getMe(props: { userId: string }): Promise<UserEntity>;
+  getMe(props: { userId: string }): Promise<UserPlainEntity>;
 }

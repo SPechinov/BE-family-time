@@ -1,5 +1,5 @@
 import { IMeUseCases } from '@/domains/useCases';
-import { UserEntity, UserFindOnePlainEntity } from '@/entities';
+import { UserPlainEntity, UserFindOnePlainEntity } from '@/entities';
 import { IUsersService } from '@/domains/services';
 import { ErrorUserNotExists } from '@/pkg';
 
@@ -10,7 +10,7 @@ export class MeUseCase implements IMeUseCases {
     this.#usersService = props.usersService;
   }
 
-  async getMe(props: { userId: string }): Promise<UserEntity> {
+  async getMe(props: { userId: string }): Promise<UserPlainEntity> {
     const user = await this.#usersService.findOne({
       userFindOnePlainEntity: new UserFindOnePlainEntity({ id: props.userId }),
     });

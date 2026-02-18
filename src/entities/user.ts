@@ -58,48 +58,25 @@ export class UserPasswordPlainEntity {
 
 export class UserPasswordHashedEntity extends UserPasswordPlainEntity {}
 
-export class UserEntity {
+interface UserBaseEntityProps {
+  id: string;
+  updatedAt: Date;
+  createdAt: Date;
+}
+
+class UserBaseEntity {
   readonly #id: string;
-  readonly #encryptionSalt: string;
   readonly #updatedAt: Date;
   readonly #createdAt: Date;
-  readonly #personalInfoPlain?: UserPersonalInfoPlainEntity;
-  readonly #personalInfoEncrypted?: UserPersonalInfoEncryptedEntity;
-  readonly #contactsPlain?: UserContactsPlainEntity;
-  readonly #contactsEncrypted?: UserContactsEncryptedEntity;
-  readonly #contactsHashed?: UserContactsHashedEntity;
-  readonly #passwordHashed?: UserPasswordHashedEntity;
 
-  constructor(props: {
-    id: string;
-    encryptionSalt: string;
-    updatedAt: Date;
-    createdAt: Date;
-    personalInfoPlain?: UserPersonalInfoPlainEntity;
-    personalInfoEncrypted?: UserPersonalInfoEncryptedEntity;
-    contactsPlain?: UserContactsPlainEntity;
-    contactsEncrypted?: UserContactsEncryptedEntity;
-    contactsHashed?: UserContactsHashedEntity;
-    passwordHashed?: UserPasswordHashedEntity;
-  }) {
+  constructor(props: UserBaseEntityProps) {
     this.#id = props.id;
-    this.#encryptionSalt = props.encryptionSalt;
     this.#updatedAt = props.updatedAt;
     this.#createdAt = props.createdAt;
-    this.#personalInfoPlain = props.personalInfoPlain;
-    this.#personalInfoEncrypted = props.personalInfoEncrypted;
-    this.#contactsPlain = props.contactsPlain;
-    this.#contactsEncrypted = props.contactsEncrypted;
-    this.#contactsHashed = props.contactsHashed;
-    this.#passwordHashed = props.passwordHashed;
   }
 
   get id(): string {
     return this.#id;
-  }
-
-  get encryptionSalt(): string {
-    return this.#encryptionSalt;
   }
 
   get updatedAt(): Date {
@@ -109,17 +86,37 @@ export class UserEntity {
   get createdAt(): Date {
     return this.#createdAt;
   }
+}
 
-  get personalInfoPlain() {
-    return this.#personalInfoPlain;
+interface UserEntityProps extends UserBaseEntityProps {
+  encryptionSalt: string;
+  personalInfoEncrypted?: UserPersonalInfoEncryptedEntity;
+  contactsEncrypted?: UserContactsEncryptedEntity;
+  contactsHashed?: UserContactsHashedEntity;
+  passwordHashed?: UserPasswordHashedEntity;
+}
+export class UserHashedEntity extends UserBaseEntity {
+  readonly #encryptionSalt: string;
+  readonly #personalInfoEncrypted?: UserPersonalInfoEncryptedEntity;
+  readonly #contactsEncrypted?: UserContactsEncryptedEntity;
+  readonly #contactsHashed?: UserContactsHashedEntity;
+  readonly #passwordHashed?: UserPasswordHashedEntity;
+
+  constructor(props: UserEntityProps) {
+    super(props);
+    this.#encryptionSalt = props.encryptionSalt;
+    this.#personalInfoEncrypted = props.personalInfoEncrypted;
+    this.#contactsEncrypted = props.contactsEncrypted;
+    this.#contactsHashed = props.contactsHashed;
+    this.#passwordHashed = props.passwordHashed;
+  }
+
+  get encryptionSalt(): string {
+    return this.#encryptionSalt;
   }
 
   get personalInfoEncrypted() {
     return this.#personalInfoEncrypted;
-  }
-
-  get contactsPlain() {
-    return this.#contactsPlain;
   }
 
   get contactsEncrypted() {
@@ -132,6 +129,30 @@ export class UserEntity {
 
   get passwordHashed() {
     return this.#passwordHashed;
+  }
+}
+
+export interface UserPlainEntityProps extends UserBaseEntityProps {
+  personalInfo?: UserPersonalInfoPlainEntity;
+  contacts?: UserContactsPlainEntity;
+}
+
+export class UserPlainEntity extends UserBaseEntity {
+  readonly #personalInfo?: UserPersonalInfoPlainEntity;
+  readonly #contacts?: UserContactsPlainEntity;
+
+  constructor(props: UserPlainEntityProps) {
+    super(props);
+    this.#personalInfo = props.personalInfo;
+    this.#contacts = props.contacts;
+  }
+
+  get personalInfo() {
+    return this.#personalInfo;
+  }
+
+  get contacts() {
+    return this.#contacts;
   }
 }
 

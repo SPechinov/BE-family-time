@@ -31,10 +31,10 @@ export class MeRoutesController {
             const user = await this.#meUseCases.getMe({ userId: request.userId });
             reply.status(200).send({
               id: user.id,
-              email: user.contactsPlain?.email ?? null,
-              phone: user.contactsPlain?.phone ?? null,
-              firstName: user.personalInfoPlain?.firstName ?? null,
-              lastName: user.personalInfoPlain?.lastName ?? null,
+              email: user.contacts?.email ?? null,
+              phone: user.contacts?.phone ?? null,
+              firstName: user.personalInfo?.firstName ?? null,
+              lastName: user.personalInfo?.lastName ?? null,
             });
           },
         );
