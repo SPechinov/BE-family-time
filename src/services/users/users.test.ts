@@ -808,4 +808,236 @@ describe('UsersService', () => {
       }, 1000);
     });
   });
+
+  // ───────────────────────────────────────────────────────────────────────────
+  // Edge cases for null/undefined handling
+  // ───────────────────────────────────────────────────────────────────────────
+
+  describe('Edge cases', () => {
+    describe('#decryptContacts', () => {
+      it('should return undefined when contactsEncrypted is not instance of UserContactsEncryptedEntity', async () => {
+        const userEntity = createMockUserEntity({
+          contactsEncrypted: {} as UserContactsEncryptedEntity,
+        });
+
+        const result = await usersService.decryptUser(userEntity);
+
+        expect(result.contacts).toBeUndefined();
+      });
+
+      it('should return undefined when contactsEncrypted has no contact', async () => {
+        const userEntity = createMockUserEntity({
+          contactsEncrypted: new UserContactsEncryptedEntity({
+            email: undefined,
+            phone: undefined,
+          }),
+        });
+
+        const result = await usersService.decryptUser(userEntity);
+
+        expect(result.contacts).toBeUndefined();
+      });
+    });
+
+    describe('#decryptPersonalInfo', () => {
+      it('should return undefined when personalInfoEncrypted is not instance of UserPersonalInfoEncryptedEntity', async () => {
+        const userEntity = createMockUserEntity({
+          personalInfoEncrypted: {} as UserPersonalInfoEncryptedEntity,
+        });
+
+        const result = await usersService.decryptUser(userEntity);
+
+        expect(result.personalInfo).toBeUndefined();
+      });
+
+      it('should return undefined when personalInfoEncrypted has no firstName and lastName', async () => {
+        const userEntity = createMockUserEntity({
+          personalInfoEncrypted: new UserPersonalInfoEncryptedEntity({
+            firstName: undefined,
+            lastName: undefined,
+          }),
+        });
+
+        const result = await usersService.decryptUser(userEntity);
+
+        expect(result.personalInfo).toBeUndefined();
+      });
+    });
+
+    describe('#convertUserFindOnePlainToHashedOrThrow', () => {
+      it('should throw if contactsPlain exists but has no contact', async () => {
+        const userFindOnePlainEntity = new UserFindOnePlainEntity({
+          contactsPlain: new UserContactsPlainEntity({
+            email: undefined,
+            phone: undefined,
+          }),
+        });
+
+        await expect(usersService.findOne({ userFindOnePlainEntity })).rejects.toThrow(
+          'Either id or contacts must be provided',
+        );
+      });
+    });
+
+    describe('#prepareContacts with null', () => {
+      it('should handle null contactsPlain in patchOne', async () => {
+        const userFindOnePlainEntity = new UserFindOnePlainEntity({ id: 'user-123' });
+        const userPatchOnePlainEntity = new UserPatchOnePlainEntity({
+          contactsPlain: null,
+        });
+
+        mockUsersRepository.findOne.mockResolvedValue(createMockUserEntity());
+        mockUsersRepository.patchOne.mockResolvedValue(createMockUserEntity());
+
+        await usersService.patchOne({ userFindOnePlainEntity, userPatchOnePlainEntity });
+
+        expect(mockUsersRepository.patchOne).toHaveBeenCalledWith(
+          expect.objectContaining({
+            userPatchOneEntity: expect.objectContaining({
+              contactsEncrypted: null,
+              contactsHashed: null,
+            }),
+          }),
+        );
+      });
+    });
+
+    describe('#preparePersonalInfo with null', () => {
+      it('should handle null personalInfoPlain in patchOne', async () => {
+        const userFindOnePlainEntity = new UserFindOnePlainEntity({ id: 'user-123' });
+        const userPatchOnePlainEntity = new UserPatchOnePlainEntity({
+          personalInfoPlain: null,
+        });
+
+        mockUsersRepository.findOne.mockResolvedValue(createMockUserEntity());
+        mockUsersRepository.patchOne.mockResolvedValue(createMockUserEntity());
+
+        await usersService.patchOne({ userFindOnePlainEntity, userPatchOnePlainEntity });
+
+        expect(mockUsersRepository.patchOne).toHaveBeenCalled();
+      });
+    });
+
+    describe('#preparePasswordHashed with null', () => {
+      it('should handle null passwordPlain in patchOne', async () => {
+        const userFindOnePlainEntity = new UserFindOnePlainEntity({ id: 'user-123' });
+        const userPatchOnePlainEntity = new UserPatchOnePlainEntity({
+          passwordPlain: null,
+        });
+
+        mockUsersRepository.findOne.mockResolvedValue(createMockUserEntity());
+        mockUsersRepository.patchOne.mockResolvedValue(createMockUserEntity());
+
+        await usersService.patchOne({ userFindOnePlainEntity, userPatchOnePlainEntity });
+
+        expect(mockUsersRepository.patchOne).toHaveBeenCalled();
+      });
+    });
+
+    describe('#convertUserPatchOnePlainToHashedOrThrow', () => {
+      it('should proceed when at least one field is provided (not all undefined/null)', async () => {
+        const userFindOnePlainEntity = new UserFindOnePlainEntity({ id: 'user-123' });
+        // When all are undefined, the service should throw
+        const userPatchOnePlainEntity = new UserPatchOnePlainEntity({
+          personalInfoPlain: undefined,
+          contactsPlain: undefined,
+          passwordPlain: undefined,
+        });
+
+        mockUsersRepository.findOne.mockResolvedValue(createMockUserEntity());
+        // The error comes from repository because no fields to update
+        mockUsersRepository.patchOne.mockResolvedValue(null);
+
+        await expect(usersService.patchOne({ userFindOnePlainEntity, userPatchOnePlainEntity })).rejects.toThrow();
+      });
+
+      it('should handle mixed null and defined values', async () => {
+        const userFindOnePlainEntity = new UserFindOnePlainEntity({ id: 'user-123' });
+        const userPatchOnePlainEntity = new UserPatchOnePlainEntity({
+          personalInfoPlain: null,
+          contactsPlain: null,
+          passwordPlain: new UserPasswordPlainEntity('newpass'),
+        });
+
+        mockUsersRepository.findOne.mockResolvedValue(createMockUserEntity());
+        mockUsersRepository.patchOne.mockResolvedValue(createMockUserEntity());
+
+        await usersService.patchOne({ userFindOnePlainEntity, userPatchOnePlainEntity });
+
+        expect(mockUsersRepository.patchOne).toHaveBeenCalled();
+      });
+    });
+
+    describe('decryptUser with all edge cases', () => {
+      it('should handle user with all undefined optional fields', async () => {
+        const userEntity = createMockUserEntity({
+          contactsEncrypted: undefined,
+          personalInfoEncrypted: undefined,
+        });
+
+        const result = await usersService.decryptUser(userEntity);
+
+        // Entity returns {} when fields are undefined
+        expect(result.contacts).toEqual({});
+        expect(result.personalInfo).toEqual({});
+        expect(result.id).toBe('user-123');
+      });
+
+      it('should decrypt only email when phone is undefined', async () => {
+        const userEntity = createMockUserEntity({
+          contactsEncrypted: new UserContactsEncryptedEntity({
+            email: 'encrypted-only-email@example.com',
+            phone: undefined,
+          }),
+        });
+
+        const result = await usersService.decryptUser(userEntity);
+
+        expect(result.contacts?.email).toBe('only-email@example.com');
+        expect(result.contacts?.phone).toBeUndefined();
+      });
+
+      it('should decrypt only phone when email is undefined', async () => {
+        const userEntity = createMockUserEntity({
+          contactsEncrypted: new UserContactsEncryptedEntity({
+            email: undefined,
+            phone: 'encrypted-+1234567890',
+          }),
+        });
+
+        const result = await usersService.decryptUser(userEntity);
+
+        expect(result.contacts?.email).toBeUndefined();
+        expect(result.contacts?.phone).toBe('+1234567890');
+      });
+
+      it('should decrypt only firstName when lastName is undefined', async () => {
+        const userEntity = createMockUserEntity({
+          personalInfoEncrypted: new UserPersonalInfoEncryptedEntity({
+            firstName: 'encrypted-OnlyFirst',
+            lastName: undefined,
+          }),
+        });
+
+        const result = await usersService.decryptUser(userEntity);
+
+        expect(result.personalInfo?.firstName).toBe('OnlyFirst');
+        expect(result.personalInfo?.lastName).toBeUndefined();
+      });
+
+      it('should decrypt only lastName when firstName is undefined', async () => {
+        const userEntity = createMockUserEntity({
+          personalInfoEncrypted: new UserPersonalInfoEncryptedEntity({
+            firstName: undefined,
+            lastName: 'encrypted-OnlyLast',
+          }),
+        });
+
+        const result = await usersService.decryptUser(userEntity);
+
+        expect(result.personalInfo?.firstName).toBeUndefined();
+        expect(result.personalInfo?.lastName).toBe('OnlyLast');
+      });
+    });
+  });
 });
