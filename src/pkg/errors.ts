@@ -65,8 +65,13 @@ export class ErrorInvalidContacts extends BusinessError {
 
 export class ErrorTooManyRequests extends BusinessError {
   statusCode = 429;
-  constructor() {
+  public readonly msBeforeNext?: number;
+  public readonly remainingPoints?: number;
+
+  constructor(props?: { msBeforeNext?: number; remainingPoints?: number }) {
     super(CODES.tooManyRequests);
+    this.msBeforeNext = props?.msBeforeNext;
+    this.remainingPoints = props?.remainingPoints;
   }
 }
 

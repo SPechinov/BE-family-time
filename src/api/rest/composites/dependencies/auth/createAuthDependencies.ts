@@ -4,10 +4,9 @@ import { AuthUseCases } from '@/useCases';
 import { RefreshTokensStore } from '@/repositories/stores';
 import { IAuthMiddleware } from '@/api/rest/domains';
 import { createUsersService } from '../common/createUsersService';
-import { RateLimiterRedis } from 'rate-limiter-flexible';
 import { AuthMiddleware } from '@/api/rest/middlewares';
 import { JwtService } from '@/services/jwt';
-import { OtpCodesService } from '@/services';
+import { OtpCodesService, RateLimiterService } from '@/services';
 import { CONFIG } from '@/config';
 
 export interface AuthDependencies {
@@ -37,11 +36,11 @@ export const createAuthDependencies = ({ redis, postgres }: CreateAuthDependenci
     ttlSec: CONFIG.ttls.forgotPasswordSec,
   });
 
-  const rateLimiter = new RateLimiterRedis({
-    storeClient: redis,
+  const rateLimiter = new RateLimiterService(redis, {
     points: 50,
     duration: TIMES.hour / 1000,
     blockDuration: TIMES.hour / 1000,
+    keyPrefix: 'auth',
   });
 
   const authUseCases = new AuthUseCases({

@@ -22,7 +22,6 @@ import {
 } from '@/pkg';
 import { IRefreshTokensStore } from '@/domains/repositories/stores';
 import { JwtPayload } from 'jsonwebtoken';
-import { RateLimiterRedis } from 'rate-limiter-flexible';
 
 export class AuthUseCases implements IAuthUseCases {
   readonly #userService: IUsersService;
@@ -30,14 +29,14 @@ export class AuthUseCases implements IAuthUseCases {
   readonly #forgotPasswordOtpCodesService: IOtpCodesService;
   readonly #refreshTokensStore: IRefreshTokensStore;
   readonly #jwtService: IJwtService;
-  readonly #rateLimiter: RateLimiterRedis;
+  readonly #rateLimiter: IRateLimiterService;
   readonly #pendRegistrationEndRequests = new Set<string>();
 
   constructor(props: {
     usersService: IUsersService;
     registrationOtpCodesService: IOtpCodesService;
     forgotPasswordOtpCodesService: IOtpCodesService;
-    rateLimiter: RateLimiterRedis;
+    rateLimiter: IRateLimiterService;
     refreshTokensStore: IRefreshTokensStore;
     jwtService: IJwtService;
   }) {
@@ -57,8 +56,7 @@ export class AuthUseCases implements IAuthUseCases {
   }): Promise<{ accessToken: string; refreshToken: string }> {
     const contact = this.#getContactOrThrow(props.userContactsPlainEntity);
 
-    const res = await this.#rateLimiter.consume(contact);
-    console.log(res);
+    await this.#rateLimiter.checkLimitOrThrow({ key: contact });
 
     const user = await this.#userService.findOne({
       userFindOnePlainEntity: new UserFindOnePlainEntity({ contactsPlain: props.userContactsPlainEntity }),
@@ -91,7 +89,7 @@ export class AuthUseCases implements IAuthUseCases {
   }): Promise<{ otpCode: string }> {
     const contact = this.#getContactOrThrow(props.userContactsPlainEntity);
 
-    await this.#rateLimiter.consume(contact);
+    await this.#rateLimiter.checkLimitOrThrow({ key: contact });
 
     const otpCode = generateNumericCode(CONFIG.codesLength.registration);
     await this.#registrationOtpCodesService.saveCode({ key: contact, code: otpCode });
@@ -111,7 +109,7 @@ export class AuthUseCases implements IAuthUseCases {
 
     try {
       this.#pendRegistrationEndRequests.add(contact);
-      await this.#rateLimiter.consume(contact);
+      await this.#rateLimiter.checkLimitOrThrow({ key: contact });
 
       const storeOtpCode = await this.#registrationOtpCodesService.getCode({ key: contact });
       this.#compareOtpCodes(storeOtpCode, props.otpCode);
@@ -141,7 +139,7 @@ export class AuthUseCases implements IAuthUseCases {
     const contact = props.userContactsPlainEntity.getContact();
     if (!contact) throw new ErrorInvalidContacts();
 
-    await this.#rateLimiter.consume(contact);
+    await this.#rateLimiter.checkLimitOrThrow({ key: contact });
 
     const userFindOnePlainEntity = new UserFindOnePlainEntity({ contactsPlain: props.userContactsPlainEntity });
     const foundUser = await this.#userService.findOne({ userFindOnePlainEntity });
@@ -163,7 +161,7 @@ export class AuthUseCases implements IAuthUseCases {
     const contact = props.userContactsPlainEntity.getContact();
     if (!contact) throw new ErrorInvalidContacts();
 
-    await this.#rateLimiter.consume(contact);
+    await this.#rateLimiter.checkLimitOrThrow({ key: contact });
 
     const storeOtpCode = await this.#forgotPasswordOtpCodesService.getCode({ key: contact });
     this.#compareOtpCodes(storeOtpCode, props.otpCode);
