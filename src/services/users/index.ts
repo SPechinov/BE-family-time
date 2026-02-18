@@ -9,7 +9,7 @@ import {
   UserCreatePlainEntity,
   UserFindOneEntity,
   UserFindOnePlainEntity,
-  UserHashedEntity,
+  UserEntity,
   UserPasswordHashedEntity,
   UserPatchOneEntity,
   UserPatchOnePlainEntity,
@@ -41,7 +41,7 @@ export class UsersService implements IUsersService {
     userCreatePlainEntity,
   }: {
     userCreatePlainEntity: UserCreatePlainEntity;
-  }): Promise<UserHashedEntity> {
+  }): Promise<UserEntity> {
     const { personalInfoPlain, contactsPlain, passwordPlain } = userCreatePlainEntity;
     const encryptionSalt = randomUUID();
 
@@ -62,7 +62,7 @@ export class UsersService implements IUsersService {
     );
   }
 
-  async findOne(props: { userFindOnePlainEntity: UserFindOnePlainEntity }): Promise<UserHashedEntity | null> {
+  async findOne(props: { userFindOnePlainEntity: UserFindOnePlainEntity }): Promise<UserEntity | null> {
     return this.#usersRepository.findOne(this.#convertUserFindOnePlainToHashedOrThrow(props.userFindOnePlainEntity));
   }
 
@@ -72,7 +72,7 @@ export class UsersService implements IUsersService {
   }: {
     userFindOnePlainEntity: UserFindOnePlainEntity;
     userPatchOnePlainEntity: UserPatchOnePlainEntity;
-  }): Promise<UserHashedEntity> {
+  }): Promise<UserEntity> {
     const userFindOneEntity = this.#convertUserFindOnePlainToHashedOrThrow(userFindOnePlainEntity);
 
     const foundUser = await this.#usersRepository.findOne(userFindOneEntity);
@@ -89,7 +89,7 @@ export class UsersService implements IUsersService {
     return userEntity;
   }
 
-  async decryptUser(userEntity: UserHashedEntity): Promise<UserPlainEntity> {
+  async decryptUser(userEntity: UserEntity): Promise<UserPlainEntity> {
     const [contacts, personalInfo] = await Promise.all([
       this.#decryptContacts(userEntity.encryptionSalt, userEntity.contactsEncrypted),
       this.#decryptPersonalInfo(userEntity.encryptionSalt, userEntity.personalInfoEncrypted),

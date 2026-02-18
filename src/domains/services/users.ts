@@ -1,19 +1,19 @@
 import {
   UserCreatePlainEntity,
   UserFindOnePlainEntity,
-  UserHashedEntity,
+  UserEntity,
   UserPatchOnePlainEntity,
   UserPlainEntity,
 } from '@/entities';
 import { ILogger } from '@/pkg';
 
 export interface IUsersService {
-  createOne(props: { userCreatePlainEntity: UserCreatePlainEntity }): Promise<UserHashedEntity>;
-  findOne(props: { userFindOnePlainEntity: UserFindOnePlainEntity }): Promise<UserHashedEntity | null>;
+  createOne(props: { userCreatePlainEntity: UserCreatePlainEntity }): Promise<UserEntity>;
+  findOne(props: { userFindOnePlainEntity: UserFindOnePlainEntity }): Promise<UserEntity | null>;
   patchOne(props: {
     userFindOnePlainEntity: UserFindOnePlainEntity;
     userPatchOnePlainEntity: UserPatchOnePlainEntity;
-  }): Promise<UserHashedEntity>;
-  decryptUser(userEntity: UserHashedEntity): Promise<UserPlainEntity>;
+  }): Promise<UserEntity>;
+  decryptUser(userEntity: UserEntity): Promise<UserPlainEntity>;
   verifyPassword(props: { password: string; hash: string; logger: ILogger }): Promise<boolean>;
 }

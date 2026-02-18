@@ -95,7 +95,7 @@ interface UserEntityProps extends UserBaseEntityProps {
   contactsHashed?: UserContactsHashedEntity;
   passwordHashed?: UserPasswordHashedEntity;
 }
-export class UserHashedEntity extends UserBaseEntity {
+export class UserEntity extends UserBaseEntity {
   readonly #encryptionSalt: string;
   readonly #personalInfoEncrypted?: UserPersonalInfoEncryptedEntity;
   readonly #contactsEncrypted?: UserContactsEncryptedEntity;

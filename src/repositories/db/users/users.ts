@@ -7,7 +7,7 @@ import {
   UserContactsHashedEntity,
   UserCreateEntity,
   UserFindOneEntity,
-  UserHashedEntity,
+  UserEntity,
   UserPasswordHashedEntity,
   UserPatchOneEntity,
   UserPersonalInfoEncryptedEntity,
@@ -20,7 +20,7 @@ export class UsersRepository implements IUsersRepository {
     this.#pool = props.pool;
   }
 
-  async createOne(userCreateEntity: UserCreateEntity): Promise<UserHashedEntity> {
+  async createOne(userCreateEntity: UserCreateEntity): Promise<UserEntity> {
     const query = `
       INSERT INTO users (
         encryption_salt,
@@ -60,7 +60,7 @@ export class UsersRepository implements IUsersRepository {
     }
   }
 
-  async findOne(userFindEntity: UserFindOneEntity): Promise<UserHashedEntity | null> {
+  async findOne(userFindEntity: UserFindOneEntity): Promise<UserEntity | null> {
     let query = 'SELECT * FROM users';
     const { conditions, values } = this.#buildUsersConditions(userFindEntity);
     if (conditions.length === 0) throw new Error('Invalid find params');
@@ -79,7 +79,7 @@ export class UsersRepository implements IUsersRepository {
   }: {
     userFindOneEntity: UserFindOneEntity;
     userPatchOneEntity: UserPatchOneEntity;
-  }): Promise<UserHashedEntity> {
+  }): Promise<UserEntity> {
     const { conditions: findConditions, values: findValues } = this.#buildUsersConditions(userFindOneEntity);
     if (findConditions.length === 0) throw new Error('Invalid find params');
 
@@ -222,7 +222,7 @@ export class UsersRepository implements IUsersRepository {
       ? new UserPasswordHashedEntity(row.password_hashed.toString('utf-8'))
       : undefined;
 
-    return new UserHashedEntity({
+    return new UserEntity({
       id: row.id,
       encryptionSalt: row.encryption_salt,
       personalInfoEncrypted,
