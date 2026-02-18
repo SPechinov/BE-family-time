@@ -12,9 +12,6 @@ import {
   UserPersonalInfoEncryptedEntity,
   UserContactsHashedEntity,
   UserPasswordHashedEntity,
-  UserCreateEntity,
-  UserFindOneEntity,
-  UserPatchOneEntity,
   UserPlainEntity,
 } from '@/entities';
 import { ErrorUserNotExists } from '@/pkg/errors';
