@@ -6,7 +6,7 @@ import { ErrorTooManyRequests } from '@/pkg/errors';
 export interface IRateLimiterServiceOptions {
   points: number;
   duration: number;
-  blockDuration?: number;
+  blockDuration: number;
   keyPrefix: string;
 }
 
@@ -17,9 +17,9 @@ export class RateLimiterService implements IRateLimiterService {
     this.#rateLimiter = new RateLimiterRedis({
       storeClient: redisClient,
       useRedisPackage: true,
-      points: options.points ?? 50,
-      duration: options.duration ?? 3600,
-      blockDuration: options.blockDuration ?? 0,
+      points: options.points,
+      duration: options.duration,
+      blockDuration: options.blockDuration,
       keyPrefix: `rate-limiter-${options.keyPrefix}`,
     });
   }
