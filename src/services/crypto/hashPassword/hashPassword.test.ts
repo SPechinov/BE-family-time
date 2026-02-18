@@ -97,6 +97,87 @@ describe('HashPasswordService', () => {
       it.each(invalidStrings)('should throw for $name', async ({ value }) => {
         await expect(service.hash(value)).rejects.toThrow('Invalid password');
       });
+
+      it('should throw for string with length 0 (explicit validation)', async () => {
+        await expect(service.hash('')).rejects.toThrow('Invalid password');
+      });
+    });
+
+    describe('🔐 Validation branch coverage', () => {
+      it('should throw for non-string type (first branch of validation)', async () => {
+        await expect((service as any).hash(123)).rejects.toThrow('Invalid password');
+      });
+
+      it('should throw for string with length 0 (second branch of validation)', async () => {
+        await expect(service.hash('')).rejects.toThrow('Invalid password');
+      });
+
+      it('should accept string with length 1 (boundary)', async () => {
+        const hashed = await service.hash('a');
+        expect(hashed).toBeDefined();
+      });
+
+      it('should verify with valid password and hash (happy path)', async () => {
+        const password = 'testPassword123';
+        const hash = await service.hash(password);
+
+        const result = await service.verify({
+          password,
+          hash,
+          logger: mockLogger,
+        });
+
+        expect(result).toBe(true);
+        expect(mockLogger.error).not.toHaveBeenCalled();
+      });
+
+      it('should return false and log error when argon2.verify throws (catch branch)', async () => {
+        const error = new Error('Argon2 internal error');
+        jest.spyOn(require('argon2'), 'verify').mockImplementationOnce(() => {
+          throw error;
+        });
+
+        const result = await service.verify({
+          password: 'test',
+          hash: 'invalid-hash-format',
+          logger: mockLogger,
+        });
+
+        expect(result).toBe(false);
+        expect(mockLogger.error).toHaveBeenCalledWith({ error });
+      });
+
+      it('should validate password in verify method (first branch)', async () => {
+        const hash = await service.hash('test');
+
+        await expect(
+          service.verify({
+            password: 123 as any,
+            hash,
+            logger: mockLogger,
+          }),
+        ).rejects.toThrow('Invalid password');
+      });
+
+      it('should validate hash in verify method (second branch)', async () => {
+        await expect(
+          service.verify({
+            password: 'test',
+            hash: '',
+            logger: mockLogger,
+          }),
+        ).rejects.toThrow('Invalid password');
+      });
+
+      it('should validate both password and hash in verify', async () => {
+        await expect(
+          service.verify({
+            password: '' as any,
+            hash: '' as any,
+            logger: mockLogger,
+          }),
+        ).rejects.toThrow('Invalid password');
+      });
     });
 
     describe('⚠ Edge cases (allowed by service)', () => {
