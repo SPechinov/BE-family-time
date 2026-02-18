@@ -12,6 +12,7 @@ import cookie from '@fastify/cookie';
 import { CONFIG, isDev } from '@/config';
 import { ILogger } from '@/pkg/logger';
 import { onPreHandler, onRequest, onResponse, onSend } from '@/api/rest/hooks';
+import { nanoid } from 'nanoid';
 
 const OPEN_API_CONFIG: FastifyDynamicSwaggerOptions['openapi'] = {
   info: {
@@ -30,7 +31,7 @@ const OPEN_API_CONFIG: FastifyDynamicSwaggerOptions['openapi'] = {
   },
 };
 
-const customJsonSchemaTransform = (props: any) => {
+const customJsonSchemaTransform = (props: Parameters<typeof jsonSchemaTransform>[0]) => {
   const transformed = jsonSchemaTransform(props);
 
   if (transformed.schema && transformed.schema.response) {
@@ -55,10 +56,7 @@ export const newFastify = (props: {
   const fastify = Fastify({
     loggerInstance: props.logger,
     disableRequestLogging: true,
-    genReqId: (() => {
-      let i = 0;
-      return () => `${Date.now()}${i++}`;
-    })(),
+    genReqId: () => nanoid(),
   });
 
   fastify.register(formBody);
