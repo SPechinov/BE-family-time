@@ -1,7 +1,7 @@
 import { FastifyInstance } from 'fastify';
 import { Pool } from 'pg';
-import { GroupsRoutesController } from '@/api/rest/routes/groups';
-import { createGroupsDependencies } from './dependencies';
+import { GroupsRoutesController } from '../../../routes/groups';
+import { createGroupsDependencies } from './utils';
 
 export class GroupsComposite {
   #fastifyInstance: FastifyInstance;

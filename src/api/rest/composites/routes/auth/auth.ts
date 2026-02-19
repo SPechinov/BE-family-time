@@ -1,8 +1,8 @@
 import { RedisClient } from '@/pkg';
 import { FastifyInstance } from 'fastify';
 import { Pool } from 'pg';
-import { AuthRoutesController } from '../routes/auth';
-import { createAuthDependencies } from './dependencies';
+import { AuthRoutesController } from '../../../routes/auth';
+import { createDependencies } from './utils';
 
 export class AuthComposite {
   #fastifyInstance: FastifyInstance;
@@ -18,7 +18,7 @@ export class AuthComposite {
   }
 
   #register() {
-    const dependencies = createAuthDependencies({ redis: this.#redis, postgres: this.#postgres });
+    const dependencies = createDependencies({ redis: this.#redis, postgres: this.#postgres });
 
     new AuthRoutesController({
       fastify: this.#fastifyInstance,

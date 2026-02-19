@@ -1,3 +1,3 @@
-export * from './auth';
-export * from './me';
-export * from './groups';
+export * from './routes/auth';
+export * from './routes/me';
+export * from './routes/groups';

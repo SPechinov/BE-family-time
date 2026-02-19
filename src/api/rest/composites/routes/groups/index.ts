@@ -1,0 +1,1 @@
+export { GroupsComposite } from './groups';

@@ -1,7 +1,7 @@
 import { FastifyInstance } from 'fastify';
 import { Pool } from 'pg';
-import { MeRoutesController } from '@/api/rest/routes/me';
-import { createMeDependencies } from './dependencies';
+import { MeRoutesController } from '../../../routes/me';
+import { createMeDependencies } from './utils';
 
 export class MeComposite {
   #fastifyInstance: FastifyInstance;

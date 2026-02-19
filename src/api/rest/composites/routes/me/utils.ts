@@ -1,10 +1,10 @@
 import { Pool } from 'pg';
 import { MeUseCase } from '@/useCases';
 import { IUsersService, IJwtService } from '@/domains/services';
-import { IAuthMiddleware } from '@/api/rest/domains';
-import { createUsersService } from '../common/createUsersService';
 import { JwtService } from '@/services/jwt';
-import { AuthMiddleware } from '@/api/rest/middlewares';
+import { IAuthMiddleware } from '../../../domains';
+import { createUsersService } from '../../utils';
+import { AuthMiddleware } from '../../../middlewares';
 
 export interface MeDependencies {
   jwtService: IJwtService;

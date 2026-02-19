@@ -1,25 +1,19 @@
-import { RedisClient, TIMES } from '@/pkg';
 import { Pool } from 'pg';
+import { RedisClient, TIMES } from '@/pkg';
 import { AuthUseCases } from '@/useCases';
 import { RefreshTokensStore } from '@/repositories/stores';
-import { IAuthMiddleware } from '@/api/rest/domains';
-import { createUsersService } from '../common/createUsersService';
-import { AuthMiddleware } from '@/api/rest/middlewares';
-import { JwtService } from '@/services/jwt';
-import { OtpCodesService, RateLimiterService } from '@/services';
+import { OtpCodesService, RateLimiterService, JwtService } from '@/services';
 import { CONFIG } from '@/config';
 
-export interface AuthDependencies {
-  authMiddleware: IAuthMiddleware;
-  authUseCases: AuthUseCases;
-}
+import { AuthMiddleware } from '../../../middlewares';
+import { createUsersService } from '../../utils';
 
-interface CreateAuthDependenciesProps {
+interface Props {
   redis: RedisClient;
   postgres: Pool;
 }
 
-export const createAuthDependencies = ({ redis, postgres }: CreateAuthDependenciesProps): AuthDependencies => {
+export const createDependencies = ({ redis, postgres }: Props) => {
   const jwtService = new JwtService();
 
   const registrationOtpCodesService = new OtpCodesService({
