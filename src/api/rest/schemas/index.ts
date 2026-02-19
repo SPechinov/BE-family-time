@@ -23,9 +23,9 @@ export const SESSION_SCHEMA = z
 export const USER_SCHEMA = z
   .object({
     id: z.string(),
-    email: z.email().nullable(),
+    email: GLOBAL_SCHEMAS.email.nullable(),
     phone: z.string().nullable(),
-    firstName: z.string().nullable(),
+    firstName: GLOBAL_SCHEMAS.firstName.nullable(),
     lastName: z.string().nullable(),
   })
   .register(z.globalRegistry, { id: 'User' });
