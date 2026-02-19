@@ -1,1 +1,1 @@
-export { AuthRoutesController } from './auth';
+export { AuthRoutesController } from './controller';
