@@ -2,7 +2,7 @@ import { ILogger, newFastify, RedisClient } from '@/pkg';
 import { isDev } from '@/config';
 import { Pool } from 'pg';
 import { globalErrorHandler } from './utils';
-import { AuthComposite, MeComposite } from './composites';
+import { AuthComposite, GroupsComposite, MeComposite } from './composites';
 
 interface Props {
   redis: RedisClient;
@@ -20,6 +20,7 @@ export const newApiRest = async (props: Props) => {
     (instance) => {
       new AuthComposite({ fastifyInstance: instance, redis: props.redis, postgres: props.postgres });
       new MeComposite({ fastifyInstance: instance, postgres: props.postgres });
+      new GroupsComposite({ fastifyInstance: instance, postgres: props.postgres });
     },
     { prefix: '/api' },
   );

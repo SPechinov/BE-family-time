@@ -1,0 +1,1 @@
+export { GroupsRoutesController } from './controller';

@@ -2,7 +2,7 @@ import { jsonSchemaTransform, jsonSchemaTransformObject } from 'fastify-type-pro
 import { FastifySchema } from 'fastify';
 
 const removeErrors = (schema: FastifySchema) => {
-  if (!schema.response) return;
+  if (!schema?.response) return;
 
   const responses: Record<string, any> = schema.response;
   Object.keys(responses).forEach((code) => {
