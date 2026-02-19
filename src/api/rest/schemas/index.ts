@@ -12,11 +12,13 @@ export const GLOBAL_SCHEMAS = {
   userAgent: z.string().min(1),
 };
 
-export const SESSION_SCHEMA = z.object({
-  expiresAt: z.number(),
-  userAgent: z.string().nullable(),
-  isCurrent: z.boolean().optional(),
-});
+export const SESSION_SCHEMA = z
+  .object({
+    expiresAt: z.number(),
+    userAgent: z.string().nullable(),
+    isCurrent: z.boolean(),
+  })
+  .register(z.globalRegistry, { id: 'Session' });
 
 export const USER_SCHEMA = z
   .object({
@@ -26,4 +28,4 @@ export const USER_SCHEMA = z
     firstName: z.string().nullable(),
     lastName: z.string().nullable(),
   })
-  .register(z.globalRegistry, { id: 'USER_SCHEMA' });
+  .register(z.globalRegistry, { id: 'User' });

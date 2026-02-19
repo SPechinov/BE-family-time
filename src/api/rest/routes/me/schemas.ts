@@ -1,16 +1,10 @@
 import { createResponseSchema } from '@/api/rest/utils';
-import { z } from 'zod';
+import { USER_SCHEMA } from '@/api/rest/schemas';
 
 const GET_ME = {
   tags: ['Me'],
   response: createResponseSchema({
-    200: z.object({
-      id: z.string(),
-      email: z.string().nullable(),
-      phone: z.string().nullable(),
-      firstName: z.string().nullable(),
-      lastName: z.string().nullable(),
-    }),
+    200: USER_SCHEMA,
   }),
 };
 

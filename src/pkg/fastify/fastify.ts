@@ -1,11 +1,6 @@
 import Fastify, { FastifyError, FastifyReply, FastifyRequest } from 'fastify';
 import formBody from '@fastify/formbody';
-import {
-  jsonSchemaTransformObject,
-  jsonSchemaTransform,
-  serializerCompiler,
-  validatorCompiler,
-} from 'fastify-type-provider-zod';
+import { serializerCompiler, validatorCompiler } from 'fastify-type-provider-zod';
 import fastifySwagger, { FastifyDynamicSwaggerOptions } from '@fastify/swagger';
 import fastifySwaggerUi from '@fastify/swagger-ui';
 import cookie from '@fastify/cookie';
@@ -13,6 +8,7 @@ import { CONFIG, isDev } from '@/config';
 import { ILogger } from '@/pkg/logger';
 import { onPreHandler, onRequest, onResponse, onSend } from '@/api/rest/hooks';
 import { nanoid } from 'nanoid';
+import { wrappedJsonSchemaTransform, wrappedJsonSchemaTransformObject } from '@/pkg/fastify/utils';
 
 const OPEN_API_CONFIG: FastifyDynamicSwaggerOptions['openapi'] = {
   info: {
@@ -29,24 +25,6 @@ const OPEN_API_CONFIG: FastifyDynamicSwaggerOptions['openapi'] = {
       },
     },
   },
-};
-
-const customJsonSchemaTransform = (props: Parameters<typeof jsonSchemaTransform>[0]) => {
-  const transformed = jsonSchemaTransform(props);
-
-  if (transformed.schema && transformed.schema.response) {
-    const responses: Record<string, any> = transformed.schema.response;
-    const errorCodes = Object.keys(responses);
-
-    errorCodes.forEach((code) => {
-      if (code.startsWith('4') || code.startsWith('5')) {
-        // eslint-disable-next-line @typescript-eslint/no-dynamic-delete
-        delete responses[code];
-      }
-    });
-  }
-
-  return transformed;
 };
 
 export const newFastify = (props: {
@@ -77,8 +55,8 @@ export const newFastify = (props: {
   if (isDev()) {
     fastify.register(fastifySwagger, {
       openapi: OPEN_API_CONFIG,
-      transform: customJsonSchemaTransform,
-      transformObject: jsonSchemaTransformObject,
+      transform: wrappedJsonSchemaTransform,
+      transformObject: wrappedJsonSchemaTransformObject,
     });
 
     fastify.register(fastifySwaggerUi, {
