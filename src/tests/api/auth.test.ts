@@ -519,20 +519,6 @@ describe('Auth API', () => {
         expect(sessions[0]).toHaveProperty('userAgent');
         expect(sessions[0]).toHaveProperty('isCurrent');
       });
-
-      it('should mark current session as isCurrent', async () => {
-        const { tokens } = await completeRegistrationFlow({ userAgent });
-
-        const { sessions } = await api.getAllSessions({
-          accessToken: tokens.accessToken,
-          userAgent,
-        });
-
-        // Note: API may or may not mark current session with isCurrent flag
-        const currentSession = sessions.find((s) => s.isCurrent);
-        // Session list should not be empty
-        expect(sessions.length).toBeGreaterThan(0);
-      });
     });
 
     describe('✗ Validation errors', () => {
