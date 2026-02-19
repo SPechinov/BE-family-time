@@ -197,7 +197,7 @@ describe('Me API', () => {
   describe('Integration: Full user journey', () => {
     it('should complete full user journey: register → login → get profile → logout', async () => {
       // Register
-      const { email, password, firstName, tokens } = await completeRegistrationFlow({ userAgent });
+      const { email, firstName, tokens } = await completeRegistrationFlow({ userAgent });
 
       // Get profile
       const { user } = await api.getMe({ accessToken: tokens.accessToken, userAgent });
@@ -221,7 +221,7 @@ describe('Me API', () => {
     });
 
     it('should handle password reset flow', async () => {
-      const { email, password } = await completeRegistrationFlow({ userAgent });
+      const { email } = await completeRegistrationFlow({ userAgent });
       const newPassword = 'NewSecurePassword789!';
 
       // Start password reset
@@ -250,7 +250,7 @@ describe('Me API', () => {
         password,
         userAgent: 'Device2/1.0',
       });
-      const { tokens: tokens3 } = await api.login({
+      await api.login({
         email,
         password,
         userAgent: 'Device3/1.0',

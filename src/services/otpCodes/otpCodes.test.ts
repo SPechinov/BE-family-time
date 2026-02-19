@@ -496,7 +496,7 @@ describe('OtpCodesService', () => {
       expect(mockRedis.setEx).toHaveBeenCalledTimes(3);
 
       // Get all codes
-      codes.forEach(({ key, code }) => {
+      codes.forEach(({ code }) => {
         mockRedis.get.mockResolvedValueOnce(code);
       });
 

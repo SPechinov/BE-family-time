@@ -133,7 +133,7 @@ describe('HashPasswordService', () => {
 
       it('should return false and log error when argon2.verify throws (catch branch)', async () => {
         const error = new Error('Argon2 internal error');
-        jest.spyOn(require('argon2'), 'verify').mockImplementationOnce(() => {
+        jest.spyOn(argon2, 'verify').mockImplementationOnce(() => {
           throw error;
         });
 
