@@ -32,7 +32,7 @@ export class GroupEntity {
     return this.#name;
   }
 
-  get description(): string | undefined{
+  get description(): string | undefined {
     return this.#description;
   }
 
