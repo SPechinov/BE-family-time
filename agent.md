@@ -137,7 +137,6 @@ be-family-time/
 |------|----------|--------|
 | `src/tests/api/me.test.ts` | Падают тесты (401/400 вместо 200) | ❌ Требуется фикс |
 | `coverage/` | ESLint сканирует coverage файлы | ⚠️ Добавить в ignore |
-| `build/` | Дублирует mock nanoid | ⚠️ Требуется clean |
 
 ## Правила для AI-ассистента
 
