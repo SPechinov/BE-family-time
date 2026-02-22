@@ -1,4 +1,4 @@
-import { Pool } from 'pg';
+import { Pool, PoolClient } from 'pg';
 import { IUsersGroupsRepository } from '@/domains/repositories/db';
 import {
   UsersGroupsEntity,
@@ -16,7 +16,11 @@ export class UsersGroupsRepository implements IUsersGroupsRepository {
     this.#pool = props.pool;
   }
 
-  async createOne(usersGroupsCreateEntity: UsersGroupsCreateEntity): Promise<UsersGroupsEntity> {
+  async createOne(
+    usersGroupsCreateEntity: UsersGroupsCreateEntity,
+    options?: { client?: PoolClient },
+  ): Promise<UsersGroupsEntity> {
+    const client = options?.client ?? this.#pool;
     const query = `
       INSERT INTO users_groups (user_id, group_id, is_owner)
       VALUES ($1, $2, $3)
@@ -24,7 +28,7 @@ export class UsersGroupsRepository implements IUsersGroupsRepository {
       RETURNING *
     `;
 
-    const result = await this.#pool.query<IUsersGroupsRowData>(query, [
+    const result = await client.query<IUsersGroupsRowData>(query, [
       usersGroupsCreateEntity.userId,
       usersGroupsCreateEntity.groupId,
       usersGroupsCreateEntity.isOwner,

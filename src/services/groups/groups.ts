@@ -19,17 +19,20 @@ export class GroupsService implements IGroupsService {
   }
 
   async createOne(props: { groupCreateEntity: GroupCreateEntity; userId: UUID }): Promise<GroupEntity> {
-    const group = await this.#groupsRepository.createOne(props.groupCreateEntity);
+    return this.#groupsRepository.withTransaction(async (client) => {
+      const group = await this.#groupsRepository.createOne(props.groupCreateEntity, { client });
 
-    await this.#usersGroupsRepository.createOne(
-      new UsersGroupsCreateEntity({
-        userId: props.userId,
-        groupId: group.id,
-        isOwner: true,
-      }),
-    );
+      await this.#usersGroupsRepository.createOne(
+        new UsersGroupsCreateEntity({
+          userId: props.userId,
+          groupId: group.id,
+          isOwner: true,
+        }),
+        { client },
+      );
 
-    return group;
+      return group;
+    });
   }
 
   async findOne(props: { groupFindOneEntity: GroupFindOneEntity }): Promise<GroupEntity | null> {
@@ -41,5 +44,10 @@ export class GroupsService implements IGroupsService {
     groupPatchOneEntity: GroupPatchOneEntity;
   }): Promise<GroupEntity> {
     return this.#groupsRepository.patchOne(props);
+  }
+
+  async getUserGroupsCount(props: { userId: UUID }): Promise<number> {
+    const usersGroupsEntities = await this.#usersGroupsRepository.findAllByUserId(props.userId);
+    return usersGroupsEntities.length;
   }
 }

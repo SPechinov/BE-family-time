@@ -11,6 +11,7 @@ const CODES = {
   doubleRegistration: 'doubleRegistration',
   invalidUserAgent: 'invalidUserAgent',
   groupNotExists: 'groupNotExists',
+  groupsLimitExceeded: 'groupsLimitExceeded',
 };
 
 export abstract class BusinessError extends Error {
@@ -108,5 +109,13 @@ export class ErrorGroupNotExists extends BusinessError {
   statusCode = 401;
   constructor() {
     super(CODES.groupNotExists);
+  }
+}
+
+export class ErrorGroupsLimitExceeded extends BusinessError {
+  statusCode = 403;
+
+  constructor() {
+    super(CODES.groupsLimitExceeded);
   }
 }

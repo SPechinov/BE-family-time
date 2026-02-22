@@ -5,10 +5,11 @@ import {
   GroupPatchOneEntity,
   UserFindOnePlainEntity,
 } from '@/entities';
-import { ErrorGroupNotExists, ErrorUserNotExists } from '@/pkg';
+import { ErrorGroupNotExists, ErrorGroupsLimitExceeded, ErrorUserNotExists } from '@/pkg';
 import { UUID } from 'node:crypto';
 import { IGroupsService, IUsersService } from '@/domains/services';
 import { DefaultProps, IGroupsUseCases } from '@/domains/useCases';
+import { CONFIG } from '@/config';
 
 export class GroupsUseCases implements IGroupsUseCases {
   readonly #usersService: IUsersService;
@@ -23,18 +24,27 @@ export class GroupsUseCases implements IGroupsUseCases {
     return [];
   }
 
-  async createUserGroup(
-    props: DefaultProps<{ userId: UUID; groupCreateEntity: GroupCreateEntity }>,
-  ): Promise<GroupEntity> {
+  async createUserGroup({
+    userId,
+    groupCreateEntity,
+    logger,
+  }: DefaultProps<{ userId: UUID; groupCreateEntity: GroupCreateEntity }>): Promise<GroupEntity> {
     const foundUser = await this.#usersService.findOne({
-      userFindOnePlainEntity: new UserFindOnePlainEntity({ id: props.userId }),
+      userFindOnePlainEntity: new UserFindOnePlainEntity({ id: userId }),
     });
     if (!foundUser) throw new ErrorUserNotExists();
+    const userGroupsCount = await this.#groupsService.getUserGroupsCount({ userId: userId });
+    if (userGroupsCount >= CONFIG.limits.user.maxGroups) {
+      throw new ErrorGroupsLimitExceeded();
+    }
 
-    return this.#groupsService.createOne({
-      groupCreateEntity: props.groupCreateEntity,
-      userId: props.userId,
+    const group = await this.#groupsService.createOne({
+      groupCreateEntity: groupCreateEntity,
+      userId: userId,
     });
+
+    logger.debug({ groupId: group.id }, 'Group created');
+    return group;
   }
 
   async findUserGroup(

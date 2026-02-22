@@ -1,4 +1,4 @@
-import { Pool } from 'pg';
+import { Pool, PoolClient } from 'pg';
 import { IGroupsRepository } from '@/domains/repositories/db';
 import { GroupCreateEntity, GroupEntity, GroupFindOneEntity, GroupPatchOneEntity } from '@/entities';
 import { IGroupRowData } from './types';
@@ -10,22 +10,34 @@ export class GroupsRepository implements IGroupsRepository {
     this.#pool = props.pool;
   }
 
-  async createOne(groupCreateEntity: GroupCreateEntity): Promise<GroupEntity> {
+  async createOne(groupCreateEntity: GroupCreateEntity, options?: { client?: PoolClient }): Promise<GroupEntity> {
+    const client = options?.client ?? this.#pool;
     const query = `
       INSERT INTO groups (name, description)
-      VALUES ($1, $2)
-      RETURNING *
+      VALUES ($1, $2) RETURNING *
     `;
 
-    const result = await this.#pool.query<IGroupRowData>(query, [
-      groupCreateEntity.name,
-      groupCreateEntity.description,
-    ]);
+    const result = await client.query<IGroupRowData>(query, [groupCreateEntity.name, groupCreateEntity.description]);
 
     const row = result.rows?.[0];
     if (!row) throw new Error('Group not created');
 
     return this.#buildGroupEntity(row);
+  }
+
+  async withTransaction<T>(fn: (client: PoolClient) => Promise<T>): Promise<T> {
+    const client = await this.#pool.connect();
+    try {
+      await client.query('BEGIN');
+      const result = await fn(client);
+      await client.query('COMMIT');
+      return result;
+    } catch (error) {
+      await client.query('ROLLBACK');
+      throw error;
+    } finally {
+      client.release();
+    }
   }
 
   async findOne(groupFindOneEntity: GroupFindOneEntity): Promise<GroupEntity | null> {
