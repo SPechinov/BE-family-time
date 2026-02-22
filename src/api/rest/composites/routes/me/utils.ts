@@ -1,5 +1,5 @@
 import { Pool } from 'pg';
-import { MeUseCase } from '@/useCases';
+import { MeUseCases } from '@/useCases';
 import { IUsersService, IJwtService } from '@/domains/services';
 import { JwtService } from '@/services/jwt';
 import { IAuthMiddleware } from '../../../domains';
@@ -10,7 +10,7 @@ export interface MeDependencies {
   jwtService: IJwtService;
   authMiddleware: IAuthMiddleware;
   usersService: IUsersService;
-  meUseCases: MeUseCase;
+  meUseCases: MeUseCases;
 }
 
 interface CreateMeDependenciesProps {
@@ -24,7 +24,7 @@ export const createMeDependencies = (props: CreateMeDependenciesProps): MeDepend
   const usersService = createUsersService(postgres);
   const authMiddleware = new AuthMiddleware({ jwtService });
 
-  const meUseCases = new MeUseCase({
+  const meUseCases = new MeUseCases({
     usersService,
   });
 
