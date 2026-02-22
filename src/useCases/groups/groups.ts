@@ -1,0 +1,45 @@
+import { GroupCreateEntity, GroupEntity, GroupFindOneEntity, GroupPatchOneEntity } from '@/entities';
+import { ErrorGroupNotExists } from '@/pkg';
+import { UUID } from 'node:crypto';
+import { IGroupsService } from '@/domains/services';
+import { DefaultProps, IGroupsUseCases } from '@/domains/useCases';
+
+export class GroupsUseCases implements IGroupsUseCases {
+  readonly #groupsService: IGroupsService;
+
+  constructor(props: { groupsService: IGroupsService }) {
+    this.#groupsService = props.groupsService;
+  }
+
+  async findUserGroupsList(props: DefaultProps<{ userId: UUID }>): Promise<GroupEntity[]> {
+    return [];
+  }
+
+  async createUserGroup(
+    props: DefaultProps<{ userId: UUID; groupCreateEntity: GroupCreateEntity }>,
+  ): Promise<GroupEntity> {
+    return this.#groupsService.createOne(props);
+  }
+
+  async findUserGroup(
+    props: DefaultProps<{ userId: UUID; groupFindOneEntity: GroupFindOneEntity }>,
+  ): Promise<GroupEntity> {
+    const group = await this.#groupsService.findOne({
+      groupFindOneEntity: props.groupFindOneEntity,
+    });
+    if (!group) throw new ErrorGroupNotExists();
+    return group;
+  }
+
+  async patchUserGroup(
+    props: DefaultProps<{
+      groupFindOneEntity: GroupFindOneEntity;
+      groupPatchOneEntity: GroupPatchOneEntity;
+    }>,
+  ): Promise<GroupEntity> {
+    return this.#groupsService.patchOne({
+      groupFindOneEntity: props.groupFindOneEntity,
+      groupPatchOneEntity: props.groupPatchOneEntity,
+    });
+  }
+}

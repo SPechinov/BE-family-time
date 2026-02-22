@@ -1,6 +1,5 @@
 import { IGroupsRepository } from '@/domains/repositories/db';
 import { GroupCreateEntity, GroupEntity, GroupFindOneEntity, GroupPatchOneEntity } from '@/entities';
-import { ErrorGroupNotExists } from '@/pkg';
 import { IGroupsService } from '@/domains/services';
 
 export class GroupsService implements IGroupsService {
@@ -14,13 +13,8 @@ export class GroupsService implements IGroupsService {
     return this.#groupsRepository.createOne(props.groupCreateEntity);
   }
 
-  async findOne(props: { groupFindOneEntity: GroupFindOneEntity }): Promise<GroupEntity> {
-    const group = await this.#groupsRepository.findOne(props.groupFindOneEntity);
-    if (!group) {
-      throw new ErrorGroupNotExists();
-    }
-
-    return group;
+  async findOne(props: { groupFindOneEntity: GroupFindOneEntity }): Promise<GroupEntity | null> {
+    return this.#groupsRepository.findOne(props.groupFindOneEntity);
   }
 
   async patchOne(props: {
