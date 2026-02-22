@@ -1,4 +1,5 @@
 export * from './users';
+export * from './groups';
 export * from './otpCodes';
 export * from './rateLimiter';
 export * from './hash';

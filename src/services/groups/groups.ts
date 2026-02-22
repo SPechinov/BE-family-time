@@ -1,8 +1,9 @@
 import { IGroupsRepository } from '@/domains/repositories/db';
 import { GroupCreateEntity, GroupEntity, GroupFindOneEntity, GroupPatchOneEntity } from '@/entities';
 import { ErrorGroupNotExists } from '@/pkg';
+import { IGroupsService } from '@/domains/services';
 
-export class GroupsService {
+export class GroupsService implements IGroupsService {
   #groupsRepository: IGroupsRepository;
 
   constructor(props: { groupsRepository: IGroupsRepository }) {
