@@ -1,0 +1,25 @@
+meta {
+  name: create
+  type: http
+  seq: 2
+}
+
+post {
+  url: {{url}}/groups
+  body: formUrlEncoded
+  auth: bearer
+}
+
+auth:bearer {
+  token: {{authToken}}
+}
+
+body:form-urlencoded {
+  name: My family 2
+  description: The best family
+}
+
+settings {
+  encodeUrl: true
+  timeout: 0
+}
