@@ -4,6 +4,7 @@ import { ZodTypeProvider } from 'fastify-type-provider-zod';
 import { PREFIX, ROUTES } from './constants';
 import { IGroupsUseCases } from '@/domains/useCases';
 import { SCHEMAS } from './schemas';
+import { GroupCreateEntity } from '@/entities';
 
 export class GroupsRoutesController {
   #fastify: FastifyInstance;
@@ -32,9 +33,23 @@ export class GroupsRoutesController {
           },
         );
 
-        router.post(ROUTES.create, {}, async (request, reply) => {
-          reply.status(201).send();
-        });
+        router.post(
+          ROUTES.create,
+          {
+            schema: SCHEMAS.create,
+          },
+          async (request, reply) => {
+            await this.#groupsUseCases.createUserGroup({
+              groupCreateEntity: new GroupCreateEntity({
+                name: request.body.name,
+                description: request.body.description ?? undefined,
+              }),
+              userId: request.userId,
+              logger: request.log,
+            });
+            reply.status(201).send();
+          },
+        );
 
         router.get(ROUTES.get, {}, async (request, reply) => {
           reply.status(200).send();

@@ -10,6 +10,8 @@ export const GLOBAL_SCHEMAS = {
       .length(length)
       .refine((v) => !isNaN(Number(v)), { message: 'Invalid number' }),
   userAgent: z.string().min(1),
+  groupName: z.string().max(50),
+  groupDescription: z.string().max(1000),
 };
 
 export const SESSION_SCHEMA = z

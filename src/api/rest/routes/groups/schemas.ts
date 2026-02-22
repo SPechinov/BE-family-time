@@ -1,5 +1,5 @@
 import { createResponseSchema } from '@/api/rest/utils';
-import { GROUP_SCHEMA } from '@/api/rest/schemas';
+import { GLOBAL_SCHEMAS, GROUP_SCHEMA } from '@/api/rest/schemas';
 import { z } from 'zod';
 
 const GET_LIST = {
@@ -9,6 +9,15 @@ const GET_LIST = {
   }),
 };
 
+const CREATE = {
+  tags: ['Groups'],
+  body: z.object({
+    name: GLOBAL_SCHEMAS.groupName,
+    description: GLOBAL_SCHEMAS.groupDescription.optional(),
+  }),
+};
+
 export const SCHEMAS = Object.freeze({
   getList: GET_LIST,
+  create: CREATE,
 });
