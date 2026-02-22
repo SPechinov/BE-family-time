@@ -1,9 +1,9 @@
-import { IOtpCodesService } from '@/domains/services';
+import { IOtpCodesStore } from '@/domains/repositories/stores';
 import { REDIS_STATUS_SUCCESS_RESPONSE, RedisClient } from '@/pkg/redis';
 
 type RedisKey = `otp:${string}:${string}`;
 
-export class OtpCodesService implements IOtpCodesService {
+export class OtpCodesStore implements IOtpCodesStore {
   readonly #redis: RedisClient;
   readonly #prefix: string;
   readonly #codeLength: number;
@@ -16,19 +16,19 @@ export class OtpCodesService implements IOtpCodesService {
     this.#ttlSec = props.ttlSec;
   }
 
-  async saveCode(props: { code: string; key: string }) {
+  async set(props: { code: string; key: string }): Promise<void> {
     this.#validateCodeOrThrow(props.code);
     this.#validateKeyOrThrow(props.key);
     const result = await this.#redis.setEx(this.#buildRedisKey(props), this.#ttlSec, props.code);
     if (result !== REDIS_STATUS_SUCCESS_RESPONSE) throw new Error('Failed to save code');
   }
 
-  getCode(props: { key: string }) {
+  async get(props: { key: string }): Promise<string | null> {
     this.#validateKeyOrThrow(props.key);
     return this.#redis.get(this.#buildRedisKey(props));
   }
 
-  deleteCode(props: { key: string }) {
+  async delete(props: { key: string }): Promise<number> {
     this.#validateKeyOrThrow(props.key);
     return this.#redis.del(this.#buildRedisKey(props));
   }

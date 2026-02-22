@@ -1,8 +1,8 @@
 import { Pool } from 'pg';
 import { RedisClient, TIMES } from '@/pkg';
 import { AuthUseCases } from '@/useCases';
-import { RefreshTokensStore } from '@/repositories/stores';
-import { OtpCodesService, RateLimiterService, JwtService } from '@/services';
+import { RefreshTokensStore, OtpCodesStore } from '@/repositories/stores';
+import { RateLimiterService, JwtService } from '@/services';
 import { CONFIG } from '@/config';
 
 import { AuthMiddleware } from '../../../middlewares';
@@ -16,14 +16,14 @@ interface Props {
 export const createDependencies = ({ redis, postgres }: Props) => {
   const jwtService = new JwtService();
 
-  const registrationOtpCodesService = new OtpCodesService({
+  const registrationOtpCodesStore = new OtpCodesStore({
     redis,
     prefix: 'auth-registration-otp',
     codeLength: CONFIG.codesLength.registration,
     ttlSec: CONFIG.ttls.registrationSec,
   });
 
-  const forgotPasswordOtpCodesService = new OtpCodesService({
+  const forgotPasswordOtpCodesStore = new OtpCodesStore({
     redis,
     prefix: 'auth-forgot-password-otp',
     codeLength: CONFIG.codesLength.forgotPassword,
@@ -39,8 +39,8 @@ export const createDependencies = ({ redis, postgres }: Props) => {
 
   const authUseCases = new AuthUseCases({
     usersService: createUsersService(postgres),
-    registrationOtpCodesService,
-    forgotPasswordOtpCodesService,
+    registrationOtpCodesStore,
+    forgotPasswordOtpCodesStore,
     rateLimiter,
     refreshTokensStore: new RefreshTokensStore({ redis }),
     jwtService,

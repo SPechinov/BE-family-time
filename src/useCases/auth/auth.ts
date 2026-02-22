@@ -1,6 +1,7 @@
 import { CONFIG } from '@/config';
-import { IJwtService, IOtpCodesService, IRateLimiterService, IUsersService } from '@/domains/services';
+import { IJwtService, IRateLimiterService, IUsersService } from '@/domains/services';
 import { DefaultProps, IAuthUseCases } from '@/domains/useCases';
+import { IOtpCodesStore } from '@/domains/repositories/stores';
 import {
   UserContactsPlainEntity,
   UserCreatePlainEntity,
@@ -25,8 +26,8 @@ import { UUID } from 'node:crypto';
 
 export class AuthUseCases implements IAuthUseCases {
   readonly #userService: IUsersService;
-  readonly #registrationOtpCodesService: IOtpCodesService;
-  readonly #forgotPasswordOtpCodesService: IOtpCodesService;
+  readonly #registrationOtpCodesStore: IOtpCodesStore;
+  readonly #forgotPasswordOtpCodesStore: IOtpCodesStore;
   readonly #refreshTokensStore: IRefreshTokensStore;
   readonly #jwtService: IJwtService;
   readonly #rateLimiter: IRateLimiterService;
@@ -34,15 +35,15 @@ export class AuthUseCases implements IAuthUseCases {
 
   constructor(props: {
     usersService: IUsersService;
-    registrationOtpCodesService: IOtpCodesService;
-    forgotPasswordOtpCodesService: IOtpCodesService;
+    registrationOtpCodesStore: IOtpCodesStore;
+    forgotPasswordOtpCodesStore: IOtpCodesStore;
     rateLimiter: IRateLimiterService;
     refreshTokensStore: IRefreshTokensStore;
     jwtService: IJwtService;
   }) {
     this.#userService = props.usersService;
-    this.#registrationOtpCodesService = props.registrationOtpCodesService;
-    this.#forgotPasswordOtpCodesService = props.forgotPasswordOtpCodesService;
+    this.#registrationOtpCodesStore = props.registrationOtpCodesStore;
+    this.#forgotPasswordOtpCodesStore = props.forgotPasswordOtpCodesStore;
     this.#refreshTokensStore = props.refreshTokensStore;
     this.#rateLimiter = props.rateLimiter;
     this.#jwtService = props.jwtService;
@@ -92,7 +93,7 @@ export class AuthUseCases implements IAuthUseCases {
     await this.#rateLimiter.checkLimitOrThrow({ key: contact });
 
     const otpCode = generateNumericCode(CONFIG.codesLength.registration);
-    await this.#registrationOtpCodesService.saveCode({ key: contact, code: otpCode });
+    await this.#registrationOtpCodesStore.set({ key: contact, code: otpCode });
     props.logger.debug({ otpCode, contact }, 'registration code saved');
 
     return { otpCode };
@@ -109,9 +110,9 @@ export class AuthUseCases implements IAuthUseCases {
       this.#pendRegistrationEndRequests.add(contact);
       await this.#rateLimiter.checkLimitOrThrow({ key: contact });
 
-      const storeOtpCode = await this.#registrationOtpCodesService.getCode({ key: contact });
+      const storeOtpCode = await this.#registrationOtpCodesStore.get({ key: contact });
       this.#compareOtpCodes(storeOtpCode, props.otpCode);
-      this.#registrationOtpCodesService.deleteCode({ key: contact }).catch((error = {}) => {
+      this.#registrationOtpCodesStore.delete({ key: contact }).catch((error = {}) => {
         props.logger.error({ error }, 'code did not deleted');
       });
 
@@ -143,7 +144,7 @@ export class AuthUseCases implements IAuthUseCases {
     if (!foundUser) throw new ErrorUserNotExists();
 
     const otpCode = generateNumericCode(CONFIG.codesLength.forgotPassword);
-    await this.#forgotPasswordOtpCodesService.saveCode({ key: contact, code: otpCode });
+    await this.#forgotPasswordOtpCodesStore.set({ key: contact, code: otpCode });
     props.logger.debug({ otpCode, contact }, 'code saved');
 
     return { otpCode };
@@ -161,9 +162,9 @@ export class AuthUseCases implements IAuthUseCases {
 
     await this.#rateLimiter.checkLimitOrThrow({ key: contact });
 
-    const storeOtpCode = await this.#forgotPasswordOtpCodesService.getCode({ key: contact });
+    const storeOtpCode = await this.#forgotPasswordOtpCodesStore.get({ key: contact });
     this.#compareOtpCodes(storeOtpCode, props.otpCode);
-    this.#forgotPasswordOtpCodesService.deleteCode({ key: contact }).catch((error = {}) => {
+    this.#forgotPasswordOtpCodesStore.delete({ key: contact }).catch((error = {}) => {
       props.logger.error({ error }, 'code did not deleted');
     });
 
