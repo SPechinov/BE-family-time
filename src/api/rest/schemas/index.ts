@@ -22,7 +22,7 @@ export const SESSION_SCHEMA = z
 
 export const USER_SCHEMA = z
   .object({
-    id: z.string(),
+    id: z.uuidv4(),
     email: GLOBAL_SCHEMAS.email.nullable(),
     phone: z.string().nullable(),
     firstName: GLOBAL_SCHEMAS.firstName.nullable(),

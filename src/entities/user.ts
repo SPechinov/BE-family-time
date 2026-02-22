@@ -1,3 +1,5 @@
+import { UUID } from 'node:crypto';
+
 export class UserPersonalInfoPlainEntity {
   readonly #firstName?: string | null;
   readonly #lastName?: string | null;
@@ -59,13 +61,13 @@ export class UserPasswordPlainEntity {
 export class UserPasswordHashedEntity extends UserPasswordPlainEntity {}
 
 interface UserBaseEntityProps {
-  id: string;
+  id: UUID;
   updatedAt: Date;
   createdAt: Date;
 }
 
 class UserBaseEntity {
-  readonly #id: string;
+  readonly #id: UUID;
   readonly #updatedAt: Date;
   readonly #createdAt: Date;
 
@@ -75,7 +77,7 @@ class UserBaseEntity {
     this.#createdAt = props.createdAt;
   }
 
-  get id(): string {
+  get id() {
     return this.#id;
   }
 
@@ -227,10 +229,10 @@ export class UserCreateEntity {
 }
 
 export class UserFindOnePlainEntity {
-  readonly #id?: string;
+  readonly #id?: UUID;
   readonly #contactsPlain?: UserContactsPlainEntity;
 
-  constructor(props: { id?: string; contactsPlain?: UserContactsPlainEntity }) {
+  constructor(props: { id?: UUID; contactsPlain?: UserContactsPlainEntity }) {
     this.#id = props.id;
     this.#contactsPlain = props.contactsPlain;
   }
@@ -245,10 +247,10 @@ export class UserFindOnePlainEntity {
 }
 
 export class UserFindOneEntity {
-  readonly #id?: string;
+  readonly #id?: UUID;
   readonly #contactsHashed?: UserContactsHashedEntity;
 
-  constructor(props: { id?: string; contactsHashed?: UserContactsHashedEntity }) {
+  constructor(props: { id?: UUID; contactsHashed?: UserContactsHashedEntity }) {
     this.#id = props.id;
     this.#contactsHashed = props.contactsHashed;
   }
