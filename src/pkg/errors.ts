@@ -10,6 +10,7 @@ const CODES = {
   userNotExists: 'userNotExists',
   doubleRegistration: 'doubleRegistration',
   invalidUserAgent: 'invalidUserAgent',
+  groupNotExists: 'groupNotExists',
 };
 
 export abstract class BusinessError extends Error {
@@ -100,5 +101,12 @@ export class ErrorTokenExpired extends BusinessError {
   statusCode = 401;
   constructor() {
     super(CODES.tokenExpired);
+  }
+}
+
+export class ErrorGroupNotExists extends BusinessError {
+  statusCode = 401;
+  constructor() {
+    super(CODES.groupNotExists);
   }
 }
