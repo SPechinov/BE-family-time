@@ -1,13 +1,14 @@
 import { createResponseSchema } from '@/api/rest/utils';
-import { USER_SCHEMA } from '@/api/rest/schemas';
+import { GROUP_SCHEMA } from '@/api/rest/schemas';
+import { z } from 'zod';
 
-const GET_ME = {
-  tags: ['Me'],
+const GET_LIST = {
+  tags: ['Groups'],
   response: createResponseSchema({
-    200: USER_SCHEMA,
+    200: z.array(GROUP_SCHEMA),
   }),
 };
 
 export const SCHEMAS = Object.freeze({
-  getMe: GET_ME,
+  getList: GET_LIST,
 });

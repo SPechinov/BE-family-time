@@ -3,6 +3,7 @@ import { IAuthMiddleware } from '@/api/rest/domains';
 import { ZodTypeProvider } from 'fastify-type-provider-zod';
 import { PREFIX, ROUTES } from './constants';
 import { IGroupsUseCases } from '@/domains/useCases';
+import { SCHEMAS } from './schemas';
 
 export class GroupsRoutesController {
   #fastify: FastifyInstance;
@@ -21,9 +22,15 @@ export class GroupsRoutesController {
         const router = instance.withTypeProvider<ZodTypeProvider>();
         router.addHook('preHandler', this.#authMiddleware.authenticate);
 
-        router.get(ROUTES.getList, {}, async (request, reply) => {
-          reply.status(200).send();
-        });
+        router.get(
+          ROUTES.getList,
+          {
+            schema: SCHEMAS.getList,
+          },
+          async (request, reply) => {
+            reply.status(200).send([]);
+          },
+        );
 
         router.post(ROUTES.create, {}, async (request, reply) => {
           reply.status(201).send();

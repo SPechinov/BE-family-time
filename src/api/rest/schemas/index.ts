@@ -29,3 +29,7 @@ export const USER_SCHEMA = z
     lastName: z.string().nullable(),
   })
   .register(z.globalRegistry, { id: 'User' });
+
+export const GROUP_SCHEMA = z
+  .object({ id: z.uuidv4(), name: z.string(), description: z.string().nullable() })
+  .register(z.globalRegistry, { id: 'Group' });
