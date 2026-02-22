@@ -1,47 +1,48 @@
 import { UserContactsPlainEntity, UserCreatePlainEntity, UserEntity, UserPasswordPlainEntity } from '@/entities';
-import { ILogger } from '@/pkg';
 import { JwtPayload } from 'jsonwebtoken';
+import { DefaultProps } from './types';
 
 export interface IAuthUseCases {
-  login(props: {
-    userContactsPlainEntity: UserContactsPlainEntity;
-    userPasswordPlainEntity: UserPasswordPlainEntity;
-    jwtPayload?: Record<string, string>;
-    logger: ILogger;
-  }): Promise<{ accessToken: string; refreshToken: string }>;
+  login(
+    props: DefaultProps<{
+      userContactsPlainEntity: UserContactsPlainEntity;
+      userPasswordPlainEntity: UserPasswordPlainEntity;
+      jwtPayload?: Record<string, string>;
+    }>,
+  ): Promise<{ accessToken: string; refreshToken: string }>;
 
-  registrationStart(props: {
-    userContactsPlainEntity: UserContactsPlainEntity;
-    logger: ILogger;
-  }): Promise<{ otpCode: string }>;
+  registrationStart(
+    props: DefaultProps<{ userContactsPlainEntity: UserContactsPlainEntity }>,
+  ): Promise<{ otpCode: string }>;
 
-  registrationEnd(props: {
-    userCreatePlainEntity: UserCreatePlainEntity;
-    otpCode: string;
-    logger: ILogger;
-  }): Promise<UserEntity>;
+  registrationEnd(
+    props: DefaultProps<{ userCreatePlainEntity: UserCreatePlainEntity; otpCode: string }>,
+  ): Promise<UserEntity>;
 
-  forgotPasswordStart(props: {
-    userContactsPlainEntity: UserContactsPlainEntity;
-    logger: ILogger;
-  }): Promise<{ otpCode: string }>;
+  forgotPasswordStart(
+    props: DefaultProps<{ userContactsPlainEntity: UserContactsPlainEntity }>,
+  ): Promise<{ otpCode: string }>;
 
-  forgotPasswordEnd(props: {
-    userContactsPlainEntity: UserContactsPlainEntity;
-    password: UserPasswordPlainEntity;
-    otpCode: string;
-    logger: ILogger;
-  }): Promise<UserEntity>;
+  forgotPasswordEnd(
+    props: DefaultProps<{
+      userContactsPlainEntity: UserContactsPlainEntity;
+      password: UserPasswordPlainEntity;
+      otpCode: string;
+    }>,
+  ): Promise<UserEntity>;
 
-  getAllSessionsPayloads(props: { userId: string }): Promise<{ payload: JwtPayload | string | null; jwt: string }[]>;
+  getAllSessionsPayloads(
+    props: DefaultProps<{ userId: string }>,
+  ): Promise<{ payload: JwtPayload | string | null; jwt: string }[]>;
 
-  logoutAllSessions(props: { userId: string }): Promise<void>;
+  logoutAllSessions(props: DefaultProps<{ userId: string }>): Promise<void>;
 
-  logoutSession(props: { userId: string; refreshToken: string }): Promise<void>;
+  logoutSession(props: DefaultProps<{ userId: string; refreshToken: string }>): Promise<void>;
 
-  refreshTokens(props: {
-    refreshToken: string;
-    jwtPayload?: Record<string, string>;
-    logger: ILogger;
-  }): Promise<{ accessToken: string; refreshToken: string }>;
+  refreshTokens(
+    props: DefaultProps<{
+      refreshToken: string;
+      jwtPayload?: Record<string, string>;
+    }>,
+  ): Promise<{ accessToken: string; refreshToken: string }>;
 }

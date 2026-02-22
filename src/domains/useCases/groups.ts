@@ -1,10 +1,6 @@
-import { ILogger } from '@/pkg';
 import { UUID } from 'node:crypto';
 import { GroupCreateEntity, GroupEntity, GroupFindOneEntity, GroupPatchOneEntity } from '@/entities';
-
-export type DefaultProps<T extends Record<string, unknown> = Record<string, never>> = {
-  logger: ILogger;
-} & T;
+import { DefaultProps } from './types';
 
 export interface IGroupsUseCases {
   findUserGroupsList(props: DefaultProps<{ userId: UUID }>): Promise<GroupEntity[]>;
