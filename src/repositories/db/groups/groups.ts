@@ -56,8 +56,7 @@ export class GroupsRepository implements IGroupsRepository {
 
     const query = `
         UPDATE groups
-        SET ${setParts.join(', ')},
-            updated_at = NOW()
+        SET ${setParts.join(', ')}
         WHERE ${findConditions.join(' AND ')}
         RETURNING *
       `;
