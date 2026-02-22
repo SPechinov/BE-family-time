@@ -1,6 +1,7 @@
 import jwt from 'jsonwebtoken';
 import { CONFIG } from '@/config';
 import { IJwtService } from '@/domains/services';
+import { UUID } from 'node:crypto';
 
 export class JwtService implements IJwtService {
   #accessTokenSecret = CONFIG.jwt.accessTokenSecret;
@@ -8,7 +9,7 @@ export class JwtService implements IJwtService {
   #accessTokenExpiry = CONFIG.jwt.accessTokenExpiry;
   #refreshTokenExpiry = CONFIG.jwt.refreshTokenExpiry;
 
-  generateAccessToken(payload: { userId: string }) {
+  generateAccessToken(payload: { userId: UUID }) {
     return jwt.sign(
       {
         createdAt: new Date().toISOString(),
@@ -22,7 +23,7 @@ export class JwtService implements IJwtService {
     );
   }
 
-  generateRefreshToken(payload: { userId: string }) {
+  generateRefreshToken(payload: { userId: UUID }) {
     return jwt.sign(
       {
         createdAt: new Date().toISOString(),
@@ -54,7 +55,7 @@ export class JwtService implements IJwtService {
 
   #verifyToken(token: string, secret: string) {
     try {
-      return jwt.verify(token, secret) as { userId: string };
+      return jwt.verify(token, secret) as { userId: UUID };
     } catch {
       return null;
     }

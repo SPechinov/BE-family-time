@@ -21,6 +21,7 @@ import {
 } from '@/pkg';
 import { IRefreshTokensStore } from '@/domains/repositories/stores';
 import { JwtPayload } from 'jsonwebtoken';
+import { UUID } from 'node:crypto';
 
 export class AuthUseCases implements IAuthUseCases {
   readonly #userService: IUsersService;
@@ -180,7 +181,7 @@ export class AuthUseCases implements IAuthUseCases {
 
   async getAllSessionsPayloads(
     props: DefaultProps<{
-      userId: string;
+      userId: UUID;
     }>,
   ): Promise<{ payload: JwtPayload | string | null; jwt: string }[]> {
     const jwts = await this.#refreshTokensStore.getAllByUserId({ userId: props.userId });
@@ -190,11 +191,11 @@ export class AuthUseCases implements IAuthUseCases {
     }));
   }
 
-  async logoutAllSessions(props: DefaultProps<{ userId: string }>): Promise<void> {
+  async logoutAllSessions(props: DefaultProps<{ userId: UUID }>): Promise<void> {
     await this.#refreshTokensStore.deleteAll({ userId: props.userId });
   }
 
-  async logoutSession(props: DefaultProps<{ userId: string; refreshToken: string }>): Promise<void> {
+  async logoutSession(props: DefaultProps<{ userId: UUID; refreshToken: string }>): Promise<void> {
     await this.#refreshTokensStore.delete({ userId: props.userId, refreshToken: props.refreshToken });
   }
 

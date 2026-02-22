@@ -1,4 +1,5 @@
 import jwt from 'jsonwebtoken';
+import { UUID } from 'node:crypto';
 import { JwtService } from './jwt';
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -23,7 +24,7 @@ jest.mock('@/config', () => ({
 // ─────────────────────────────────────────────────────────────────────────────
 
 const createMockToken = (value: string) => value;
-const createMockPayload = (userId: string) => ({ userId });
+const createMockPayload = (userId: UUID) => ({ userId });
 
 // ─────────────────────────────────────────────────────────────────────────────
 // Test Suite

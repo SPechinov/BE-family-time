@@ -1,5 +1,7 @@
+import { UUID } from 'node:crypto';
+
 export interface IUserRowData {
-  id: string;
+  id: UUID;
   encryption_salt: string;
   first_name_encrypted?: Buffer | null;
   last_name_encrypted?: Buffer | null;

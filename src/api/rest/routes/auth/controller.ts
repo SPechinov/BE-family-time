@@ -147,7 +147,10 @@ export class AuthRoutesController {
             schema: AUTH_SCHEMAS.getAllSession,
           },
           async (request, reply) => {
-            const sessionsPayloads = await this.#useCases.getAllSessionsPayloads({ userId: request.userId });
+            const sessionsPayloads = await this.#useCases.getAllSessionsPayloads({
+              logger: request.log,
+              userId: request.userId,
+            });
             const currentJwt = this.#getRefreshToken(request);
 
             const sessions = sessionsPayloads.reduce<
@@ -178,7 +181,10 @@ export class AuthRoutesController {
             schema: AUTH_SCHEMAS.logoutAllSession,
           },
           async (request, reply) => {
-            await this.#useCases.logoutAllSessions({ userId: request.userId });
+            await this.#useCases.logoutAllSessions({
+              logger: request.log,
+              userId: request.userId,
+            });
             this.#removeRefreshToken(reply);
             reply.status(200).send();
           },
@@ -197,7 +203,11 @@ export class AuthRoutesController {
               return;
             }
 
-            await this.#useCases.logoutSession({ userId: request.userId, refreshToken });
+            await this.#useCases.logoutSession({
+              logger: request.log,
+              userId: request.userId,
+              refreshToken,
+            });
             this.#removeRefreshToken(reply);
             reply.status(200).send();
           },

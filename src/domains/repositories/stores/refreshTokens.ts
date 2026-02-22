@@ -1,7 +1,9 @@
+import { UUID } from 'node:crypto';
+
 export interface IRefreshTokensStore {
-  save(props: { userId: string; refreshToken: string; expiresAt: Date }): Promise<void>;
-  hasInStore(props: { userId: string; refreshToken: string }): Promise<boolean>;
-  delete(props: { userId: string; refreshToken: string }): Promise<void>;
-  deleteAll(props: { userId: string }): Promise<void>;
-  getAllByUserId(props: { userId: string }): Promise<string[]>;
+  save(props: { userId: UUID; refreshToken: string; expiresAt: Date }): Promise<void>;
+  hasInStore(props: { userId: UUID; refreshToken: string }): Promise<boolean>;
+  delete(props: { userId: UUID; refreshToken: string }): Promise<void>;
+  deleteAll(props: { userId: UUID }): Promise<void>;
+  getAllByUserId(props: { userId: UUID }): Promise<string[]>;
 }

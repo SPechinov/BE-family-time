@@ -28,7 +28,10 @@ export class MeRoutesController {
             schema: SCHEMAS.getMe,
           },
           async (request, reply) => {
-            const user = await this.#meUseCases.getMe({ userId: request.userId });
+            const user = await this.#meUseCases.getMe({
+              logger: request.log,
+              userId: request.userId,
+            });
             reply.status(200).send({
               id: user.id,
               email: user.contacts?.email ?? null,
