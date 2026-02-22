@@ -24,6 +24,7 @@ jest.mock('@/config', () => ({
 // ─────────────────────────────────────────────────────────────────────────────
 
 const createMockToken = (value: string) => value;
+const createMockUuid = (value: string): UUID => `${value}-${value}-${value}-${value}-${value}` as UUID;
 const createMockPayload = (userId: UUID) => ({ userId });
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -45,7 +46,7 @@ describe('JwtService', () => {
   describe('generateAccessToken()', () => {
     describe('✓ Valid operations', () => {
       it('should generate access token with correct payload and options', () => {
-        const payload = createMockPayload('user-123');
+        const payload = createMockPayload(createMockUuid('user-123'));
         const expectedToken = createMockToken('access-token');
         (jwt.sign as jest.Mock).mockReturnValue(expectedToken);
 
@@ -66,7 +67,7 @@ describe('JwtService', () => {
       });
 
       it('should generate token with different userId', () => {
-        const payload = createMockPayload('another-user-456');
+        const payload = createMockPayload(createMockUuid('another-user-456'));
         const expectedToken = createMockToken('another-access-token');
         (jwt.sign as jest.Mock).mockReturnValue(expectedToken);
 
@@ -87,7 +88,7 @@ describe('JwtService', () => {
       });
 
       it('should include createdAt timestamp in payload', () => {
-        const payload = createMockPayload('user-123');
+        const payload = createMockPayload(createMockUuid('user-123'));
         (jwt.sign as jest.Mock).mockReturnValue('token');
 
         service.generateAccessToken(payload);
@@ -104,7 +105,7 @@ describe('JwtService', () => {
 
     describe('🔐 Token properties', () => {
       it('should use correct expiry time for access token', () => {
-        const payload = createMockPayload('user-123');
+        const payload = createMockPayload(createMockUuid('user-123'));
         (jwt.sign as jest.Mock).mockReturnValue('token');
 
         service.generateAccessToken(payload);
@@ -119,7 +120,7 @@ describe('JwtService', () => {
       });
 
       it('should include issuer in access token generation', () => {
-        const payload = createMockPayload('user-123');
+        const payload = createMockPayload(createMockUuid('user-123'));
         (jwt.sign as jest.Mock).mockReturnValue('token');
 
         service.generateAccessToken(payload);
@@ -134,7 +135,7 @@ describe('JwtService', () => {
       });
 
       it('should preserve additional payload properties', () => {
-        const payload = { userId: 'user-123', role: 'admin', email: 'user@example.com' };
+        const payload = { userId: createMockUuid('user-123'), role: 'admin', email: 'user@example.com' };
         (jwt.sign as jest.Mock).mockReturnValue('token');
 
         service.generateAccessToken(payload);
@@ -159,7 +160,7 @@ describe('JwtService', () => {
   describe('generateRefreshToken()', () => {
     describe('✓ Valid operations', () => {
       it('should generate refresh token with correct payload and options', () => {
-        const payload = createMockPayload('user-123');
+        const payload = createMockPayload(createMockUuid('user-123'));
         const expectedToken = createMockToken('refresh-token');
         (jwt.sign as jest.Mock).mockReturnValue(expectedToken);
 
@@ -180,7 +181,7 @@ describe('JwtService', () => {
       });
 
       it('should generate refresh token with different userId', () => {
-        const payload = createMockPayload('another-user-789');
+        const payload = createMockPayload(createMockUuid('another-user-789'));
         const expectedToken = createMockToken('another-refresh-token');
         (jwt.sign as jest.Mock).mockReturnValue(expectedToken);
 
@@ -203,7 +204,7 @@ describe('JwtService', () => {
 
     describe('🔐 Token properties', () => {
       it('should use correct expiry time for refresh token', () => {
-        const payload = createMockPayload('user-123');
+        const payload = createMockPayload(createMockUuid('user-123'));
         (jwt.sign as jest.Mock).mockReturnValue('token');
 
         service.generateRefreshToken(payload);
@@ -218,7 +219,7 @@ describe('JwtService', () => {
       });
 
       it('should include issuer in refresh token generation', () => {
-        const payload = createMockPayload('user-123');
+        const payload = createMockPayload(createMockUuid('user-123'));
         (jwt.sign as jest.Mock).mockReturnValue('token');
 
         service.generateRefreshToken(payload);
@@ -235,8 +236,8 @@ describe('JwtService', () => {
       it('should have longer expiry than access token', () => {
         (jwt.sign as jest.Mock).mockReturnValue('token');
 
-        service.generateAccessToken({ userId: 'user-123' });
-        service.generateRefreshToken({ userId: 'user-123' });
+        service.generateAccessToken({ userId: createMockUuid('user-123') });
+        service.generateRefreshToken({ userId: createMockUuid('user-123') });
 
         const accessCall = (jwt.sign as jest.Mock).mock.calls.find((call) => call[2]?.expiresIn === 900);
         const refreshCall = (jwt.sign as jest.Mock).mock.calls.find((call) => call[2]?.expiresIn === 604800);
@@ -254,7 +255,7 @@ describe('JwtService', () => {
 
   describe('verifyAccessToken()', () => {
     const token = createMockToken('valid-access-token');
-    const payload = createMockPayload('user-123');
+    const payload = createMockPayload(createMockUuid('user-123'));
 
     describe('✓ Valid operations', () => {
       it('should verify valid access token and return payload', () => {
@@ -330,7 +331,7 @@ describe('JwtService', () => {
 
   describe('verifyRefreshToken()', () => {
     const token = createMockToken('valid-refresh-token');
-    const payload = createMockPayload('user-123');
+    const payload = createMockPayload(createMockUuid('user-123'));
 
     describe('✓ Valid operations', () => {
       it('should verify valid refresh token and return payload', () => {
@@ -408,7 +409,7 @@ describe('JwtService', () => {
     describe('✓ Valid operations', () => {
       it('should parse valid token and return payload', () => {
         const token = createMockToken('valid-token');
-        const payload = createMockPayload('user-123');
+        const payload = createMockPayload(createMockUuid('user-123'));
         (jwt.decode as jest.Mock).mockReturnValue(payload);
 
         const result = service.parseToken(token);
@@ -420,7 +421,7 @@ describe('JwtService', () => {
       it('should parse token with multiple claims', () => {
         const token = createMockToken('multi-claim-token');
         const payload = {
-          userId: 'user-123',
+          userId: createMockUuid('user-123'),
           role: 'admin',
           email: 'user@example.com',
           iat: 1234567890,
@@ -488,9 +489,9 @@ describe('JwtService', () => {
   describe('Integration', () => {
     describe('✓ Token lifecycle', () => {
       it('should generate and verify access token', () => {
-        const payload = createMockPayload('user-123');
+        const payload = createMockPayload(createMockUuid('user-123'));
         const token = 'generated-access-token';
-        const verifiedPayload = { userId: 'user-123', iat: 1234567890 };
+        const verifiedPayload = { userId: createMockUuid('user-123'), iat: 1234567890 };
 
         (jwt.sign as jest.Mock).mockReturnValue(token);
         (jwt.verify as jest.Mock).mockReturnValue(verifiedPayload);
@@ -503,9 +504,9 @@ describe('JwtService', () => {
       });
 
       it('should generate and verify refresh token', () => {
-        const payload = createMockPayload('user-123');
+        const payload = createMockPayload(createMockUuid('user-123'));
         const token = 'generated-refresh-token';
-        const verifiedPayload = { userId: 'user-123', iat: 1234567890 };
+        const verifiedPayload = { userId: createMockUuid('user-123'), iat: 1234567890 };
 
         (jwt.sign as jest.Mock).mockReturnValue(token);
         (jwt.verify as jest.Mock).mockReturnValue(verifiedPayload);
@@ -518,9 +519,9 @@ describe('JwtService', () => {
       });
 
       it('should parse token after generation', () => {
-        const payload = createMockPayload('user-123');
+        const payload = createMockPayload(createMockUuid('user-123'));
         const token = 'generated-token';
-        const decodedPayload = { userId: 'user-123', exp: 1234567990 };
+        const decodedPayload = { userId: createMockUuid('user-123'), exp: 1234567990 };
 
         (jwt.sign as jest.Mock).mockReturnValue(token);
         (jwt.decode as jest.Mock).mockReturnValue(decodedPayload);
@@ -537,8 +538,8 @@ describe('JwtService', () => {
       it('should use different secrets for access and refresh tokens', () => {
         (jwt.sign as jest.Mock).mockReturnValue('token');
 
-        service.generateAccessToken({ userId: 'user-123' });
-        service.generateRefreshToken({ userId: 'user-123' });
+        service.generateAccessToken({ userId: createMockUuid('user-123') });
+        service.generateRefreshToken({ userId: createMockUuid('user-123') });
 
         const accessCall = (jwt.sign as jest.Mock).mock.calls.find((call) => call[1] === 'access-token-secret');
         const refreshCall = (jwt.sign as jest.Mock).mock.calls.find((call) => call[1] === 'refresh-token-secret');
@@ -580,7 +581,7 @@ describe('JwtService', () => {
         const startTime = Date.now();
 
         for (let i = 0; i < 100; i++) {
-          service.generateAccessToken({ userId: `user-${i}` });
+          service.generateAccessToken({ userId: createMockUuid(`user-${i}`) });
         }
 
         const duration = Date.now() - startTime;

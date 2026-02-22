@@ -1,5 +1,5 @@
 import { UsersService } from './users';
-import { randomUUID } from 'node:crypto';
+import { randomUUID, UUID } from 'node:crypto';
 import {
   UserContactsPlainEntity,
   UserCreatePlainEntity,
@@ -29,6 +29,8 @@ jest.mock('node:crypto', () => ({
 // Helpers
 // ─────────────────────────────────────────────────────────────────────────────
 
+const createMockUuid = (value: string): UUID => `${value}-${value}-${value}-${value}-${value}` as UUID;
+
 const createMockUsersRepository = () => ({
   createOne: jest.fn(),
   findOne: jest.fn(),
@@ -52,7 +54,7 @@ const createMockHashPasswordService = () => ({
 });
 
 const createMockUserEntity = (overrides?: {
-  id?: string;
+  id?: UUID;
   encryptionSalt?: string;
   contactsEncrypted?: UserContactsEncryptedEntity;
   contactsHashed?: UserContactsHashedEntity;
@@ -62,7 +64,7 @@ const createMockUserEntity = (overrides?: {
   updatedAt?: Date;
 }): UserEntity => {
   return new UserEntity({
-    id: overrides?.id ?? 'user-123',
+    id: overrides?.id ?? createMockUuid('user-123'),
     encryptionSalt: overrides?.encryptionSalt ?? 'salt-123',
     contactsEncrypted:
       overrides?.contactsEncrypted ??
@@ -290,7 +292,7 @@ describe('UsersService', () => {
   describe('findOne()', () => {
     describe('✓ Valid operations', () => {
       it('should find user by ID', async () => {
-        const userFindOnePlainEntity = new UserFindOnePlainEntity({ id: 'user-123' });
+        const userFindOnePlainEntity = new UserFindOnePlainEntity({ id: createMockUuid('user-123') });
         const mockUser = createMockUserEntity();
 
         mockUsersRepository.findOne.mockResolvedValue(mockUser);
@@ -298,7 +300,7 @@ describe('UsersService', () => {
         const result = await usersService.findOne({ userFindOnePlainEntity });
 
         expect(result).toBe(mockUser);
-        expect(mockUsersRepository.findOne).toHaveBeenCalledWith(expect.objectContaining({ id: 'user-123' }));
+        expect(mockUsersRepository.findOne).toHaveBeenCalledWith(expect.objectContaining({ id: createMockUuid('user-123') }));
       });
 
       it('should find user by email', async () => {
@@ -331,7 +333,7 @@ describe('UsersService', () => {
       });
 
       it('should return null when user not found', async () => {
-        const userFindOnePlainEntity = new UserFindOnePlainEntity({ id: 'non-existent' });
+        const userFindOnePlainEntity = new UserFindOnePlainEntity({ id: createMockUuid('non-existent') });
 
         mockUsersRepository.findOne.mockResolvedValue(null);
 
@@ -369,7 +371,7 @@ describe('UsersService', () => {
   describe('patchOne()', () => {
     describe('✓ Valid operations', () => {
       it('should update user personal info', async () => {
-        const userFindOnePlainEntity = new UserFindOnePlainEntity({ id: 'user-123' });
+        const userFindOnePlainEntity = new UserFindOnePlainEntity({ id: createMockUuid('user-123') });
         const userPatchOnePlainEntity = new UserPatchOnePlainEntity({
           personalInfoPlain: new UserPersonalInfoPlainEntity({ firstName: 'Jane' }),
         });
@@ -387,7 +389,7 @@ describe('UsersService', () => {
       });
 
       it('should update user contacts', async () => {
-        const userFindOnePlainEntity = new UserFindOnePlainEntity({ id: 'user-123' });
+        const userFindOnePlainEntity = new UserFindOnePlainEntity({ id: createMockUuid('user-123') });
         const userPatchOnePlainEntity = new UserPatchOnePlainEntity({
           contactsPlain: new UserContactsPlainEntity({ email: 'new@example.com' }),
         });
@@ -402,7 +404,7 @@ describe('UsersService', () => {
       });
 
       it('should update user password', async () => {
-        const userFindOnePlainEntity = new UserFindOnePlainEntity({ id: 'user-123' });
+        const userFindOnePlainEntity = new UserFindOnePlainEntity({ id: createMockUuid('user-123') });
         const userPatchOnePlainEntity = new UserPatchOnePlainEntity({
           passwordPlain: new UserPasswordPlainEntity('newPassword123'),
         });
@@ -416,7 +418,7 @@ describe('UsersService', () => {
       });
 
       it('should update multiple fields at once', async () => {
-        const userFindOnePlainEntity = new UserFindOnePlainEntity({ id: 'user-123' });
+        const userFindOnePlainEntity = new UserFindOnePlainEntity({ id: createMockUuid('user-123') });
         const userPatchOnePlainEntity = new UserPatchOnePlainEntity({
           personalInfoPlain: new UserPersonalInfoPlainEntity({ firstName: 'Jane' }),
           contactsPlain: new UserContactsPlainEntity({ phone: '+9876543210' }),
@@ -436,7 +438,7 @@ describe('UsersService', () => {
 
     describe('✗ Invalid operations', () => {
       it('should throw if user not found', async () => {
-        const userFindOnePlainEntity = new UserFindOnePlainEntity({ id: 'non-existent' });
+        const userFindOnePlainEntity = new UserFindOnePlainEntity({ id: createMockUuid('non-existent') });
         const userPatchOnePlainEntity = new UserPatchOnePlainEntity({
           personalInfoPlain: new UserPersonalInfoPlainEntity({ firstName: 'Jane' }),
         });
@@ -449,7 +451,7 @@ describe('UsersService', () => {
       });
 
       it('should throw if no fields provided for update', async () => {
-        const userFindOnePlainEntity = new UserFindOnePlainEntity({ id: 'user-123' });
+        const userFindOnePlainEntity = new UserFindOnePlainEntity({ id: createMockUuid('user-123') });
         const userPatchOnePlainEntity = new UserPatchOnePlainEntity({});
 
         mockUsersRepository.findOne.mockResolvedValue(createMockUserEntity());
@@ -460,7 +462,7 @@ describe('UsersService', () => {
       });
 
       it('should throw ErrorUserNotExists if patchOne returns null', async () => {
-        const userFindOnePlainEntity = new UserFindOnePlainEntity({ id: 'user-123' });
+        const userFindOnePlainEntity = new UserFindOnePlainEntity({ id: createMockUuid('user-123') });
         const userPatchOnePlainEntity = new UserPatchOnePlainEntity({
           personalInfoPlain: new UserPersonalInfoPlainEntity({ firstName: 'Jane' }),
         });
@@ -476,7 +478,7 @@ describe('UsersService', () => {
 
     describe('✗ Repository errors', () => {
       it('should propagate repository error on findOne', async () => {
-        const userFindOnePlainEntity = new UserFindOnePlainEntity({ id: 'user-123' });
+        const userFindOnePlainEntity = new UserFindOnePlainEntity({ id: createMockUuid('user-123') });
         const userPatchOnePlainEntity = new UserPatchOnePlainEntity({
           personalInfoPlain: new UserPersonalInfoPlainEntity({ firstName: 'Jane' }),
         });
@@ -490,7 +492,7 @@ describe('UsersService', () => {
       });
 
       it('should propagate repository error on patchOne', async () => {
-        const userFindOnePlainEntity = new UserFindOnePlainEntity({ id: 'user-123' });
+        const userFindOnePlainEntity = new UserFindOnePlainEntity({ id: createMockUuid('user-123') });
         const userPatchOnePlainEntity = new UserPatchOnePlainEntity({
           personalInfoPlain: new UserPersonalInfoPlainEntity({ firstName: 'Jane' }),
         });
@@ -577,14 +579,14 @@ describe('UsersService', () => {
       it('should preserve user metadata', async () => {
         const customDate = new Date('2024-01-02');
         const userEntity = createMockUserEntity({
-          id: 'test-id-123',
+          id: createMockUuid('test-id-123'),
           createdAt: new Date('2024-01-01'),
           updatedAt: customDate,
         });
 
         const result = await usersService.decryptUser(userEntity);
 
-        expect(result.id).toBe('test-id-123');
+        expect(result.id).toBe(createMockUuid('test-id-123'));
         expect(result.createdAt).toBeInstanceOf(Date);
         expect(result.updatedAt).toBeInstanceOf(Date);
       });
@@ -671,7 +673,7 @@ describe('UsersService', () => {
         await usersService.createOne({ userCreatePlainEntity: createEntity });
 
         // Find
-        const findEntity = new UserFindOnePlainEntity({ id: 'user-123' });
+        const findEntity = new UserFindOnePlainEntity({ id: createMockUuid('user-123') });
         mockUsersRepository.findOne.mockResolvedValue(createdUser);
 
         const foundUser = await usersService.findOne({ userFindOnePlainEntity: findEntity });
@@ -785,13 +787,13 @@ describe('UsersService', () => {
         // Find
         mockUsersRepository.findOne.mockResolvedValue(createMockUserEntity());
         await usersService.findOne({
-          userFindOnePlainEntity: new UserFindOnePlainEntity({ id: 'user-123' }),
+          userFindOnePlainEntity: new UserFindOnePlainEntity({ id: createMockUuid('user-123') }),
         });
 
         // Update
         mockUsersRepository.patchOne.mockResolvedValue(createMockUserEntity());
         await usersService.patchOne({
-          userFindOnePlainEntity: new UserFindOnePlainEntity({ id: 'user-123' }),
+          userFindOnePlainEntity: new UserFindOnePlainEntity({ id: createMockUuid('user-123') }),
           userPatchOnePlainEntity: new UserPatchOnePlainEntity({
             personalInfoPlain: new UserPersonalInfoPlainEntity({ firstName: 'Jane' }),
           }),
@@ -878,7 +880,7 @@ describe('UsersService', () => {
 
     describe('#prepareContacts with null', () => {
       it('should handle null contactsPlain in patchOne', async () => {
-        const userFindOnePlainEntity = new UserFindOnePlainEntity({ id: 'user-123' });
+        const userFindOnePlainEntity = new UserFindOnePlainEntity({ id: createMockUuid('user-123') });
         const userPatchOnePlainEntity = new UserPatchOnePlainEntity({
           contactsPlain: null,
         });
@@ -901,7 +903,7 @@ describe('UsersService', () => {
 
     describe('#preparePersonalInfo with null', () => {
       it('should handle null personalInfoPlain in patchOne', async () => {
-        const userFindOnePlainEntity = new UserFindOnePlainEntity({ id: 'user-123' });
+        const userFindOnePlainEntity = new UserFindOnePlainEntity({ id: createMockUuid('user-123') });
         const userPatchOnePlainEntity = new UserPatchOnePlainEntity({
           personalInfoPlain: null,
         });
@@ -917,7 +919,7 @@ describe('UsersService', () => {
 
     describe('#preparePasswordHashed with null', () => {
       it('should handle null passwordPlain in patchOne', async () => {
-        const userFindOnePlainEntity = new UserFindOnePlainEntity({ id: 'user-123' });
+        const userFindOnePlainEntity = new UserFindOnePlainEntity({ id: createMockUuid('user-123') });
         const userPatchOnePlainEntity = new UserPatchOnePlainEntity({
           passwordPlain: null,
         });
@@ -933,7 +935,7 @@ describe('UsersService', () => {
 
     describe('#convertUserPatchOnePlainToHashedOrThrow', () => {
       it('should proceed when at least one field is provided (not all undefined/null)', async () => {
-        const userFindOnePlainEntity = new UserFindOnePlainEntity({ id: 'user-123' });
+        const userFindOnePlainEntity = new UserFindOnePlainEntity({ id: createMockUuid('user-123') });
         // When all are undefined, the service should throw
         const userPatchOnePlainEntity = new UserPatchOnePlainEntity({
           personalInfoPlain: undefined,
@@ -949,7 +951,7 @@ describe('UsersService', () => {
       });
 
       it('should handle mixed null and defined values', async () => {
-        const userFindOnePlainEntity = new UserFindOnePlainEntity({ id: 'user-123' });
+        const userFindOnePlainEntity = new UserFindOnePlainEntity({ id: createMockUuid('user-123') });
         const userPatchOnePlainEntity = new UserPatchOnePlainEntity({
           personalInfoPlain: null,
           contactsPlain: null,
