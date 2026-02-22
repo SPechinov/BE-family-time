@@ -35,6 +35,14 @@ const ConfigSchema = z.object({
   cookie: z.object({
     secret: z.string().min(1),
   }),
+  limits: z.object({
+    user: z.object({
+      maxGroups: z.number().min(1),
+    }),
+    group: z.object({
+      maxUsers: z.number().min(1),
+    }),
+  }),
 });
 
 export type Config = z.infer<typeof ConfigSchema>;
