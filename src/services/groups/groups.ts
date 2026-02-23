@@ -4,8 +4,6 @@ import {
   GroupEntity,
   GroupFindOneEntity,
   GroupPatchOneEntity,
-  GroupUser,
-  GroupWithUsersEntity,
   UsersGroupsCreateEntity,
   UsersGroupsFindManyEntity,
 } from '@/entities';
@@ -42,28 +40,17 @@ export class GroupsService implements IGroupsService {
     return this.#groupsRepository.findOne(props.groupFindOneEntity);
   }
 
-  async findMany(props: { usersGroupsFindManyOptions: UsersGroupsFindManyEntity }): Promise<GroupWithUsersEntity[]> {
+  async findMany(props: { usersGroupsFindManyOptions: UsersGroupsFindManyEntity }): Promise<GroupEntity[]> {
     const usersGroups = await this.#usersGroupsRepository.findMany(props.usersGroupsFindManyOptions);
 
-    const groupsWithUsers: GroupWithUsersEntity[] = [];
+    const groups: GroupEntity[] = [];
 
     for (const userGroup of usersGroups) {
       const group = await this.#groupsRepository.findOne(new GroupFindOneEntity({ id: userGroup.groupId }));
-
       if (!group) continue;
-
-      groupsWithUsers.push(
-        new GroupWithUsersEntity({
-          id: group.id,
-          name: group.name,
-          description: group.description,
-          createdAt: group.createdAt,
-          users: [new GroupUser({ id: userGroup.userId, isOwner: userGroup.isOwner })],
-        }),
-      );
+      groups.push(group);
     }
-
-    return groupsWithUsers;
+    return groups;
   }
 
   async patchOne(props: {

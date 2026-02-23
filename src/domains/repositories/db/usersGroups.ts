@@ -5,7 +5,6 @@ import {
   UsersGroupsDeleteEntity,
   UsersGroupsFindManyEntity,
 } from '@/entities';
-import { UUID } from 'node:crypto';
 import { PoolClient } from 'pg';
 import { IBaseRepository } from './baseRepository';
 
