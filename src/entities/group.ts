@@ -83,6 +83,24 @@ export class GroupFindOneEntity {
   }
 }
 
+export class GroupFindAllEntity {
+  readonly #userId: UUID;
+  readonly #deleted: boolean;
+
+  constructor(props: { userId: UUID; deleted?: boolean }) {
+    this.#userId = props.userId;
+    this.#deleted = false;
+  }
+
+  get userId() {
+    return this.#userId;
+  }
+
+  get deleted() {
+    return this.#deleted;
+  }
+}
+
 export class GroupPatchOneEntity {
   readonly #name?: string;
   readonly #description?: string | null;
