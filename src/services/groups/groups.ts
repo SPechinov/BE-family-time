@@ -5,7 +5,9 @@ import {
   GroupFindOneEntity,
   GroupPatchOneEntity,
   UsersGroupsCreateEntity,
+  UsersGroupsEntity,
   UsersGroupsFindManyEntity,
+  UsersGroupsFindOneEntity,
 } from '@/entities';
 import { IGroupsService } from '@/domains/services';
 import { UUID } from 'node:crypto';
@@ -19,7 +21,7 @@ export class GroupsService implements IGroupsService {
     this.#usersGroupsRepository = props.usersGroupsRepository;
   }
 
-  async createOne(props: { groupCreateEntity: GroupCreateEntity; userId: UUID }): Promise<GroupEntity> {
+  async createOne(props: { userId: UUID; groupCreateEntity: GroupCreateEntity }): Promise<GroupEntity> {
     return this.#groupsRepository.withTransaction(async (client) => {
       const group = await this.#groupsRepository.createOne(props.groupCreateEntity, { client });
 
@@ -36,11 +38,24 @@ export class GroupsService implements IGroupsService {
     });
   }
 
-  async findOne(props: { groupFindOneEntity: GroupFindOneEntity }): Promise<GroupEntity | null> {
-    return this.#groupsRepository.findOne(props.groupFindOneEntity);
+  async findOne(props: {
+    usersGroupsFindOneEntity: UsersGroupsFindOneEntity;
+  }): Promise<{ group: GroupEntity; usersGroups: UsersGroupsEntity[] } | null> {
+    const usersGroups = await this.#usersGroupsRepository.findOne(props.usersGroupsFindOneEntity);
+    if (!usersGroups) return null;
+
+    const group = await this.#groupsRepository.findOne(new GroupFindOneEntity({ id: usersGroups.groupId }));
+    if (!group) return null;
+
+    return {
+      group,
+      usersGroups,
+    };
   }
 
-  async findMany(props: { usersGroupsFindManyOptions: UsersGroupsFindManyEntity }): Promise<GroupEntity[]> {
+  async findMany(props: {
+    usersGroupsFindManyOptions: UsersGroupsFindManyEntity;
+  }): Promise<{ group: GroupEntity; usersGroups: UsersGroupsEntity[] }[]> {
     const usersGroups = await this.#usersGroupsRepository.findMany(props.usersGroupsFindManyOptions);
 
     const groups: GroupEntity[] = [];

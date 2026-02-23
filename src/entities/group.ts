@@ -1,37 +1,12 @@
 import { UUID } from 'node:crypto';
 
-export class GroupUser {
-  readonly #isOwner: boolean;
-  readonly #id: UUID;
-
-  constructor(props: { isOwner: boolean; id: UUID }) {
-    this.#isOwner = props.isOwner;
-    this.#id = props.id;
-  }
-
-  get id() {
-    return this.#id;
-  }
-
-  get isOwner() {
-    return this.#isOwner;
-  }
-}
-
-interface GroupEntityProps {
-  id: UUID;
-  name: string;
-  description?: string;
-  createdAt: Date;
-}
-
 export class GroupEntity {
   readonly #id: UUID;
   readonly #name: string;
   readonly #description?: string;
   readonly #createdAt: Date;
 
-  constructor(props: GroupEntityProps) {
+  constructor(props: { id: UUID; name: string; description?: string; createdAt: Date }) {
     this.#id = props.id;
     this.#name = props.name;
     this.#description = props.description;
@@ -52,19 +27,6 @@ export class GroupEntity {
 
   get createdAt() {
     return this.#createdAt;
-  }
-}
-
-export class GroupWithUsersEntity extends GroupEntity {
-  readonly #users: GroupUser[];
-
-  constructor(props: GroupEntityProps & { users: GroupUser[] }) {
-    super(props);
-    this.#users = props.users;
-  }
-
-  get users() {
-    return this.#users;
   }
 }
 
@@ -94,18 +56,6 @@ export class GroupFindOneEntity {
 
   get id() {
     return this.#id;
-  }
-}
-
-export class GroupFindAllEntity {
-  readonly #userId: UUID;
-
-  constructor(props: { userId: UUID }) {
-    this.#userId = props.userId;
-  }
-
-  get userId() {
-    return this.#userId;
   }
 }
 

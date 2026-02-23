@@ -78,24 +78,6 @@ export class UsersGroupsFindOneEntity {
   }
 }
 
-export class UsersGroupsDeleteEntity {
-  readonly #userId: UUID;
-  readonly #groupId: UUID;
-
-  constructor(props: { userId: UUID; groupId: UUID }) {
-    this.#userId = props.userId;
-    this.#groupId = props.groupId;
-  }
-
-  get userId() {
-    return this.#userId;
-  }
-
-  get groupId() {
-    return this.#groupId;
-  }
-}
-
 export class UsersGroupsFindManyEntity {
   readonly #userId?: UUID;
   readonly #groupId?: UUID;
@@ -117,5 +99,23 @@ export class UsersGroupsFindManyEntity {
 
   get isOwner() {
     return this.#isOwner;
+  }
+}
+
+export class UsersGroupsDeleteOneEntity {
+  readonly #userId: UUID;
+  readonly #groupId: UUID;
+
+  constructor(props: { userId: UUID; groupId: UUID }) {
+    this.#userId = props.userId;
+    this.#groupId = props.groupId;
+  }
+
+  get userId() {
+    return this.#userId;
+  }
+
+  get groupId() {
+    return this.#groupId;
   }
 }

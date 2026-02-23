@@ -3,7 +3,7 @@ import {
   UsersGroupsEntity,
   UsersGroupsCreateEntity,
   UsersGroupsFindOneEntity,
-  UsersGroupsDeleteEntity,
+  UsersGroupsDeleteOneEntity,
   UsersGroupsFindManyEntity,
 } from '@/entities';
 import { Pool } from 'pg';
@@ -473,7 +473,7 @@ describe('UsersGroupsRepository', () => {
       it('should delete relation by userId and groupId', async () => {
         const userId = createMockUuid('user-123');
         const groupId = createMockUuid('group-456');
-        const entity = new UsersGroupsDeleteEntity({ userId, groupId });
+        const entity = new UsersGroupsDeleteOneEntity({ userId, groupId });
 
         (mockPool.query as jest.Mock).mockResolvedValue({ rowCount: 1 });
 
@@ -486,7 +486,7 @@ describe('UsersGroupsRepository', () => {
       });
 
       it('should succeed even if no rows deleted', async () => {
-        const entity = new UsersGroupsDeleteEntity({
+        const entity = new UsersGroupsDeleteOneEntity({
           userId: createMockUuid('non-existent'),
           groupId: createMockUuid('group-456'),
         });
@@ -499,7 +499,7 @@ describe('UsersGroupsRepository', () => {
 
     describe('✗ Invalid operations', () => {
       it('should propagate database error', async () => {
-        const entity = new UsersGroupsDeleteEntity({
+        const entity = new UsersGroupsDeleteOneEntity({
           userId: createMockUuid('user-123'),
           groupId: createMockUuid('group-456'),
         });

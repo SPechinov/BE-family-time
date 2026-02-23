@@ -2,7 +2,7 @@ import {
   UsersGroupsEntity,
   UsersGroupsCreateEntity,
   UsersGroupsFindOneEntity,
-  UsersGroupsDeleteEntity,
+  UsersGroupsDeleteOneEntity,
   UsersGroupsFindManyEntity,
 } from '@/entities';
 import { PoolClient } from 'pg';
@@ -16,5 +16,5 @@ export interface IUsersGroupsRepository extends IBaseRepository {
   findOne(usersGroupsFindOneEntity: UsersGroupsFindOneEntity): Promise<UsersGroupsEntity | null>;
   findMany(options: UsersGroupsFindManyEntity): Promise<UsersGroupsEntity[]>;
   count(options: UsersGroupsFindManyEntity): Promise<number>;
-  deleteOne(usersGroupsDeleteEntity: UsersGroupsDeleteEntity): Promise<void>;
+  deleteOne(usersGroupsDeleteOneEntity: UsersGroupsDeleteOneEntity): Promise<void>;
 }

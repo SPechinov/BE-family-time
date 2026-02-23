@@ -20,16 +20,6 @@ export class GroupsUseCases implements IGroupsUseCases {
     this.#groupsService = props.groupsService;
   }
 
-  async findUserGroupsList({ userId }: DefaultProps<{ userId: UUID }>): Promise<GroupEntity[]> {
-    await this.#usersService.findOneByUserIdOrThrow(userId);
-
-    return this.#groupsService.findMany({
-      usersGroupsFindManyOptions: new UsersGroupsFindManyEntity({
-        userId,
-      }),
-    });
-  }
-
   async createUserGroup({
     userId,
     groupCreateEntity,
@@ -47,14 +37,25 @@ export class GroupsUseCases implements IGroupsUseCases {
     return group;
   }
 
-  async findUserGroup(
-    props: DefaultProps<{ userId: UUID; groupFindOneEntity: GroupFindOneEntity }>,
-  ): Promise<GroupEntity> {
-    const group = await this.#groupsService.findOne({
-      groupFindOneEntity: props.groupFindOneEntity,
+  async findUserGroup({
+    userId,
+    groupFindOneEntity,
+  }: DefaultProps<{ userId: UUID; groupFindOneEntity: GroupFindOneEntity }>): Promise<GroupEntity> {
+    const group = await this.#groupsService.findOneByUserId(userId, {
+      groupFindOneEntity: groupFindOneEntity,
     });
     if (!group) throw new ErrorGroupNotExists();
     return group;
+  }
+
+  async findUserGroupsList({ userId }: DefaultProps<{ userId: UUID }>): Promise<GroupEntity[]> {
+    await this.#usersService.findOneByUserIdOrThrow(userId);
+
+    return this.#groupsService.findMany({
+      usersGroupsFindManyOptions: new UsersGroupsFindManyEntity({
+        userId,
+      }),
+    });
   }
 
   async patchUserGroup(

@@ -4,7 +4,7 @@ import {
   UsersGroupsEntity,
   UsersGroupsCreateEntity,
   UsersGroupsFindOneEntity,
-  UsersGroupsDeleteEntity,
+  UsersGroupsDeleteOneEntity,
   UsersGroupsFindManyEntity,
 } from '@/entities';
 import { IUsersGroupsRowData } from './types';
@@ -104,7 +104,7 @@ export class UsersGroupsRepository extends BaseRepository implements IUsersGroup
     return { conditions, values };
   }
 
-  async deleteOne(usersGroupsDeleteEntity: UsersGroupsDeleteEntity): Promise<void> {
+  async deleteOne(usersGroupsDeleteEntity: UsersGroupsDeleteOneEntity): Promise<void> {
     const query = `
       DELETE FROM users_groups
       WHERE user_id = $1 AND group_id = $2
