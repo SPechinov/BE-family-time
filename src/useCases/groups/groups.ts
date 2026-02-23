@@ -25,7 +25,7 @@ export class GroupsUseCases implements IGroupsUseCases {
   async findUserGroupsList({
     userId,
   }: DefaultProps<{ userId: UUID }>): Promise<
-    { group: GroupWithUsersEntity; members: { isOwner: boolean; user: UserPlainEntity }[] }[]
+    { group: GroupWithUsersEntity; users: { isOwner: boolean; user: UserPlainEntity }[] }[]
   > {
     await this.#usersService.findOneByUserIdOrThrow(userId);
 
@@ -38,19 +38,14 @@ export class GroupsUseCases implements IGroupsUseCases {
     return Promise.all(
       groups.map(async (group) => ({
         group,
-        members: await Promise.all(
-          group.users.map(async (user) => ({
-            isOwner: user.isOwner,
-            user: await this.#getUserPlainEntity(user.id),
+        users: await Promise.all(
+          group.users.map(async (groupUser) => ({
+            isOwner: groupUser.isOwner,
+            user: await this.#usersService.decryptUser(await this.#usersService.findOneByUserIdOrThrow(groupUser.id)),
           })),
         ),
       })),
     );
-  }
-
-  async #getUserPlainEntity(userId: UUID): Promise<UserPlainEntity> {
-    const user = await this.#usersService.findOneByUserIdOrThrow(userId);
-    return this.#usersService.decryptUser(user);
   }
 
   async createUserGroup({

@@ -61,11 +61,50 @@ export class UsersGroupsRepository extends BaseRepository implements IUsersGroup
   }
 
   async count(options: UsersGroupsFindManyEntity): Promise<number> {
-    const { query, values } = this.#buildFindManyQuery(options);
-    const countQuery = query.replace('SELECT ug.*', 'SELECT COUNT(*)');
-    const result = await this.pool.query<{ count: string }>(countQuery, values);
+    const { conditions, values, joinClause } = this.#buildConditions(options);
 
+    const query = `
+      SELECT COUNT(*)
+      FROM users_groups ug
+        ${joinClause} ${conditions.length > 0 ? 'WHERE ' + conditions.join(' AND ') : ''}
+    `;
+
+    const result = await this.pool.query<{ count: string }>(query, values);
     return parseInt(result.rows[0].count, 10);
+  }
+
+  #buildConditions({ userId, groupId, isOwner, deleted }: UsersGroupsFindManyEntity) {
+    const conditions: string[] = [];
+    const values: (UUID | boolean)[] = [];
+    let valueIndex = 1;
+    let joinClause = '';
+
+    if (userId !== undefined) {
+      conditions.push(`ug.user_id = $${valueIndex}`);
+      values.push(userId);
+      valueIndex++;
+    }
+
+    if (groupId !== undefined) {
+      conditions.push(`ug.group_id = $${valueIndex}`);
+      values.push(groupId);
+      valueIndex++;
+    }
+
+    if (isOwner !== undefined) {
+      conditions.push(`ug.is_owner = $${valueIndex}`);
+      values.push(isOwner);
+      valueIndex++;
+    }
+
+    if (deleted !== undefined) {
+      joinClause = 'INNER JOIN groups g ON ug.group_id = g.id';
+      conditions.push(`g.deleted = $${valueIndex}`);
+      values.push(deleted);
+      valueIndex++;
+    }
+
+    return { conditions, values, joinClause };
   }
 
   async deleteOne(usersGroupsDeleteEntity: UsersGroupsDeleteEntity): Promise<void> {

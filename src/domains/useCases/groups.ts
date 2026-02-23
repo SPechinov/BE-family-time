@@ -12,7 +12,7 @@ import { DefaultProps } from './types';
 export interface IGroupsUseCases {
   findUserGroupsList(
     props: DefaultProps<{ userId: UUID }>,
-  ): Promise<{ group: GroupWithUsersEntity; members: { isOwner: boolean; user: UserPlainEntity }[] }[]>;
+  ): Promise<{ group: GroupWithUsersEntity; users: { isOwner: boolean; user: UserPlainEntity }[] }[]>;
   createUserGroup(props: DefaultProps<{ userId: UUID; groupCreateEntity: GroupCreateEntity }>): Promise<GroupEntity>;
   findUserGroup(props: DefaultProps<{ userId: UUID; groupFindOneEntity: GroupFindOneEntity }>): Promise<GroupEntity>;
   patchUserGroup(

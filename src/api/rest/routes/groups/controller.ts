@@ -29,7 +29,11 @@ export class GroupsRoutesController {
             schema: SCHEMAS.getList,
           },
           async (request, reply) => {
-            reply.status(200).send([]);
+            const groups = await this.#groupsUseCases.findUserGroupsList({
+              userId: request.userId,
+              logger: request.log,
+            });
+            reply.status(200).send(groups);
           },
         );
 

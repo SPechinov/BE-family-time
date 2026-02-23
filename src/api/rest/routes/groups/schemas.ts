@@ -5,7 +5,7 @@ import { z } from 'zod';
 const GET_LIST = {
   tags: ['Groups'],
   response: createResponseSchema({
-    200: z.array(GROUP_SCHEMA),
+    200: z.array(z.any()),
   }),
 };
 
