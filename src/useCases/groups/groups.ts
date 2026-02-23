@@ -1,10 +1,5 @@
-import {
-  GroupCreateEntity,
-  GroupEntity,
-  GroupFindOneEntity,
-  GroupPatchOneEntity,
-} from '@/entities';
-import { ErrorGroupNotExists, ErrorGroupsLimitExceeded, ErrorUserNotExists } from '@/pkg';
+import { GroupCreateEntity, GroupEntity, GroupFindOneEntity, GroupPatchOneEntity } from '@/entities';
+import { ErrorGroupNotExists, ErrorGroupsLimitExceeded } from '@/pkg';
 import { UUID } from 'node:crypto';
 import { IGroupsService, IUsersService } from '@/domains/services';
 import { DefaultProps, IGroupsUseCases } from '@/domains/useCases';
@@ -19,7 +14,8 @@ export class GroupsUseCases implements IGroupsUseCases {
     this.#groupsService = props.groupsService;
   }
 
-  async findUserGroupsList(props: DefaultProps<{ userId: UUID }>): Promise<GroupEntity[]> {
+  async findUserGroupsList({ userId }: DefaultProps<{ userId: UUID }>): Promise<GroupEntity[]> {
+    await this.#usersService.findOneByUserIdOrThrow(userId);
     return [];
   }
 
