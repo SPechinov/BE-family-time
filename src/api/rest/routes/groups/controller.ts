@@ -33,7 +33,22 @@ export class GroupsRoutesController {
               userId: request.userId,
               logger: request.log,
             });
-            reply.status(200).send(groups);
+            reply.status(200).send(
+              groups.map((group) => ({
+                group: {
+                  id: group.group.id,
+                  name: group.group.name,
+                  description: group.group.description,
+                  createdAt: group.group.createdAt,
+                },
+                users: group.users.map((user) => ({
+                  id: user.user.id,
+                  firstName: user.user.personalInfo?.firstName,
+                  lastName: user.user.personalInfo?.lastName,
+                  isOwner: user.isOwner,
+                })),
+              })),
+            );
           },
         );
 

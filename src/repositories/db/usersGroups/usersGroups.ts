@@ -77,7 +77,9 @@ export class UsersGroupsRepository extends BaseRepository implements IUsersGroup
     const conditions: string[] = [];
     const values: (UUID | boolean)[] = [];
     let valueIndex = 1;
-    let joinClause = '';
+
+    // Всегда добавляем JOIN с groups для фильтрации по deleted
+    const joinClause = 'INNER JOIN groups g ON ug.group_id = g.id';
 
     if (userId !== undefined) {
       conditions.push(`ug.user_id = $${valueIndex}`);
@@ -98,7 +100,6 @@ export class UsersGroupsRepository extends BaseRepository implements IUsersGroup
     }
 
     if (deleted !== undefined) {
-      joinClause = 'INNER JOIN groups g ON ug.group_id = g.id';
       conditions.push(`g.deleted = $${valueIndex}`);
       values.push(deleted);
       valueIndex++;
@@ -164,7 +165,9 @@ export class UsersGroupsRepository extends BaseRepository implements IUsersGroup
     const conditions: string[] = [];
     const values: (UUID | boolean)[] = [];
     let valueIndex = 1;
-    let joinClause = '';
+
+    // Всегда добавляем JOIN с groups для получения g.deleted
+    const joinClause = 'INNER JOIN groups g ON ug.group_id = g.id';
 
     if (userId !== undefined) {
       conditions.push(`ug.user_id = $${valueIndex}`);
@@ -185,7 +188,6 @@ export class UsersGroupsRepository extends BaseRepository implements IUsersGroup
     }
 
     if (deleted !== undefined) {
-      joinClause = 'INNER JOIN groups g ON ug.group_id = g.id';
       conditions.push(`g.deleted = $${valueIndex}`);
       values.push(deleted);
       valueIndex++;
