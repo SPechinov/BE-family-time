@@ -1,4 +1,4 @@
-import { randomUUID } from 'node:crypto';
+import { randomUUID, UUID } from 'node:crypto';
 import { IUsersRepository } from '@/domains/repositories/db';
 import { IEncryptionService, IHashPasswordService, IHmacService, IUsersService } from '@/domains/services';
 import {
@@ -61,6 +61,15 @@ export class UsersService implements IUsersService {
 
   async findOne(props: { userFindOnePlainEntity: UserFindOnePlainEntity }): Promise<UserEntity | null> {
     return this.#usersRepository.findOne(this.#convertUserFindOnePlainToHashedOrThrow(props.userFindOnePlainEntity));
+  }
+
+  async findOneByUserIdOrThrow(userId: UUID): Promise<UserEntity> {
+    const foundUser = await this.#usersRepository.findOne(new UserFindOneEntity({ id: userId }));
+    if (!foundUser) {
+      throw new ErrorUserNotExists();
+    }
+
+    return foundUser;
   }
 
   async patchOne({

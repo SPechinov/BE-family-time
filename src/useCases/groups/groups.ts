@@ -3,7 +3,6 @@ import {
   GroupEntity,
   GroupFindOneEntity,
   GroupPatchOneEntity,
-  UserFindOnePlainEntity,
 } from '@/entities';
 import { ErrorGroupNotExists, ErrorGroupsLimitExceeded, ErrorUserNotExists } from '@/pkg';
 import { UUID } from 'node:crypto';
@@ -29,14 +28,8 @@ export class GroupsUseCases implements IGroupsUseCases {
     groupCreateEntity,
     logger,
   }: DefaultProps<{ userId: UUID; groupCreateEntity: GroupCreateEntity }>): Promise<GroupEntity> {
-    const foundUser = await this.#usersService.findOne({
-      userFindOnePlainEntity: new UserFindOnePlainEntity({ id: userId }),
-    });
-    if (!foundUser) throw new ErrorUserNotExists();
-    const userGroupsCount = await this.#groupsService.getUserGroupsCount({ userId: userId });
-    if (userGroupsCount >= CONFIG.limits.user.maxGroups) {
-      throw new ErrorGroupsLimitExceeded();
-    }
+    await this.#usersService.findOneByUserIdOrThrow(userId);
+    await this.#checkUserGroupsLimitExceededOrThrow(userId);
 
     const group = await this.#groupsService.createOne({
       groupCreateEntity: groupCreateEntity,
@@ -67,5 +60,12 @@ export class GroupsUseCases implements IGroupsUseCases {
       groupFindOneEntity: props.groupFindOneEntity,
       groupPatchOneEntity: props.groupPatchOneEntity,
     });
+  }
+
+  async #checkUserGroupsLimitExceededOrThrow(userId: UUID) {
+    const userGroupsCount = await this.#groupsService.getUserGroupsCount({ userId: userId });
+    if (userGroupsCount >= CONFIG.limits.user.maxGroups) {
+      throw new ErrorGroupsLimitExceeded();
+    }
   }
 }
