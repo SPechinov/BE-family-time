@@ -1,5 +1,23 @@
 import { UUID } from 'node:crypto';
 
+export class GroupUser {
+  readonly #isOwner: boolean;
+  readonly #id: UUID;
+
+  constructor(props: { isOwner: boolean; id: UUID }) {
+    this.#isOwner = props.isOwner;
+    this.#id = props.id;
+  }
+
+  get id() {
+    return this.#id;
+  }
+
+  get isOwner() {
+    return this.#isOwner;
+  }
+}
+
 export class GroupEntity {
   readonly #id: UUID;
   readonly #name: string;
@@ -7,6 +25,7 @@ export class GroupEntity {
   readonly #createdAt: Date;
   readonly #deleted: boolean;
   readonly #deletedAt?: Date;
+  readonly #users?: GroupUser[];
 
   constructor(props: {
     id: UUID;
@@ -15,6 +34,7 @@ export class GroupEntity {
     createdAt: Date;
     deleted: boolean;
     deletedAt?: Date;
+    users?: GroupUser[];
   }) {
     this.#id = props.id;
     this.#name = props.name;
@@ -22,6 +42,7 @@ export class GroupEntity {
     this.#createdAt = props.createdAt;
     this.#deleted = props.deleted;
     this.#deletedAt = props.deletedAt;
+    this.#users = props.users;
   }
 
   get id() {
@@ -46,6 +67,10 @@ export class GroupEntity {
 
   get deletedAt() {
     return this.#deletedAt;
+  }
+
+  get users() {
+    return this.#users;
   }
 }
 

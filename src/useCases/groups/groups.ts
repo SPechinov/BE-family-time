@@ -15,6 +15,9 @@ export class GroupsUseCases implements IGroupsUseCases {
   }
 
   async findUserGroupsList({ userId }: DefaultProps<{ userId: UUID }>): Promise<GroupEntity[]> {
+    // Получить список групп
+    // Получить информацию по каждой группе
+    // Получить список участников каждоый группы
     await this.#usersService.findOneByUserIdOrThrow(userId);
     return [];
   }

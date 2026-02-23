@@ -5,7 +5,7 @@ import {
   UsersGroupsCreateEntity,
   UsersGroupsFindOneEntity,
   UsersGroupsDeleteEntity,
-  UsersGroupsFindAllOptions,
+  UsersGroupsFindManyOptions,
 } from '@/entities';
 import { IUsersGroupsRowData } from './types';
 import { UUID } from 'node:crypto';
@@ -53,15 +53,15 @@ export class UsersGroupsRepository extends BaseRepository implements IUsersGroup
     return this.#buildUsersGroupsEntity(row);
   }
 
-  async findAll(options: UsersGroupsFindAllOptions): Promise<UsersGroupsEntity[]> {
-    const { query, values } = this.#buildFindAllQuery(options);
+  async findMany(options: UsersGroupsFindManyOptions): Promise<UsersGroupsEntity[]> {
+    const { query, values } = this.#buildFindManyQuery(options);
     const result = await this.pool.query<IUsersGroupsRowData>(query, values);
 
     return result.rows.map((row) => this.#buildUsersGroupsEntity(row));
   }
 
-  async count(options: UsersGroupsFindAllOptions): Promise<number> {
-    const { query, values } = this.#buildFindAllQuery(options);
+  async count(options: UsersGroupsFindManyOptions): Promise<number> {
+    const { query, values } = this.#buildFindManyQuery(options);
     const countQuery = query.replace('SELECT ug.*', 'SELECT COUNT(*)');
     const result = await this.pool.query<{ count: string }>(countQuery, values);
 
@@ -121,7 +121,7 @@ export class UsersGroupsRepository extends BaseRepository implements IUsersGroup
     return { conditions, values, joinClause };
   }
 
-  #buildFindAllQuery({ userId, groupId, isOwner, deleted }: UsersGroupsFindAllOptions) {
+  #buildFindManyQuery({ userId, groupId, isOwner, deleted }: UsersGroupsFindManyOptions) {
     const conditions: string[] = [];
     const values: (UUID | boolean)[] = [];
     let valueIndex = 1;

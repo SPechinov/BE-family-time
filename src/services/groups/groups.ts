@@ -5,7 +5,8 @@ import {
   GroupFindOneEntity,
   GroupPatchOneEntity,
   UsersGroupsCreateEntity,
-  UsersGroupsFindAllOptions,
+  UsersGroupsEntity,
+  UsersGroupsFindManyOptions,
 } from '@/entities';
 import { IGroupsService } from '@/domains/services';
 import { UUID } from 'node:crypto';
@@ -40,6 +41,11 @@ export class GroupsService implements IGroupsService {
     return this.#groupsRepository.findOne(props.groupFindOneEntity);
   }
 
+  async findMany(props: { usersGroupsFindManyOptions: UsersGroupsFindManyOptions }): Promise<GroupEntity[]> {
+    const usersGroups = await this.#usersGroupsRepository.findMany(props.usersGroupsFindManyOptions);
+
+  }
+
   async patchOne(props: {
     groupFindOneEntity: GroupFindOneEntity;
     groupPatchOneEntity: GroupPatchOneEntity;
@@ -49,7 +55,7 @@ export class GroupsService implements IGroupsService {
 
   async getUserGroupsCount(props: { userId: UUID }): Promise<number> {
     return await this.#usersGroupsRepository.count(
-      new UsersGroupsFindAllOptions({ userId: props.userId, deleted: false }),
+      new UsersGroupsFindManyOptions({ userId: props.userId, deleted: false }),
     );
   }
 }

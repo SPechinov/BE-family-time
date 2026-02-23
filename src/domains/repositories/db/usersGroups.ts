@@ -3,7 +3,7 @@ import {
   UsersGroupsCreateEntity,
   UsersGroupsFindOneEntity,
   UsersGroupsDeleteEntity,
-  UsersGroupsFindAllOptions,
+  UsersGroupsFindManyOptions,
 } from '@/entities';
 import { UUID } from 'node:crypto';
 import { PoolClient } from 'pg';
@@ -15,8 +15,8 @@ export interface IUsersGroupsRepository extends IBaseRepository {
     options?: { client?: PoolClient },
   ): Promise<UsersGroupsEntity>;
   findOne(usersGroupsFindOneEntity: UsersGroupsFindOneEntity): Promise<UsersGroupsEntity | null>;
-  findAll(options: UsersGroupsFindAllOptions): Promise<UsersGroupsEntity[]>;
-  count(options: UsersGroupsFindAllOptions): Promise<number>;
+  findMany(options: UsersGroupsFindManyOptions): Promise<UsersGroupsEntity[]>;
+  count(options: UsersGroupsFindManyOptions): Promise<number>;
   deleteOne(usersGroupsDeleteEntity: UsersGroupsDeleteEntity): Promise<void>;
   deleteAllByUserId(userId: UUID): Promise<void>;
   deleteAllByGroupId(groupId: UUID): Promise<void>;

@@ -102,7 +102,7 @@ export class UsersGroupsDeleteEntity {
   }
 }
 
-export class UsersGroupsFindAllOptions {
+export class UsersGroupsFindManyOptions {
   readonly #userId?: UUID;
   readonly #groupId?: UUID;
   readonly #deleted?: boolean;
