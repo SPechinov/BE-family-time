@@ -75,7 +75,7 @@ export class GroupsService implements IGroupsService {
     return this.#groupsRepository.patchOne(props);
   }
 
-  async getUserGroupsCount(props: { usersGroupsFindManyEntity: UsersGroupsFindManyEntity }): Promise<number> {
+  async getGroupsCount(props: { usersGroupsFindManyEntity: UsersGroupsFindManyEntity }): Promise<number> {
     return await this.#usersGroupsRepository.count(new UsersGroupsFindManyEntity(props.usersGroupsFindManyEntity));
   }
 }
