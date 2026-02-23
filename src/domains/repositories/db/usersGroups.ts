@@ -14,8 +14,7 @@ export interface IUsersGroupsRepository {
   ): Promise<UsersGroupsEntity>;
   findOne(usersGroupsFindOneEntity: UsersGroupsFindOneEntity): Promise<UsersGroupsEntity | null>;
   findAllByUserId(userId: UUID): Promise<UsersGroupsEntity[]>;
+  countAllByUserId(userId: UUID): Promise<number>;
   findAllByGroupId(groupId: UUID): Promise<UsersGroupsEntity[]>;
   deleteOne(usersGroupsDeleteEntity: UsersGroupsDeleteEntity): Promise<void>;
-  deleteAllByUserId(userId: UUID): Promise<void>;
-  deleteAllByGroupId(groupId: UUID): Promise<void>;
 }

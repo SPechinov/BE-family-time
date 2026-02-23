@@ -54,10 +54,27 @@ export class UsersGroupsRepository implements IUsersGroupsRepository {
   }
 
   async findAllByUserId(userId: UUID): Promise<UsersGroupsEntity[]> {
-    const query = 'SELECT * FROM users_groups WHERE user_id = $1';
+    const query = `
+      SELECT ug.*
+      FROM users_groups ug
+      INNER JOIN groups g ON ug.group_id = g.id
+      WHERE ug.user_id = $1 AND g.deleted = false
+    `;
     const result = await this.#pool.query<IUsersGroupsRowData>(query, [userId]);
 
     return result.rows.map((row) => this.#buildUsersGroupsEntity(row));
+  }
+
+  async countAllByUserId(userId: UUID): Promise<number> {
+    const query = `
+      SELECT COUNT(*)
+      FROM users_groups ug
+      INNER JOIN groups g ON ug.group_id = g.id
+      WHERE ug.user_id = $1 AND g.deleted = false
+    `;
+    const result = await this.#pool.query<{ count: string }>(query, [userId]);
+
+    return parseInt(result.rows[0].count, 10);
   }
 
   async findAllByGroupId(groupId: UUID): Promise<UsersGroupsEntity[]> {
@@ -74,16 +91,6 @@ export class UsersGroupsRepository implements IUsersGroupsRepository {
     `;
 
     await this.#pool.query(query, [usersGroupsDeleteEntity.userId, usersGroupsDeleteEntity.groupId]);
-  }
-
-  async deleteAllByUserId(userId: UUID): Promise<void> {
-    const query = 'DELETE FROM users_groups WHERE user_id = $1';
-    await this.#pool.query(query, [userId]);
-  }
-
-  async deleteAllByGroupId(groupId: UUID): Promise<void> {
-    const query = 'DELETE FROM users_groups WHERE group_id = $1';
-    await this.#pool.query(query, [groupId]);
   }
 
   #buildUsersGroupsConditions(usersGroupsFindOneEntity: UsersGroupsFindOneEntity) {

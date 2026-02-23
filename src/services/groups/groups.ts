@@ -47,7 +47,6 @@ export class GroupsService implements IGroupsService {
   }
 
   async getUserGroupsCount(props: { userId: UUID }): Promise<number> {
-    const usersGroupsEntities = await this.#usersGroupsRepository.findAllByUserId(props.userId);
-    return usersGroupsEntities.length;
+    return await this.#usersGroupsRepository.countAllByUserId(props.userId);
   }
 }
