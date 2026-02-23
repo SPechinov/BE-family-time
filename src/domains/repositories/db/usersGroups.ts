@@ -18,6 +18,4 @@ export interface IUsersGroupsRepository extends IBaseRepository {
   findMany(options: UsersGroupsFindManyEntity): Promise<UsersGroupsEntity[]>;
   count(options: UsersGroupsFindManyEntity): Promise<number>;
   deleteOne(usersGroupsDeleteEntity: UsersGroupsDeleteEntity): Promise<void>;
-  deleteAllByUserId(userId: UUID): Promise<void>;
-  deleteAllByGroupId(groupId: UUID): Promise<void>;
 }
