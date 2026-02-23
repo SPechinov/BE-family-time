@@ -5,6 +5,7 @@ import {
   UsersGroupsCreateEntity,
   UsersGroupsFindOneEntity,
   UsersGroupsDeleteEntity,
+  UsersGroupsFindAllOptions,
 } from '@/entities';
 import { IUsersGroupsRowData } from './types';
 import { UUID } from 'node:crypto';
@@ -36,11 +37,15 @@ export class UsersGroupsRepository extends BaseRepository implements IUsersGroup
   }
 
   async findOne(usersGroupsFindOneEntity: UsersGroupsFindOneEntity): Promise<UsersGroupsEntity | null> {
-    let query = 'SELECT * FROM users_groups';
-    const { conditions, values } = this.#buildUsersGroupsConditions(usersGroupsFindOneEntity);
+    const { conditions, values, joinClause } = this.#buildUsersGroupsConditions(usersGroupsFindOneEntity);
     if (conditions.length === 0) throw new Error('Invalid find params');
 
-    query += ' WHERE ' + conditions.join(' AND ');
+    const query = `
+      SELECT ug.*
+      FROM users_groups ug
+      ${joinClause}
+      WHERE ${conditions.join(' AND ')}
+    `;
 
     const result = await this.pool.query<IUsersGroupsRowData>(query, values);
     const row = result.rows?.[0];
@@ -48,35 +53,19 @@ export class UsersGroupsRepository extends BaseRepository implements IUsersGroup
     return this.#buildUsersGroupsEntity(row);
   }
 
-  async findAllByUserId(userId: UUID): Promise<UsersGroupsEntity[]> {
-    const query = `
-      SELECT ug.*
-      FROM users_groups ug
-      INNER JOIN groups g ON ug.group_id = g.id
-      WHERE ug.user_id = $1 AND g.deleted = false
-    `;
-    const result = await this.pool.query<IUsersGroupsRowData>(query, [userId]);
+  async findAll(options: UsersGroupsFindAllOptions): Promise<UsersGroupsEntity[]> {
+    const { query, values } = this.#buildFindAllQuery(options);
+    const result = await this.pool.query<IUsersGroupsRowData>(query, values);
 
     return result.rows.map((row) => this.#buildUsersGroupsEntity(row));
   }
 
-  async countAllByUserId(userId: UUID): Promise<number> {
-    const query = `
-      SELECT COUNT(*)
-      FROM users_groups ug
-      INNER JOIN groups g ON ug.group_id = g.id
-      WHERE ug.user_id = $1 AND g.deleted = false
-    `;
-    const result = await this.pool.query<{ count: string }>(query, [userId]);
+  async count(options: UsersGroupsFindAllOptions): Promise<number> {
+    const { query, values } = this.#buildFindAllQuery(options);
+    const countQuery = query.replace('SELECT ug.*', 'SELECT COUNT(*)');
+    const result = await this.pool.query<{ count: string }>(countQuery, values);
 
     return parseInt(result.rows[0].count, 10);
-  }
-
-  async findAllByGroupId(groupId: UUID): Promise<UsersGroupsEntity[]> {
-    const query = 'SELECT * FROM users_groups WHERE group_id = $1';
-    const result = await this.pool.query<IUsersGroupsRowData>(query, [groupId]);
-
-    return result.rows.map((row) => this.#buildUsersGroupsEntity(row));
   }
 
   async deleteOne(usersGroupsDeleteEntity: UsersGroupsDeleteEntity): Promise<void> {
@@ -88,30 +77,89 @@ export class UsersGroupsRepository extends BaseRepository implements IUsersGroup
     await this.pool.query(query, [usersGroupsDeleteEntity.userId, usersGroupsDeleteEntity.groupId]);
   }
 
+  async deleteAllByUserId(userId: UUID): Promise<void> {
+    const query = 'DELETE FROM users_groups WHERE user_id = $1';
+    await this.pool.query(query, [userId]);
+  }
+
+  async deleteAllByGroupId(groupId: UUID): Promise<void> {
+    const query = 'DELETE FROM users_groups WHERE group_id = $1';
+    await this.pool.query(query, [groupId]);
+  }
+
   #buildUsersGroupsConditions(usersGroupsFindOneEntity: UsersGroupsFindOneEntity) {
     const conditions: string[] = [];
     const values: (UUID | boolean)[] = [];
     let valueIndex = 1;
+    let joinClause = '';
 
     if (usersGroupsFindOneEntity.userId) {
-      conditions.push(`user_id = $${valueIndex}`);
+      conditions.push(`ug.user_id = $${valueIndex}`);
       values.push(usersGroupsFindOneEntity.userId);
       valueIndex++;
     }
 
     if (usersGroupsFindOneEntity.groupId) {
-      conditions.push(`group_id = $${valueIndex}`);
+      conditions.push(`ug.group_id = $${valueIndex}`);
       values.push(usersGroupsFindOneEntity.groupId);
       valueIndex++;
     }
 
     if (usersGroupsFindOneEntity.isOwner !== undefined) {
-      conditions.push(`is_owner = $${valueIndex}`);
+      conditions.push(`ug.is_owner = $${valueIndex}`);
       values.push(usersGroupsFindOneEntity.isOwner);
       valueIndex++;
     }
 
-    return { conditions, values };
+    if (usersGroupsFindOneEntity.deleted !== undefined) {
+      joinClause = 'INNER JOIN groups g ON ug.group_id = g.id';
+      conditions.push(`g.deleted = $${valueIndex}`);
+      values.push(usersGroupsFindOneEntity.deleted);
+      valueIndex++;
+    }
+
+    return { conditions, values, joinClause };
+  }
+
+  #buildFindAllQuery({ userId, groupId, isOwner, deleted }: UsersGroupsFindAllOptions) {
+    const conditions: string[] = [];
+    const values: (UUID | boolean)[] = [];
+    let valueIndex = 1;
+    let joinClause = '';
+
+    if (userId !== undefined) {
+      conditions.push(`ug.user_id = $${valueIndex}`);
+      values.push(userId);
+      valueIndex++;
+    }
+
+    if (groupId !== undefined) {
+      conditions.push(`ug.group_id = $${valueIndex}`);
+      values.push(groupId);
+      valueIndex++;
+    }
+
+    if (isOwner !== undefined) {
+      conditions.push(`ug.is_owner = $${valueIndex}`);
+      values.push(isOwner);
+      valueIndex++;
+    }
+
+    if (deleted !== undefined) {
+      joinClause = 'INNER JOIN groups g ON ug.group_id = g.id';
+      conditions.push(`g.deleted = $${valueIndex}`);
+      values.push(deleted);
+      valueIndex++;
+    }
+
+    const query = `
+      SELECT ug.*
+      FROM users_groups ug
+      ${joinClause}
+      ${conditions.length > 0 ? 'WHERE ' + conditions.join(' AND ') : ''}
+    `;
+
+    return { query, values };
   }
 
   #buildUsersGroupsEntity(row: IUsersGroupsRowData) {

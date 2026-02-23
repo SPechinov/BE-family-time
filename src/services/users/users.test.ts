@@ -35,6 +35,7 @@ const createMockUsersRepository = () => ({
   createOne: jest.fn(),
   findOne: jest.fn(),
   patchOne: jest.fn(),
+  withTransaction: jest.fn(async (fn) => fn({} as any)),
 });
 
 const createMockHmacService = () => ({
@@ -300,7 +301,9 @@ describe('UsersService', () => {
         const result = await usersService.findOne({ userFindOnePlainEntity });
 
         expect(result).toBe(mockUser);
-        expect(mockUsersRepository.findOne).toHaveBeenCalledWith(expect.objectContaining({ id: createMockUuid('user-123') }));
+        expect(mockUsersRepository.findOne).toHaveBeenCalledWith(
+          expect.objectContaining({ id: createMockUuid('user-123') }),
+        );
       });
 
       it('should find user by email', async () => {

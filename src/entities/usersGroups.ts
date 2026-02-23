@@ -58,11 +58,13 @@ export class UsersGroupsFindOneEntity {
   readonly #userId?: UUID;
   readonly #groupId?: UUID;
   readonly #isOwner?: boolean;
+  readonly #deleted?: boolean;
 
-  constructor(props: { userId?: UUID; groupId?: UUID; isOwner?: boolean }) {
+  constructor(props: { userId?: UUID; groupId?: UUID; isOwner?: boolean; deleted?: boolean }) {
     this.#userId = props.userId;
     this.#groupId = props.groupId;
     this.#isOwner = props.isOwner;
+    this.#deleted = props.deleted;
   }
 
   get userId() {
@@ -75,6 +77,10 @@ export class UsersGroupsFindOneEntity {
 
   get isOwner() {
     return this.#isOwner;
+  }
+
+  get deleted() {
+    return this.#deleted;
   }
 }
 
@@ -93,5 +99,35 @@ export class UsersGroupsDeleteEntity {
 
   get groupId() {
     return this.#groupId;
+  }
+}
+
+export class UsersGroupsFindAllOptions {
+  readonly #userId?: UUID;
+  readonly #groupId?: UUID;
+  readonly #deleted?: boolean;
+  readonly #isOwner?: boolean;
+
+  constructor(props: { userId?: UUID; groupId?: UUID; deleted?: boolean; isOwner?: boolean }) {
+    this.#userId = props.userId;
+    this.#groupId = props.groupId;
+    this.#deleted = props.deleted;
+    this.#isOwner = props.isOwner;
+  }
+
+  get userId() {
+    return this.#userId;
+  }
+
+  get groupId() {
+    return this.#groupId;
+  }
+
+  get deleted() {
+    return this.#deleted;
+  }
+
+  get isOwner() {
+    return this.#isOwner;
   }
 }

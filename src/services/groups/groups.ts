@@ -5,6 +5,7 @@ import {
   GroupFindOneEntity,
   GroupPatchOneEntity,
   UsersGroupsCreateEntity,
+  UsersGroupsFindAllOptions,
 } from '@/entities';
 import { IGroupsService } from '@/domains/services';
 import { UUID } from 'node:crypto';
@@ -47,6 +48,8 @@ export class GroupsService implements IGroupsService {
   }
 
   async getUserGroupsCount(props: { userId: UUID }): Promise<number> {
-    return await this.#usersGroupsRepository.countAllByUserId(props.userId);
+    return await this.#usersGroupsRepository.count(
+      new UsersGroupsFindAllOptions({ userId: props.userId, deleted: false }),
+    );
   }
 }
