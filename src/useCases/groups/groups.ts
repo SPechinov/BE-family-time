@@ -3,6 +3,8 @@ import {
   GroupEntity,
   GroupFindOneEntity,
   GroupPatchOneEntity,
+  GroupWithUsersEntity,
+  UserPlainEntity,
   UsersGroupsFindManyEntity,
 } from '@/entities';
 import { ErrorGroupNotExists, ErrorGroupsLimitExceeded } from '@/pkg';
@@ -20,16 +22,35 @@ export class GroupsUseCases implements IGroupsUseCases {
     this.#groupsService = props.groupsService;
   }
 
-  async findUserGroupsList({ userId }: DefaultProps<{ userId: UUID }>): Promise<GroupEntity[]> {
-    // Получить список участников каждоый группы
+  async findUserGroupsList({
+    userId,
+  }: DefaultProps<{ userId: UUID }>): Promise<
+    { group: GroupWithUsersEntity; members: { isOwner: boolean; user: UserPlainEntity }[] }[]
+  > {
     await this.#usersService.findOneByUserIdOrThrow(userId);
+
     const groups = await this.#groupsService.findMany({
       usersGroupsFindManyOptions: new UsersGroupsFindManyEntity({
         userId,
       }),
     });
 
-    return [];
+    return Promise.all(
+      groups.map(async (group) => ({
+        group,
+        members: await Promise.all(
+          group.users.map(async (user) => ({
+            isOwner: user.isOwner,
+            user: await this.#getUserPlainEntity(user.id),
+          })),
+        ),
+      })),
+    );
+  }
+
+  async #getUserPlainEntity(userId: UUID): Promise<UserPlainEntity> {
+    const user = await this.#usersService.findOneByUserIdOrThrow(userId);
+    return this.#usersService.decryptUser(user);
   }
 
   async createUserGroup({

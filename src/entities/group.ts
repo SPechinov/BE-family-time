@@ -70,7 +70,7 @@ export class GroupEntity {
 }
 
 export class GroupWithUsersEntity extends GroupEntity {
-  readonly #users?: GroupUser[];
+  readonly #users: GroupUser[];
 
   constructor(props: GroupEntityProps & { users: GroupUser[] }) {
     super(props);

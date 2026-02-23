@@ -52,7 +52,8 @@ export class GroupsRoutesController {
         );
 
         router.get(ROUTES.get, {}, async (request, reply) => {
-          reply.status(200).send();
+          const groups = await this.#groupsUseCases.findUserGroupsList({ userId: request.userId, logger: request.log });
+          reply.status(200).send(groups);
         });
 
         router.patch(ROUTES.patch, {}, async (request, reply) => {
