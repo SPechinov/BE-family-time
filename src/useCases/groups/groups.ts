@@ -89,7 +89,7 @@ export class GroupsUseCases implements IGroupsUseCases {
 
   async #checkUserGroupsLimitExceededOrThrow(userId: UUID) {
     const userGroupsCount = await this.#groupsService.getGroupsCount({
-      usersGroupsFindManyEntity: new UsersGroupsFindManyEntity({ userId: userId, deleted: false }),
+      usersGroupsFindManyEntity: new UsersGroupsFindManyEntity({ userId: userId }),
     });
     if (userGroupsCount >= CONFIG.limits.user.maxGroups) {
       throw new ErrorGroupsLimitExceeded();

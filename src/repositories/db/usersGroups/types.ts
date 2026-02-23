@@ -5,5 +5,4 @@ export interface IUsersGroupsRowData {
   group_id: UUID;
   is_owner: boolean;
   created_at: Date;
-  deleted: boolean;
 }

@@ -23,8 +23,6 @@ interface GroupEntityProps {
   name: string;
   description?: string;
   createdAt: Date;
-  deleted: boolean;
-  deletedAt?: Date;
 }
 
 export class GroupEntity {
@@ -32,16 +30,12 @@ export class GroupEntity {
   readonly #name: string;
   readonly #description?: string;
   readonly #createdAt: Date;
-  readonly #deleted: boolean;
-  readonly #deletedAt?: Date;
 
   constructor(props: GroupEntityProps) {
     this.#id = props.id;
     this.#name = props.name;
     this.#description = props.description;
     this.#createdAt = props.createdAt;
-    this.#deleted = props.deleted;
-    this.#deletedAt = props.deletedAt;
   }
 
   get id() {
@@ -58,14 +52,6 @@ export class GroupEntity {
 
   get createdAt() {
     return this.#createdAt;
-  }
-
-  get deleted() {
-    return this.#deleted;
-  }
-
-  get deletedAt() {
-    return this.#deletedAt;
   }
 }
 
@@ -100,49 +86,36 @@ export class GroupCreateEntity {
 }
 
 export class GroupFindOneEntity {
-  readonly #id: UUID;
-  readonly #deleted?: boolean;
+  readonly #id?: UUID;
 
-  constructor(props: { id: UUID; deleted?: boolean }) {
+  constructor(props: { id?: UUID }) {
     this.#id = props.id;
   }
 
   get id() {
     return this.#id;
   }
-
-  get deleted() {
-    return this.#deleted;
-  }
 }
 
 export class GroupFindAllEntity {
   readonly #userId: UUID;
-  readonly #deleted: boolean;
 
-  constructor(props: { userId: UUID; deleted?: boolean }) {
+  constructor(props: { userId: UUID }) {
     this.#userId = props.userId;
-    this.#deleted = false;
   }
 
   get userId() {
     return this.#userId;
-  }
-
-  get deleted() {
-    return this.#deleted;
   }
 }
 
 export class GroupPatchOneEntity {
   readonly #name?: string;
   readonly #description?: string | null;
-  readonly #delete?: boolean;
 
-  constructor(props: { name: string; description?: string; delete?: boolean }) {
+  constructor(props: { name?: string; description?: string | null }) {
     this.#name = props.name;
     this.#description = props.description;
-    this.#delete = props.delete;
   }
   get name() {
     return this.#name;
@@ -150,9 +123,5 @@ export class GroupPatchOneEntity {
 
   get description() {
     return this.#description;
-  }
-
-  get delete() {
-    return this.#delete;
   }
 }

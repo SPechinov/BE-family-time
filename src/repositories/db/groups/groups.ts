@@ -72,18 +72,12 @@ export class GroupsRepository extends BaseRepository implements IGroupsRepositor
       valueIndex++;
     }
 
-    if (groupFindOneEntity.deleted !== undefined) {
-      conditions.push(`deleted = $${valueIndex}`);
-      values.push(groupFindOneEntity.deleted);
-      valueIndex++;
-    }
-
     return { conditions, values };
   }
 
   #buildUpdateSetClause(groupPatchEntity: GroupPatchOneEntity, startValueIndex: number) {
     const setParts: string[] = [];
-    const updateValues: (string | boolean | null)[] = [];
+    const updateValues: (string | null)[] = [];
     let valueIndex = startValueIndex;
 
     if (groupPatchEntity.name !== undefined) {
@@ -98,12 +92,6 @@ export class GroupsRepository extends BaseRepository implements IGroupsRepositor
       valueIndex++;
     }
 
-    if (groupPatchEntity.delete !== undefined) {
-      setParts.push(`deleted = $${valueIndex}`);
-      updateValues.push(groupPatchEntity.delete);
-      valueIndex++;
-    }
-
     return { setParts, updateValues, nextValueIndex: valueIndex };
   }
 
@@ -113,8 +101,6 @@ export class GroupsRepository extends BaseRepository implements IGroupsRepositor
       name: row.name,
       description: row.description ?? undefined,
       createdAt: row.created_at,
-      deleted: row.deleted,
-      deletedAt: row.deleted_at ?? undefined,
     });
   }
 }

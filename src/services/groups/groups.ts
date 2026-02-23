@@ -58,8 +58,6 @@ export class GroupsService implements IGroupsService {
           name: group.name,
           description: group.description,
           createdAt: group.createdAt,
-          deleted: group.deleted,
-          deletedAt: group.deletedAt,
           users: [new GroupUser({ id: userGroup.userId, isOwner: userGroup.isOwner })],
         }),
       );

@@ -5,14 +5,12 @@ export class UsersGroupsEntity {
   readonly #groupId: UUID;
   readonly #isOwner: boolean;
   readonly #createdAt: Date;
-  readonly #deleted: boolean;
 
-  constructor(props: { userId: UUID; groupId: UUID; isOwner: boolean; createdAt: Date; deleted: boolean }) {
+  constructor(props: { userId: UUID; groupId: UUID; isOwner: boolean; createdAt: Date }) {
     this.#userId = props.userId;
     this.#groupId = props.groupId;
     this.#isOwner = props.isOwner;
     this.#createdAt = props.createdAt;
-    this.#deleted = props.deleted;
   }
 
   get userId() {
@@ -29,10 +27,6 @@ export class UsersGroupsEntity {
 
   get createdAt() {
     return this.#createdAt;
-  }
-
-  get deleted() {
-    return this.#deleted;
   }
 }
 
@@ -64,13 +58,11 @@ export class UsersGroupsFindOneEntity {
   readonly #userId?: UUID;
   readonly #groupId?: UUID;
   readonly #isOwner?: boolean;
-  readonly #deleted?: boolean;
 
-  constructor(props: { userId?: UUID; groupId?: UUID; isOwner?: boolean; deleted?: boolean }) {
+  constructor(props: { userId?: UUID; groupId?: UUID; isOwner?: boolean }) {
     this.#userId = props.userId;
     this.#groupId = props.groupId;
     this.#isOwner = props.isOwner;
-    this.#deleted = props.deleted;
   }
 
   get userId() {
@@ -83,10 +75,6 @@ export class UsersGroupsFindOneEntity {
 
   get isOwner() {
     return this.#isOwner;
-  }
-
-  get deleted() {
-    return this.#deleted;
   }
 }
 
@@ -111,13 +99,11 @@ export class UsersGroupsDeleteEntity {
 export class UsersGroupsFindManyEntity {
   readonly #userId?: UUID;
   readonly #groupId?: UUID;
-  readonly #deleted?: boolean;
   readonly #isOwner?: boolean;
 
-  constructor(props: { userId?: UUID; groupId?: UUID; deleted?: boolean; isOwner?: boolean }) {
+  constructor(props: { userId?: UUID; groupId?: UUID; isOwner?: boolean }) {
     this.#userId = props.userId;
     this.#groupId = props.groupId;
-    this.#deleted = props.deleted;
     this.#isOwner = props.isOwner;
   }
 
@@ -127,10 +113,6 @@ export class UsersGroupsFindManyEntity {
 
   get groupId() {
     return this.#groupId;
-  }
-
-  get deleted() {
-    return this.#deleted;
   }
 
   get isOwner() {
