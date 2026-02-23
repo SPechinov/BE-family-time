@@ -18,6 +18,15 @@ export class GroupUser {
   }
 }
 
+interface GroupEntityProps {
+  id: UUID;
+  name: string;
+  description?: string;
+  createdAt: Date;
+  deleted: boolean;
+  deletedAt?: Date;
+}
+
 export class GroupEntity {
   readonly #id: UUID;
   readonly #name: string;
@@ -25,24 +34,14 @@ export class GroupEntity {
   readonly #createdAt: Date;
   readonly #deleted: boolean;
   readonly #deletedAt?: Date;
-  readonly #users?: GroupUser[];
 
-  constructor(props: {
-    id: UUID;
-    name: string;
-    description?: string;
-    createdAt: Date;
-    deleted: boolean;
-    deletedAt?: Date;
-    users?: GroupUser[];
-  }) {
+  constructor(props: GroupEntityProps) {
     this.#id = props.id;
     this.#name = props.name;
     this.#description = props.description;
     this.#createdAt = props.createdAt;
     this.#deleted = props.deleted;
     this.#deletedAt = props.deletedAt;
-    this.#users = props.users;
   }
 
   get id() {
@@ -67,6 +66,15 @@ export class GroupEntity {
 
   get deletedAt() {
     return this.#deletedAt;
+  }
+}
+
+export class GroupWithUsersEntity extends GroupEntity {
+  readonly #users?: GroupUser[];
+
+  constructor(props: GroupEntityProps & { users: GroupUser[] }) {
+    super(props);
+    this.#users = props.users;
   }
 
   get users() {

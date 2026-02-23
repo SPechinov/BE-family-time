@@ -5,7 +5,7 @@ import {
   UsersGroupsCreateEntity,
   UsersGroupsFindOneEntity,
   UsersGroupsDeleteEntity,
-  UsersGroupsFindManyOptions,
+  UsersGroupsFindManyEntity,
 } from '@/entities';
 import { IUsersGroupsRowData } from './types';
 import { UUID } from 'node:crypto';
@@ -41,7 +41,7 @@ export class UsersGroupsRepository extends BaseRepository implements IUsersGroup
     if (conditions.length === 0) throw new Error('Invalid find params');
 
     const query = `
-      SELECT ug.*
+      SELECT ug.*, g.deleted
       FROM users_groups ug
       ${joinClause}
       WHERE ${conditions.join(' AND ')}
@@ -53,14 +53,14 @@ export class UsersGroupsRepository extends BaseRepository implements IUsersGroup
     return this.#buildUsersGroupsEntity(row);
   }
 
-  async findMany(options: UsersGroupsFindManyOptions): Promise<UsersGroupsEntity[]> {
-    const { query, values } = this.#buildFindManyQuery(options);
+  async findMany(options: UsersGroupsFindManyEntity): Promise<UsersGroupsEntity[]> {
+    const { query, values, joinClause } = this.#buildFindManyQuery(options);
     const result = await this.pool.query<IUsersGroupsRowData>(query, values);
 
     return result.rows.map((row) => this.#buildUsersGroupsEntity(row));
   }
 
-  async count(options: UsersGroupsFindManyOptions): Promise<number> {
+  async count(options: UsersGroupsFindManyEntity): Promise<number> {
     const { query, values } = this.#buildFindManyQuery(options);
     const countQuery = query.replace('SELECT ug.*', 'SELECT COUNT(*)');
     const result = await this.pool.query<{ count: string }>(countQuery, values);
@@ -121,7 +121,7 @@ export class UsersGroupsRepository extends BaseRepository implements IUsersGroup
     return { conditions, values, joinClause };
   }
 
-  #buildFindManyQuery({ userId, groupId, isOwner, deleted }: UsersGroupsFindManyOptions) {
+  #buildFindManyQuery({ userId, groupId, isOwner, deleted }: UsersGroupsFindManyEntity) {
     const conditions: string[] = [];
     const values: (UUID | boolean)[] = [];
     let valueIndex = 1;
@@ -153,13 +153,13 @@ export class UsersGroupsRepository extends BaseRepository implements IUsersGroup
     }
 
     const query = `
-      SELECT ug.*
+      SELECT ug.*, g.deleted
       FROM users_groups ug
       ${joinClause}
       ${conditions.length > 0 ? 'WHERE ' + conditions.join(' AND ') : ''}
     `;
 
-    return { query, values };
+    return { query, values, joinClause };
   }
 
   #buildUsersGroupsEntity(row: IUsersGroupsRowData) {
@@ -168,6 +168,7 @@ export class UsersGroupsRepository extends BaseRepository implements IUsersGroup
       groupId: row.group_id,
       isOwner: row.is_owner,
       createdAt: row.created_at,
+      deleted: row.deleted,
     });
   }
 }

@@ -5,12 +5,14 @@ export class UsersGroupsEntity {
   readonly #groupId: UUID;
   readonly #isOwner: boolean;
   readonly #createdAt: Date;
+  readonly #deleted: boolean;
 
-  constructor(props: { userId: UUID; groupId: UUID; isOwner: boolean; createdAt: Date }) {
+  constructor(props: { userId: UUID; groupId: UUID; isOwner: boolean; createdAt: Date; deleted: boolean }) {
     this.#userId = props.userId;
     this.#groupId = props.groupId;
     this.#isOwner = props.isOwner;
     this.#createdAt = props.createdAt;
+    this.#deleted = props.deleted;
   }
 
   get userId() {
@@ -27,6 +29,10 @@ export class UsersGroupsEntity {
 
   get createdAt() {
     return this.#createdAt;
+  }
+
+  get deleted() {
+    return this.#deleted;
   }
 }
 
@@ -102,7 +108,7 @@ export class UsersGroupsDeleteEntity {
   }
 }
 
-export class UsersGroupsFindManyOptions {
+export class UsersGroupsFindManyEntity {
   readonly #userId?: UUID;
   readonly #groupId?: UUID;
   readonly #deleted?: boolean;

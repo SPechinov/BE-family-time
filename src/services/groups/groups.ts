@@ -4,9 +4,10 @@ import {
   GroupEntity,
   GroupFindOneEntity,
   GroupPatchOneEntity,
+  GroupUser,
+  GroupWithUsersEntity,
   UsersGroupsCreateEntity,
-  UsersGroupsEntity,
-  UsersGroupsFindManyOptions,
+  UsersGroupsFindManyEntity,
 } from '@/entities';
 import { IGroupsService } from '@/domains/services';
 import { UUID } from 'node:crypto';
@@ -41,9 +42,30 @@ export class GroupsService implements IGroupsService {
     return this.#groupsRepository.findOne(props.groupFindOneEntity);
   }
 
-  async findMany(props: { usersGroupsFindManyOptions: UsersGroupsFindManyOptions }): Promise<GroupEntity[]> {
+  async findMany(props: { usersGroupsFindManyOptions: UsersGroupsFindManyEntity }): Promise<GroupWithUsersEntity[]> {
     const usersGroups = await this.#usersGroupsRepository.findMany(props.usersGroupsFindManyOptions);
 
+    const groupsWithUsers: GroupWithUsersEntity[] = [];
+
+    for (const userGroup of usersGroups) {
+      const group = await this.#groupsRepository.findOne(new GroupFindOneEntity({ id: userGroup.groupId }));
+
+      if (!group) continue;
+
+      groupsWithUsers.push(
+        new GroupWithUsersEntity({
+          id: group.id,
+          name: group.name,
+          description: group.description,
+          createdAt: group.createdAt,
+          deleted: group.deleted,
+          deletedAt: group.deletedAt,
+          users: [new GroupUser({ id: userGroup.userId, isOwner: userGroup.isOwner })],
+        }),
+      );
+    }
+
+    return groupsWithUsers;
   }
 
   async patchOne(props: {
@@ -55,7 +77,7 @@ export class GroupsService implements IGroupsService {
 
   async getUserGroupsCount(props: { userId: UUID }): Promise<number> {
     return await this.#usersGroupsRepository.count(
-      new UsersGroupsFindManyOptions({ userId: props.userId, deleted: false }),
+      new UsersGroupsFindManyEntity({ userId: props.userId, deleted: false }),
     );
   }
 }

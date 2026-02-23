@@ -1,4 +1,10 @@
-import { GroupCreateEntity, GroupEntity, GroupFindOneEntity, GroupPatchOneEntity } from '@/entities';
+import {
+  GroupCreateEntity,
+  GroupEntity,
+  GroupFindOneEntity,
+  GroupPatchOneEntity,
+  UsersGroupsFindManyEntity,
+} from '@/entities';
 import { ErrorGroupNotExists, ErrorGroupsLimitExceeded } from '@/pkg';
 import { UUID } from 'node:crypto';
 import { IGroupsService, IUsersService } from '@/domains/services';
@@ -15,10 +21,14 @@ export class GroupsUseCases implements IGroupsUseCases {
   }
 
   async findUserGroupsList({ userId }: DefaultProps<{ userId: UUID }>): Promise<GroupEntity[]> {
-    // Получить список групп
-    // Получить информацию по каждой группе
     // Получить список участников каждоый группы
     await this.#usersService.findOneByUserIdOrThrow(userId);
+    const groups = await this.#groupsService.findMany({
+      usersGroupsFindManyOptions: new UsersGroupsFindManyEntity({
+        userId,
+      }),
+    });
+
     return [];
   }
 
