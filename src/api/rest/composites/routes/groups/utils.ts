@@ -13,8 +13,8 @@ interface CreateGroupsDependenciesProps {
 export const createGroupsDependencies = (props: CreateGroupsDependenciesProps) => {
   const jwtService = new JwtService();
   const authMiddleware = new AuthMiddleware({ jwtService });
-  const groupsRepository = new GroupsRepository({ pool: props.postgres });
-  const usersGroupsRepository = new UsersGroupsRepository({ pool: props.postgres });
+  const groupsRepository = new GroupsRepository(props.postgres);
+  const usersGroupsRepository = new UsersGroupsRepository(props.postgres);
 
   const usersService = createUsersService(props.postgres);
   const groupsService = new GroupsService({ groupsRepository, usersGroupsRepository });

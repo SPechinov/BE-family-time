@@ -1,4 +1,4 @@
-import { Pool, PoolClient } from 'pg';
+import { PoolClient } from 'pg';
 import { IUsersGroupsRepository } from '@/domains/repositories/db';
 import {
   UsersGroupsEntity,
@@ -8,19 +8,14 @@ import {
 } from '@/entities';
 import { IUsersGroupsRowData } from './types';
 import { UUID } from 'node:crypto';
+import { BaseRepository } from '../baseRepository';
 
-export class UsersGroupsRepository implements IUsersGroupsRepository {
-  #pool: Pool;
-
-  constructor(props: { pool: Pool }) {
-    this.#pool = props.pool;
-  }
-
+export class UsersGroupsRepository extends BaseRepository implements IUsersGroupsRepository {
   async createOne(
     usersGroupsCreateEntity: UsersGroupsCreateEntity,
     options?: { client?: PoolClient },
   ): Promise<UsersGroupsEntity> {
-    const client = options?.client ?? this.#pool;
+    const client = options?.client ?? this.pool;
     const query = `
       INSERT INTO users_groups (user_id, group_id, is_owner)
       VALUES ($1, $2, $3)
@@ -47,7 +42,7 @@ export class UsersGroupsRepository implements IUsersGroupsRepository {
 
     query += ' WHERE ' + conditions.join(' AND ');
 
-    const result = await this.#pool.query<IUsersGroupsRowData>(query, values);
+    const result = await this.pool.query<IUsersGroupsRowData>(query, values);
     const row = result.rows?.[0];
     if (!row) return null;
     return this.#buildUsersGroupsEntity(row);
@@ -60,7 +55,7 @@ export class UsersGroupsRepository implements IUsersGroupsRepository {
       INNER JOIN groups g ON ug.group_id = g.id
       WHERE ug.user_id = $1 AND g.deleted = false
     `;
-    const result = await this.#pool.query<IUsersGroupsRowData>(query, [userId]);
+    const result = await this.pool.query<IUsersGroupsRowData>(query, [userId]);
 
     return result.rows.map((row) => this.#buildUsersGroupsEntity(row));
   }
@@ -72,14 +67,14 @@ export class UsersGroupsRepository implements IUsersGroupsRepository {
       INNER JOIN groups g ON ug.group_id = g.id
       WHERE ug.user_id = $1 AND g.deleted = false
     `;
-    const result = await this.#pool.query<{ count: string }>(query, [userId]);
+    const result = await this.pool.query<{ count: string }>(query, [userId]);
 
     return parseInt(result.rows[0].count, 10);
   }
 
   async findAllByGroupId(groupId: UUID): Promise<UsersGroupsEntity[]> {
     const query = 'SELECT * FROM users_groups WHERE group_id = $1';
-    const result = await this.#pool.query<IUsersGroupsRowData>(query, [groupId]);
+    const result = await this.pool.query<IUsersGroupsRowData>(query, [groupId]);
 
     return result.rows.map((row) => this.#buildUsersGroupsEntity(row));
   }
@@ -90,7 +85,7 @@ export class UsersGroupsRepository implements IUsersGroupsRepository {
       WHERE user_id = $1 AND group_id = $2
     `;
 
-    await this.#pool.query(query, [usersGroupsDeleteEntity.userId, usersGroupsDeleteEntity.groupId]);
+    await this.pool.query(query, [usersGroupsDeleteEntity.userId, usersGroupsDeleteEntity.groupId]);
   }
 
   #buildUsersGroupsConditions(usersGroupsFindOneEntity: UsersGroupsFindOneEntity) {

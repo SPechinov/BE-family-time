@@ -1,17 +1,12 @@
-import { Pool, PoolClient } from 'pg';
+import { PoolClient } from 'pg';
 import { IGroupsRepository } from '@/domains/repositories/db';
 import { GroupCreateEntity, GroupEntity, GroupFindOneEntity, GroupPatchOneEntity } from '@/entities';
 import { IGroupRowData } from './types';
+import { BaseRepository } from '../baseRepository';
 
-export class GroupsRepository implements IGroupsRepository {
-  #pool: Pool;
-
-  constructor(props: { pool: Pool }) {
-    this.#pool = props.pool;
-  }
-
+export class GroupsRepository extends BaseRepository implements IGroupsRepository {
   async createOne(groupCreateEntity: GroupCreateEntity, options?: { client?: PoolClient }): Promise<GroupEntity> {
-    const client = options?.client ?? this.#pool;
+    const client = options?.client ?? this.pool;
     const query = `
       INSERT INTO groups (name, description)
       VALUES ($1, $2) RETURNING *
@@ -25,21 +20,6 @@ export class GroupsRepository implements IGroupsRepository {
     return this.#buildGroupEntity(row);
   }
 
-  async withTransaction<T>(fn: (client: PoolClient) => Promise<T>): Promise<T> {
-    const client = await this.#pool.connect();
-    try {
-      await client.query('BEGIN');
-      const result = await fn(client);
-      await client.query('COMMIT');
-      return result;
-    } catch (error) {
-      await client.query('ROLLBACK');
-      throw error;
-    } finally {
-      client.release();
-    }
-  }
-
   async findOne(groupFindOneEntity: GroupFindOneEntity): Promise<GroupEntity | null> {
     let query = 'SELECT * FROM groups';
     const { conditions, values } = this.#buildGroupsConditions(groupFindOneEntity);
@@ -47,7 +27,7 @@ export class GroupsRepository implements IGroupsRepository {
 
     query += ' WHERE ' + conditions.join(' AND ');
 
-    const result = await this.#pool.query<IGroupRowData>(query, values);
+    const result = await this.pool.query<IGroupRowData>(query, values);
     const row = result.rows?.[0];
     if (!row) return null;
     return this.#buildGroupEntity(row);
@@ -73,7 +53,7 @@ export class GroupsRepository implements IGroupsRepository {
         RETURNING *
       `;
     const allValues = [...findValues, ...updateValues];
-    const result = await this.#pool.query<IGroupRowData>(query, allValues);
+    const result = await this.pool.query<IGroupRowData>(query, allValues);
 
     const row = result.rows?.[0];
     if (!row) throw new Error('Group not found or not updated');

@@ -1,0 +1,29 @@
+import { Pool, PoolClient } from 'pg';
+import { IBaseRepository } from '@/domains/repositories/db';
+
+export abstract class BaseRepository implements IBaseRepository {
+  readonly #pool: Pool;
+
+  constructor(pool: Pool) {
+    this.#pool = pool;
+  }
+
+  protected get pool(): Pool {
+    return this.#pool;
+  }
+
+  async withTransaction<T>(fn: (client: PoolClient) => Promise<T>): Promise<T> {
+    const client = await this.#pool.connect();
+    try {
+      await client.query('BEGIN');
+      const result = await fn(client);
+      await client.query('COMMIT');
+      return result;
+    } catch (error) {
+      await client.query('ROLLBACK');
+      throw error;
+    } finally {
+      client.release();
+    }
+  }
+}

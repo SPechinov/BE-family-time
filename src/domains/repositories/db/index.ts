@@ -1,3 +1,4 @@
 export * from './users';
 export * from './groups';
 export * from './usersGroups';
+export * from './baseRepository';

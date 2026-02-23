@@ -6,8 +6,9 @@ import {
 } from '@/entities';
 import { UUID } from 'node:crypto';
 import { PoolClient } from 'pg';
+import { IBaseRepository } from './baseRepository';
 
-export interface IUsersGroupsRepository {
+export interface IUsersGroupsRepository extends IBaseRepository {
   createOne(
     usersGroupsCreateEntity: UsersGroupsCreateEntity,
     options?: { client?: PoolClient },

@@ -1,4 +1,3 @@
-import { Pool } from 'pg';
 import { IUsersRepository } from '@/domains/repositories/db';
 import { ErrorUserExists } from '@/pkg';
 import { IUserRowData } from './types';
@@ -12,14 +11,9 @@ import {
   UserPatchOneEntity,
   UserPersonalInfoEncryptedEntity,
 } from '@/entities';
+import { BaseRepository } from '../baseRepository';
 
-export class UsersRepository implements IUsersRepository {
-  #pool: Pool;
-
-  constructor(props: { pool: Pool }) {
-    this.#pool = props.pool;
-  }
-
+export class UsersRepository extends BaseRepository implements IUsersRepository {
   async createOne(userCreateEntity: UserCreateEntity): Promise<UserEntity> {
     const query = `
       INSERT INTO users (
@@ -37,7 +31,7 @@ export class UsersRepository implements IUsersRepository {
     `;
 
     try {
-      const result = await this.#pool.query<IUserRowData>(query, [
+      const result = await this.pool.query<IUserRowData>(query, [
         userCreateEntity.encryptionSalt,
         userCreateEntity.contactsHashed?.email,
         userCreateEntity.contactsEncrypted?.email,
@@ -67,7 +61,7 @@ export class UsersRepository implements IUsersRepository {
 
     query += ' WHERE ' + conditions.join(' AND ');
 
-    const result = await this.#pool.query<IUserRowData>(query, values);
+    const result = await this.pool.query<IUserRowData>(query, values);
     const row = result.rows?.[0];
     if (!row) return null;
     return this.#buildUserEntity(row);
@@ -94,7 +88,7 @@ export class UsersRepository implements IUsersRepository {
         RETURNING *
       `;
     const allValues = [...findValues, ...updateValues];
-    const result = await this.#pool.query<IUserRowData>(query, allValues);
+    const result = await this.pool.query<IUserRowData>(query, allValues);
 
     const row = result.rows?.[0];
     if (!row) throw new Error('User not found or not updated');
