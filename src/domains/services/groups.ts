@@ -16,5 +16,5 @@ export interface IGroupsService {
     groupFindOneEntity: GroupFindOneEntity;
     groupPatchOneEntity: GroupPatchOneEntity;
   }): Promise<GroupEntity>;
-  getUserGroupsCount(props: { userId: UUID }): Promise<number>;
+  getUserGroupsCount(props: { usersGroupsFindManyEntity: UsersGroupsFindManyEntity }): Promise<number>;
 }
