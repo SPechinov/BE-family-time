@@ -37,7 +37,12 @@ export class UsersGroupsRepository extends BaseRepository implements IUsersGroup
   }
 
   async findOne(usersGroupsFindOneEntity: UsersGroupsFindOneEntity): Promise<UsersGroupsEntity | null> {
-    const { conditions, values, joinClause } = this.#buildConditions(usersGroupsFindOneEntity);
+    const { conditions, values, joinClause } = this.#buildConditions({
+      userId: usersGroupsFindOneEntity.userId,
+      groupId: usersGroupsFindOneEntity.groupId,
+      isOwner: usersGroupsFindOneEntity.isOwner,
+      deleted: usersGroupsFindOneEntity.deleted,
+    });
     if (conditions.length === 0) return null;
 
     const query = `
