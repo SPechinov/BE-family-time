@@ -1,4 +1,4 @@
-import { PoolClient } from 'pg';
+import { Pool, PoolClient } from 'pg';
 import { IGroupsRepository } from '@/domains/repositories/db';
 import {
   GroupCreateEntity,
@@ -8,12 +8,16 @@ import {
   GroupPatchOneEntity,
 } from '@/entities';
 import { IGroupRowData } from './types';
-import { BaseRepository } from '../baseRepository';
 import { UUID } from 'node:crypto';
 
-export class GroupsRepository extends BaseRepository implements IGroupsRepository {
+export class GroupsRepository implements IGroupsRepository {
+  readonly #pool: Pool;
+
+  constructor(pool: Pool) {
+    this.#pool = pool;
+  }
   async createOne(groupCreateEntity: GroupCreateEntity, options?: { client?: PoolClient }): Promise<GroupEntity> {
-    const client = options?.client ?? this.pool;
+    const client = options?.client ?? this.#pool;
     const query = `
       INSERT INTO groups (name, description)
       VALUES ($1, $2) RETURNING *
@@ -31,7 +35,7 @@ export class GroupsRepository extends BaseRepository implements IGroupsRepositor
     groupFindOneEntity: GroupFindOneEntity,
     options?: { client?: PoolClient },
   ): Promise<GroupEntity | null> {
-    const client = options?.client ?? this.pool;
+    const client = options?.client ?? this.#pool;
     let query = 'SELECT * FROM groups';
     const { conditions, values } = this.#buildGroupsConditions(groupFindOneEntity);
     if (conditions.length === 0) throw new Error('Invalid find params');
@@ -45,7 +49,7 @@ export class GroupsRepository extends BaseRepository implements IGroupsRepositor
   }
 
   async findMany(groupFindManyEntity?: GroupFindManyEntity, options?: { client?: PoolClient }): Promise<GroupEntity[]> {
-    const client = options?.client ?? this.pool;
+    const client = options?.client ?? this.#pool;
     const { conditions, values } = this.#buildGroupsConditions(groupFindManyEntity);
 
     const query = `
@@ -68,7 +72,7 @@ export class GroupsRepository extends BaseRepository implements IGroupsRepositor
     },
     options?: { client?: PoolClient },
   ): Promise<GroupEntity> {
-    const client = options?.client ?? this.pool;
+    const client = options?.client ?? this.#pool;
     const { conditions: findConditions, values: findValues } = this.#buildGroupsConditions(groupFindOneEntity);
     if (findConditions.length === 0) throw new Error('Invalid find params');
 
@@ -91,7 +95,7 @@ export class GroupsRepository extends BaseRepository implements IGroupsRepositor
   }
 
   async deleteOne(groupFindOneEntity: GroupFindOneEntity, options?: { client?: PoolClient }): Promise<void> {
-    const client = options?.client ?? this.pool;
+    const client = options?.client ?? this.#pool;
     const { conditions, values } = this.#buildGroupsConditions(groupFindOneEntity);
     if (conditions.length === 0) throw new Error('Invalid delete params');
 

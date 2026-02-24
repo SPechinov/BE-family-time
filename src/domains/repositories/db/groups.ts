@@ -6,9 +6,8 @@ import {
   GroupPatchOneEntity,
 } from '@/entities';
 import { PoolClient } from 'pg';
-import { IBaseRepository } from './baseRepository';
 
-export interface IGroupsRepository extends IBaseRepository {
+export interface IGroupsRepository {
   createOne(groupCreateEntity: GroupCreateEntity, options?: { client?: PoolClient }): Promise<GroupEntity>;
   findOne(groupFindOneEntity: GroupFindOneEntity, options?: { client?: PoolClient }): Promise<GroupEntity | null>;
   findMany(groupFindManyEntity?: GroupFindManyEntity, options?: { client?: PoolClient }): Promise<GroupEntity[]>;

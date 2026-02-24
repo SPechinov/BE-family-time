@@ -1,7 +1,6 @@
 import { UserCreateEntity, UserFindOneEntity, UserEntity, UserPatchOneEntity } from '@/entities';
-import { IBaseRepository } from './baseRepository';
 
-export interface IUsersRepository extends IBaseRepository {
+export interface IUsersRepository {
   createOne(userCreateEntity: UserCreateEntity): Promise<UserEntity>;
   findOne(userFindEntity: UserFindOneEntity): Promise<UserEntity | null>;
   patchOne(props: {

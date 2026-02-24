@@ -6,9 +6,8 @@ import {
   GroupsUsersFindManyEntity,
 } from '@/entities';
 import { PoolClient } from 'pg';
-import { IBaseRepository } from './baseRepository';
 
-export interface IGroupsUsersRepository extends IBaseRepository {
+export interface IGroupsUsersRepository {
   createOne(
     groupsUsersCreateEntity: GroupsUsersCreateEntity,
     options?: { client?: PoolClient },

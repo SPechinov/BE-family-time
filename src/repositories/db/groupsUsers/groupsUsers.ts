@@ -1,4 +1,4 @@
-import { PoolClient } from 'pg';
+import { Pool, PoolClient } from 'pg';
 import { IGroupsUsersRepository } from '@/domains/repositories/db';
 import {
   GroupsUsersEntity,
@@ -9,14 +9,18 @@ import {
 } from '@/entities';
 import { IGroupsUsersRowData } from './types';
 import { UUID } from 'node:crypto';
-import { BaseRepository } from '../baseRepository';
 
-export class GroupsUsersRepository extends BaseRepository implements IGroupsUsersRepository {
+export class GroupsUsersRepository implements IGroupsUsersRepository {
+  readonly #pool: Pool;
+
+  constructor(pool: Pool) {
+    this.#pool = pool;
+  }
   async createOne(
     groupsUsersCreateEntity: GroupsUsersCreateEntity,
     options?: { client?: PoolClient },
   ): Promise<GroupsUsersEntity> {
-    const client = options?.client ?? this.pool;
+    const client = options?.client ?? this.#pool;
     const query = `
       INSERT INTO groups_users (group_id, user_id, is_owner)
       VALUES ($1, $2, $3)
@@ -40,7 +44,7 @@ export class GroupsUsersRepository extends BaseRepository implements IGroupsUser
     groupsUsersFindOneEntity: GroupsUsersFindOneEntity,
     options?: { client?: PoolClient },
   ): Promise<GroupsUsersEntity | null> {
-    const client = options?.client ?? this.pool;
+    const client = options?.client ?? this.#pool;
     const { conditions, values } = this.#buildConditions(groupsUsersFindOneEntity);
     if (conditions.length === 0) return null;
 
@@ -60,7 +64,7 @@ export class GroupsUsersRepository extends BaseRepository implements IGroupsUser
     groupsUsersFindManyEntity: GroupsUsersFindManyEntity,
     options?: { client?: PoolClient },
   ): Promise<GroupsUsersEntity[]> {
-    const client = options?.client ?? this.pool;
+    const client = options?.client ?? this.#pool;
     const { conditions, values } = this.#buildConditions(groupsUsersFindManyEntity);
 
     const query = `
@@ -77,7 +81,7 @@ export class GroupsUsersRepository extends BaseRepository implements IGroupsUser
     groupsUsersFindManyEntity: GroupsUsersFindManyEntity,
     options?: { client?: PoolClient },
   ): Promise<number> {
-    const client = options?.client ?? this.pool;
+    const client = options?.client ?? this.#pool;
     const { conditions, values } = this.#buildConditions(groupsUsersFindManyEntity);
 
     const query = `
@@ -120,7 +124,7 @@ export class GroupsUsersRepository extends BaseRepository implements IGroupsUser
     groupsUsersDeleteEntity: GroupsUsersDeleteOneEntity,
     options?: { client?: PoolClient },
   ): Promise<void> {
-    const client = options?.client ?? this.pool;
+    const client = options?.client ?? this.#pool;
     const query = `
       DELETE FROM groups_users
       WHERE group_id = $1 AND user_id = $2
