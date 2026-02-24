@@ -1,6 +1,6 @@
 import { UUID } from 'node:crypto';
 
-export interface IUsersGroupsRowData {
+export interface IGroupsUsersRowData {
   user_id: UUID;
   group_id: UUID;
   is_owner: boolean;

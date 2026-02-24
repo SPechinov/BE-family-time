@@ -1,1 +1,0 @@
-export { UsersGroupsService } from './usersGroups';

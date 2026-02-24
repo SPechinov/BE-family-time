@@ -1,10 +1,10 @@
-import { UsersGroupsRepository } from './usersGroups';
+import { GroupsUsersRepository } from './groupsUsers';
 import {
-  UsersGroupsEntity,
-  UsersGroupsCreateEntity,
-  UsersGroupsFindOneEntity,
-  UsersGroupsDeleteOneEntity,
-  UsersGroupsFindManyEntity,
+  GroupsUsersEntity,
+  GroupsUsersCreateEntity,
+  GroupsUsersFindOneEntity,
+  GroupsUsersDeleteOneEntity,
+  GroupsUsersFindManyEntity,
 } from '@/entities';
 import { Pool } from 'pg';
 import { UUID } from 'node:crypto';
@@ -25,13 +25,13 @@ const createMockUuid = (value: string): UUID => {
   return `${value}-${value}-${value}-${value}-${value}` as UUID;
 };
 
-const createMockUsersGroupsEntity = (overrides?: {
+const createMockGroupsUsersEntity = (overrides?: {
   userId?: UUID;
   groupId?: UUID;
   isOwner?: boolean;
   createdAt?: Date;
-}): UsersGroupsEntity => {
-  return new UsersGroupsEntity({
+}): GroupsUsersEntity => {
+  return new GroupsUsersEntity({
     userId: overrides?.userId ?? createMockUuid('user-123'),
     groupId: overrides?.groupId ?? createMockUuid('group-456'),
     isOwner: overrides?.isOwner ?? false,
@@ -39,7 +39,7 @@ const createMockUsersGroupsEntity = (overrides?: {
   });
 };
 
-const createMockRowData = (entity: UsersGroupsEntity) => ({
+const createMockRowData = (entity: GroupsUsersEntity) => ({
   user_id: entity.userId,
   group_id: entity.groupId,
   is_owner: entity.isOwner,
@@ -50,13 +50,13 @@ const createMockRowData = (entity: UsersGroupsEntity) => ({
 // Test Suite
 // ─────────────────────────────────────────────────────────────────────────────
 
-describe('UsersGroupsRepository', () => {
-  let repository: UsersGroupsRepository;
+describe('GroupsUsersRepository', () => {
+  let repository: GroupsUsersRepository;
   let mockPool: ReturnType<typeof createMockPool>;
 
   beforeEach(() => {
     mockPool = createMockPool();
-    repository = new UsersGroupsRepository(mockPool);
+    repository = new GroupsUsersRepository(mockPool);
     jest.clearAllMocks();
   });
 
@@ -77,14 +77,14 @@ describe('UsersGroupsRepository', () => {
   describe('createOne()', () => {
     describe('✓ Valid operations', () => {
       it('should create users-groups relation with all fields', async () => {
-        const entity = new UsersGroupsCreateEntity({
+        const entity = new GroupsUsersCreateEntity({
           userId: createMockUuid('user-123'),
           groupId: createMockUuid('group-456'),
           isOwner: true,
         });
 
         const mockRow = createMockRowData(
-          createMockUsersGroupsEntity({
+          createMockGroupsUsersEntity({
             userId: entity.userId,
             groupId: entity.groupId,
             isOwner: entity.isOwner,
@@ -95,26 +95,26 @@ describe('UsersGroupsRepository', () => {
 
         const result = await repository.createOne(entity);
 
-        expect(result).toBeInstanceOf(UsersGroupsEntity);
+        expect(result).toBeInstanceOf(GroupsUsersEntity);
         expect(result.userId).toBe(entity.userId);
         expect(result.groupId).toBe(entity.groupId);
         expect(result.isOwner).toBe(entity.isOwner);
-        expect(mockPool.query).toHaveBeenCalledWith(expect.stringContaining('INSERT INTO users_groups'), [
-          entity.userId,
+        expect(mockPool.query).toHaveBeenCalledWith(expect.stringContaining('INSERT INTO groups_users'), [
           entity.groupId,
+          entity.userId,
           entity.isOwner,
         ]);
       });
 
       it('should create relation with isOwner=false', async () => {
-        const entity = new UsersGroupsCreateEntity({
+        const entity = new GroupsUsersCreateEntity({
           userId: createMockUuid('user-123'),
           groupId: createMockUuid('group-456'),
           isOwner: false,
         });
 
         const mockRow = createMockRowData(
-          createMockUsersGroupsEntity({
+          createMockGroupsUsersEntity({
             userId: entity.userId,
             groupId: entity.groupId,
             isOwner: false,
@@ -133,13 +133,13 @@ describe('UsersGroupsRepository', () => {
           query: jest.fn(),
         };
 
-        const entity = new UsersGroupsCreateEntity({
+        const entity = new GroupsUsersCreateEntity({
           userId: createMockUuid('user-123'),
           groupId: createMockUuid('group-456'),
           isOwner: true,
         });
 
-        const mockRow = createMockRowData(createMockUsersGroupsEntity());
+        const mockRow = createMockRowData(createMockGroupsUsersEntity());
         mockClient.query.mockResolvedValue({ rows: [mockRow] });
 
         await repository.createOne(entity, { client: mockClient as any });
@@ -151,7 +151,7 @@ describe('UsersGroupsRepository', () => {
 
     describe('✗ Invalid operations', () => {
       it('should throw error when row is not returned', async () => {
-        const entity = new UsersGroupsCreateEntity({
+        const entity = new GroupsUsersCreateEntity({
           userId: createMockUuid('user-123'),
           groupId: createMockUuid('group-456'),
           isOwner: true,
@@ -163,7 +163,7 @@ describe('UsersGroupsRepository', () => {
       });
 
       it('should throw error when query fails', async () => {
-        const entity = new UsersGroupsCreateEntity({
+        const entity = new GroupsUsersCreateEntity({
           userId: createMockUuid('user-123'),
           groupId: createMockUuid('group-456'),
           isOwner: true,
@@ -178,19 +178,19 @@ describe('UsersGroupsRepository', () => {
 
     describe('⚡ SQL query', () => {
       it('should use ON CONFLICT DO UPDATE clause', async () => {
-        const entity = new UsersGroupsCreateEntity({
+        const entity = new GroupsUsersCreateEntity({
           userId: createMockUuid('user-123'),
           groupId: createMockUuid('group-456'),
           isOwner: true,
         });
 
-        const mockRow = createMockRowData(createMockUsersGroupsEntity());
+        const mockRow = createMockRowData(createMockGroupsUsersEntity());
         (mockPool.query as jest.Mock).mockResolvedValue({ rows: [mockRow] });
 
         await repository.createOne(entity);
 
         const queryCall = (mockPool.query as jest.Mock).mock.calls[0][0];
-        expect(queryCall).toContain('ON CONFLICT (user_id, group_id) DO UPDATE');
+        expect(queryCall).toContain('ON CONFLICT (group_id, user_id) DO UPDATE');
         expect(queryCall).toContain('SET is_owner = EXCLUDED.is_owner');
       });
     });
@@ -204,64 +204,64 @@ describe('UsersGroupsRepository', () => {
     describe('✓ Valid operations', () => {
       it('should find relation by userId', async () => {
         const userId = createMockUuid('user-123');
-        const entity = new UsersGroupsFindOneEntity({ userId });
+        const entity = new GroupsUsersFindOneEntity({ userId });
 
-        const mockRow = createMockRowData(createMockUsersGroupsEntity({ userId }));
+        const mockRow = createMockRowData(createMockGroupsUsersEntity({ userId }));
         (mockPool.query as jest.Mock).mockResolvedValue({ rows: [mockRow] });
 
         const result = await repository.findOne(entity);
 
-        expect(result).toBeInstanceOf(UsersGroupsEntity);
+        expect(result).toBeInstanceOf(GroupsUsersEntity);
         expect(result?.userId).toBe(userId);
         expect(mockPool.query).toHaveBeenCalledWith(
-          expect.stringContaining('WHERE ug.user_id = $1'),
+          expect.stringContaining('WHERE gu.user_id = $1'),
           expect.arrayContaining([userId]),
         );
       });
 
       it('should find relation by groupId', async () => {
         const groupId = createMockUuid('group-456');
-        const entity = new UsersGroupsFindOneEntity({ groupId });
+        const entity = new GroupsUsersFindOneEntity({ groupId });
 
-        const mockRow = createMockRowData(createMockUsersGroupsEntity({ groupId }));
+        const mockRow = createMockRowData(createMockGroupsUsersEntity({ groupId }));
         (mockPool.query as jest.Mock).mockResolvedValue({ rows: [mockRow] });
 
         const result = await repository.findOne(entity);
 
-        expect(result).toBeInstanceOf(UsersGroupsEntity);
+        expect(result).toBeInstanceOf(GroupsUsersEntity);
         expect(result?.groupId).toBe(groupId);
       });
 
       it('should find relation by userId and groupId', async () => {
         const userId = createMockUuid('user-123');
         const groupId = createMockUuid('group-456');
-        const entity = new UsersGroupsFindOneEntity({ userId, groupId });
+        const entity = new GroupsUsersFindOneEntity({ userId, groupId });
 
-        const mockRow = createMockRowData(createMockUsersGroupsEntity({ userId, groupId }));
+        const mockRow = createMockRowData(createMockGroupsUsersEntity({ userId, groupId }));
         (mockPool.query as jest.Mock).mockResolvedValue({ rows: [mockRow] });
 
         const result = await repository.findOne(entity);
 
-        expect(result).toBeInstanceOf(UsersGroupsEntity);
+        expect(result).toBeInstanceOf(GroupsUsersEntity);
         expect(result?.userId).toBe(userId);
         expect(result?.groupId).toBe(groupId);
       });
 
       it('should find relation by isOwner', async () => {
-        const entity = new UsersGroupsFindOneEntity({ isOwner: true });
+        const entity = new GroupsUsersFindOneEntity({ isOwner: true });
 
-        const mockRow = createMockRowData(createMockUsersGroupsEntity({ isOwner: true }));
+        const mockRow = createMockRowData(createMockGroupsUsersEntity({ isOwner: true }));
         (mockPool.query as jest.Mock).mockResolvedValue({ rows: [mockRow] });
 
         const result = await repository.findOne(entity);
 
         expect(result?.isOwner).toBe(true);
         const queryCall = (mockPool.query as jest.Mock).mock.calls[0][0];
-        expect(queryCall).toContain('ug.is_owner = $');
+        expect(queryCall).toContain('gu.is_owner = $');
       });
 
       it('should return null when relation not found', async () => {
-        const entity = new UsersGroupsFindOneEntity({
+        const entity = new GroupsUsersFindOneEntity({
           userId: createMockUuid('non-existent'),
         });
 
@@ -273,7 +273,7 @@ describe('UsersGroupsRepository', () => {
       });
 
       it('should return null when no conditions provided', async () => {
-        const entity = new UsersGroupsFindOneEntity({});
+        const entity = new GroupsUsersFindOneEntity({});
 
         const result = await repository.findOne(entity);
 
@@ -284,7 +284,7 @@ describe('UsersGroupsRepository', () => {
 
     describe('✗ Invalid operations', () => {
       it('should propagate database error', async () => {
-        const entity = new UsersGroupsFindOneEntity({
+        const entity = new GroupsUsersFindOneEntity({
           userId: createMockUuid('user-123'),
         });
 
@@ -304,28 +304,28 @@ describe('UsersGroupsRepository', () => {
     describe('✓ Valid operations', () => {
       it('should find many relations by userId', async () => {
         const userId = createMockUuid('user-123');
-        const options = new UsersGroupsFindManyEntity({ userId });
+        const options = new GroupsUsersFindManyEntity({ userId });
 
         const mockRows = [
-          createMockRowData(createMockUsersGroupsEntity({ userId })),
-          createMockRowData(createMockUsersGroupsEntity({ userId, groupId: createMockUuid('group-789') })),
+          createMockRowData(createMockGroupsUsersEntity({ userId })),
+          createMockRowData(createMockGroupsUsersEntity({ userId, groupId: createMockUuid('group-789') })),
         ];
         (mockPool.query as jest.Mock).mockResolvedValue({ rows: mockRows });
 
         const result = await repository.findMany(options);
 
         expect(result).toHaveLength(2);
-        expect(result[0]).toBeInstanceOf(UsersGroupsEntity);
+        expect(result[0]).toBeInstanceOf(GroupsUsersEntity);
         expect(result[0].userId).toBe(userId);
       });
 
       it('should find many relations by groupId', async () => {
         const groupId = createMockUuid('group-456');
-        const options = new UsersGroupsFindManyEntity({ groupId });
+        const options = new GroupsUsersFindManyEntity({ groupId });
 
         const mockRows = [
-          createMockRowData(createMockUsersGroupsEntity({ groupId })),
-          createMockRowData(createMockUsersGroupsEntity({ groupId })),
+          createMockRowData(createMockGroupsUsersEntity({ groupId })),
+          createMockRowData(createMockGroupsUsersEntity({ groupId })),
         ];
         (mockPool.query as jest.Mock).mockResolvedValue({ rows: mockRows });
 
@@ -336,9 +336,9 @@ describe('UsersGroupsRepository', () => {
       });
 
       it('should find many relations with isOwner filter', async () => {
-        const options = new UsersGroupsFindManyEntity({ isOwner: true });
+        const options = new GroupsUsersFindManyEntity({ isOwner: true });
 
-        const mockRows = [createMockRowData(createMockUsersGroupsEntity({ isOwner: true }))];
+        const mockRows = [createMockRowData(createMockGroupsUsersEntity({ isOwner: true }))];
         (mockPool.query as jest.Mock).mockResolvedValue({ rows: mockRows });
 
         const result = await repository.findMany(options);
@@ -348,7 +348,7 @@ describe('UsersGroupsRepository', () => {
       });
 
       it('should return empty array when no relations found', async () => {
-        const options = new UsersGroupsFindManyEntity({
+        const options = new GroupsUsersFindManyEntity({
           userId: createMockUuid('non-existent'),
         });
 
@@ -360,11 +360,11 @@ describe('UsersGroupsRepository', () => {
       });
 
       it('should return all relations when no filters provided', async () => {
-        const options = new UsersGroupsFindManyEntity({});
+        const options = new GroupsUsersFindManyEntity({});
 
         const mockRows = [
-          createMockRowData(createMockUsersGroupsEntity()),
-          createMockRowData(createMockUsersGroupsEntity()),
+          createMockRowData(createMockGroupsUsersEntity()),
+          createMockRowData(createMockGroupsUsersEntity()),
         ];
         (mockPool.query as jest.Mock).mockResolvedValue({ rows: mockRows });
 
@@ -376,7 +376,7 @@ describe('UsersGroupsRepository', () => {
 
     describe('✗ Invalid operations', () => {
       it('should propagate database error', async () => {
-        const options = new UsersGroupsFindManyEntity({
+        const options = new GroupsUsersFindManyEntity({
           userId: createMockUuid('user-123'),
         });
 
@@ -396,7 +396,7 @@ describe('UsersGroupsRepository', () => {
     describe('✓ Valid operations', () => {
       it('should count relations by userId', async () => {
         const userId = createMockUuid('user-123');
-        const options = new UsersGroupsFindManyEntity({ userId });
+        const options = new GroupsUsersFindManyEntity({ userId });
 
         (mockPool.query as jest.Mock).mockResolvedValue({ rows: [{ count: '5' }] });
 
@@ -408,7 +408,7 @@ describe('UsersGroupsRepository', () => {
 
       it('should count relations by groupId', async () => {
         const groupId = createMockUuid('group-456');
-        const options = new UsersGroupsFindManyEntity({ groupId });
+        const options = new GroupsUsersFindManyEntity({ groupId });
 
         (mockPool.query as jest.Mock).mockResolvedValue({ rows: [{ count: '10' }] });
 
@@ -418,7 +418,7 @@ describe('UsersGroupsRepository', () => {
       });
 
       it('should count relations with isOwner filter', async () => {
-        const options = new UsersGroupsFindManyEntity({ isOwner: true });
+        const options = new GroupsUsersFindManyEntity({ isOwner: true });
 
         (mockPool.query as jest.Mock).mockResolvedValue({ rows: [{ count: '1' }] });
 
@@ -428,7 +428,7 @@ describe('UsersGroupsRepository', () => {
       });
 
       it('should return 0 when no relations found', async () => {
-        const options = new UsersGroupsFindManyEntity({
+        const options = new GroupsUsersFindManyEntity({
           userId: createMockUuid('non-existent'),
         });
 
@@ -440,7 +440,7 @@ describe('UsersGroupsRepository', () => {
       });
 
       it('should count all relations when no filters provided', async () => {
-        const options = new UsersGroupsFindManyEntity({});
+        const options = new GroupsUsersFindManyEntity({});
 
         (mockPool.query as jest.Mock).mockResolvedValue({ rows: [{ count: '100' }] });
 
@@ -452,7 +452,7 @@ describe('UsersGroupsRepository', () => {
 
     describe('✗ Invalid operations', () => {
       it('should propagate database error', async () => {
-        const options = new UsersGroupsFindManyEntity({
+        const options = new GroupsUsersFindManyEntity({
           userId: createMockUuid('user-123'),
         });
 
@@ -473,20 +473,20 @@ describe('UsersGroupsRepository', () => {
       it('should delete relation by userId and groupId', async () => {
         const userId = createMockUuid('user-123');
         const groupId = createMockUuid('group-456');
-        const entity = new UsersGroupsDeleteOneEntity({ userId, groupId });
+        const entity = new GroupsUsersDeleteOneEntity({ userId, groupId });
 
         (mockPool.query as jest.Mock).mockResolvedValue({ rowCount: 1 });
 
         await repository.deleteOne(entity);
 
-        expect(mockPool.query).toHaveBeenCalledWith(expect.stringContaining('DELETE FROM users_groups'), [
-          userId,
+        expect(mockPool.query).toHaveBeenCalledWith(expect.stringContaining('DELETE FROM groups_users'), [
           groupId,
+          userId,
         ]);
       });
 
       it('should succeed even if no rows deleted', async () => {
-        const entity = new UsersGroupsDeleteOneEntity({
+        const entity = new GroupsUsersDeleteOneEntity({
           userId: createMockUuid('non-existent'),
           groupId: createMockUuid('group-456'),
         });
@@ -499,7 +499,7 @@ describe('UsersGroupsRepository', () => {
 
     describe('✗ Invalid operations', () => {
       it('should propagate database error', async () => {
-        const entity = new UsersGroupsDeleteOneEntity({
+        const entity = new GroupsUsersDeleteOneEntity({
           userId: createMockUuid('user-123'),
           groupId: createMockUuid('group-456'),
         });
@@ -529,14 +529,14 @@ describe('UsersGroupsRepository', () => {
         created_at: createdAt,
       };
 
-      const entity = new UsersGroupsEntity({
+      const entity = new GroupsUsersEntity({
         userId: rowData.user_id,
         groupId: rowData.group_id,
         isOwner: rowData.is_owner,
         createdAt: rowData.created_at,
       });
 
-      expect(entity).toBeInstanceOf(UsersGroupsEntity);
+      expect(entity).toBeInstanceOf(GroupsUsersEntity);
       expect(entity.userId).toBe(userId);
       expect(entity.groupId).toBe(groupId);
       expect(entity.isOwner).toBe(true);

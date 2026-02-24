@@ -1,6 +1,6 @@
 import { UUID } from 'node:crypto';
 
-export class UsersGroupsEntity {
+export class GroupsUsersEntity {
   readonly #userId: UUID;
   readonly #groupId: UUID;
   readonly #isOwner: boolean;
@@ -30,7 +30,7 @@ export class UsersGroupsEntity {
   }
 }
 
-export class UsersGroupsCreateEntity {
+export class GroupsUsersCreateEntity {
   readonly #userId: UUID;
   readonly #groupId: UUID;
   readonly #isOwner: boolean;
@@ -54,7 +54,7 @@ export class UsersGroupsCreateEntity {
   }
 }
 
-export class UsersGroupsFindOneEntity {
+export class GroupsUsersFindOneEntity {
   readonly #userId?: UUID;
   readonly #groupId?: UUID;
   readonly #isOwner?: boolean;
@@ -78,7 +78,7 @@ export class UsersGroupsFindOneEntity {
   }
 }
 
-export class UsersGroupsFindManyEntity {
+export class GroupsUsersFindManyEntity {
   readonly #userId?: UUID;
   readonly #groupId?: UUID;
   readonly #isOwner?: boolean;
@@ -102,7 +102,7 @@ export class UsersGroupsFindManyEntity {
   }
 }
 
-export class UsersGroupsDeleteOneEntity {
+export class GroupsUsersDeleteOneEntity {
   readonly #userId: UUID;
   readonly #groupId: UUID;
 

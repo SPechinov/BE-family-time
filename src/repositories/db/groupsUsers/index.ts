@@ -1,0 +1,1 @@
+export { GroupsUsersRepository } from './groupsUsers';

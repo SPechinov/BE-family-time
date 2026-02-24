@@ -19,8 +19,8 @@ Backend-сервис для управления семейными группа
 ```
 src/
 ├── api/rest/          # HTTP слой (Fastify роуты, контроллеры, схемы)
-├── entities/          # Доменные сущности (User, Group, UsersGroups)
-├── services/          # Бизнес-логика (users, groups, crypto, jwt, rateLimiter)
+├── entities/          # Доменные сущности (User, Group, GroupsUsers)
+├── services/          # Бизнес-логика (users, groups, groupsUsers, crypto, jwt, rateLimiter)
 ├── repositories/      # Доступ к ДБ (db/) и хранилища (stores/)
 ├── domains/           # Интерфейсы для DI (repositories, services, useCases)
 ├── useCases/          # Сценарии использования (auth, groups, me)
@@ -31,7 +31,7 @@ src/
 ## Доменная модель
 - **User** — пользователи (email/phone зашифрованы, password захеширован)
 - **Group** — группы (name, description)
-- **UsersGroups** — связь многие-ко-многим (user_id, group_id, is_owner)
+- **GroupsUsers** — связь многие-ко-многим (group_id, user_id, is_owner)
 
 ## API (порт 8000)
 | Префикс | Описание |
@@ -55,7 +55,7 @@ src/
 ## Миграции
 1. `users` — пользователи (encrypted email/phone, hashed password)
 2. `groups` — группы
-3. `users_groups` — связь пользователей с группами
+3. `groups_users` — связь пользователей с группами
 
 ## Команды
 ```bash
