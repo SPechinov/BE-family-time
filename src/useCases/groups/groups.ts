@@ -1,6 +1,7 @@
 import {
   GroupCreateEntity,
   GroupEntity,
+  GroupFindManyEntity,
   GroupFindOneEntity,
   GroupPatchOneEntity,
   GroupsUsersCreateEntity,
@@ -76,15 +77,8 @@ export class GroupsUseCases implements IGroupsUseCases {
     await this.#usersService.findOneByUserIdOrThrow(userId);
 
     const groupsUsers = await this.#groupsUsersService.findUserGroups(userId);
-
-    const groups: GroupEntity[] = [];
-    for (const groupUser of groupsUsers) {
-      const group = await this.#groupsService.findOne(new GroupFindOneEntity({ id: groupUser.groupId }));
-      if (!group) continue;
-      groups.push(group);
-    }
-
-    return groups;
+    const groupsIds = groupsUsers.map((groupUser) => groupUser.groupId);
+    return this.#groupsService.findMany(new GroupFindManyEntity({ ids: groupsIds }));
   }
 
   async patchUserGroup(
