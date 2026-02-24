@@ -1,4 +1,4 @@
-import { Pool, PoolClient } from 'pg';
+import { Pool } from 'pg';
 import { IUsersRepository } from '@/domains/repositories/db';
 import { ErrorUserExists } from '@/pkg';
 import { IUserRowData } from './types';
