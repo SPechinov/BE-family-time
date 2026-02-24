@@ -28,10 +28,43 @@ src/
 └── config/            # Конфигурация
 ```
 
+## Архитектурные принципы
+- **Чистая архитектура**: зависимости направлены внутрь (useCases → services → repositories)
+- **DI (Dependency Injection)**: сервисы и репозитории инжектятся через конструктор
+- **Транзакции**: `BaseRepository.withTransaction()` для атомарных операций
+- **Entity pattern**: сущности инкапсулируют данные через `#private` поля
+
 ## Доменная модель
 - **User** — пользователи (email/phone зашифрованы, password захеширован)
 - **Group** — группы (name, description)
 - **GroupsUsers** — связь многие-ко-многим (group_id, user_id, is_owner)
+
+## Важные детали реализации
+
+### Транзакции
+Для операций, затрагивающих несколько таблиц, используется транзакция:
+```typescript
+groupsRepository.withTransaction(async (client) => {
+  await groupsService.createOne(entity, { client });
+  await groupsUsersService.createOne(entity, { client });
+});
+```
+При ошибке любой операции — автоматический `ROLLBACK`.
+
+### Поддержка транзакций в сервисах
+Все методы сервисов и репозиториев принимают опциональный параметр:
+```typescript
+createOne(entity: Entity, options?: { client?: PoolClient }): Promise<Result>
+```
+Если `client` не передан — используется обычный `pool.query()`.
+
+### Фильтрация в findMany
+```typescript
+groupsService.findMany(new GroupFindManyEntity({ 
+  ids: [id1, id2],  // WHERE id IN (...)
+  name: 'Ивановы'   // WHERE name ILIKE '%Ивановы%'
+}))
+```
 
 ## API (порт 8000)
 | Префикс | Описание |
