@@ -9,26 +9,26 @@ import {
 import { ErrorGroupNotExists, ErrorGroupsLimitExceeded } from '@/pkg';
 import { UUID } from 'node:crypto';
 import { IGroupsService, IGroupsUsersService, IUsersService } from '@/domains/services';
+import { IDbTransactionService } from '@/pkg/dbTransaction';
 import { DefaultProps, IGroupsUseCases } from '@/domains/useCases';
 import { CONFIG } from '@/config';
-import { IGroupsRepository } from '@/domains/repositories/db';
 
 export class GroupsUseCases implements IGroupsUseCases {
   readonly #usersService: IUsersService;
   readonly #groupsService: IGroupsService;
   readonly #groupsUsersService: IGroupsUsersService;
-  readonly #groupsRepository: IGroupsRepository;
+  readonly #transactionService: IDbTransactionService;
 
   constructor(props: {
     usersService: IUsersService;
     groupsService: IGroupsService;
     groupsUsersService: IGroupsUsersService;
-    groupsRepository: IGroupsRepository;
+    transactionService: IDbTransactionService;
   }) {
     this.#usersService = props.usersService;
     this.#groupsService = props.groupsService;
     this.#groupsUsersService = props.groupsUsersService;
-    this.#groupsRepository = props.groupsRepository;
+    this.#transactionService = props.transactionService;
   }
 
   async createUserGroup({
@@ -39,7 +39,7 @@ export class GroupsUseCases implements IGroupsUseCases {
     await this.#usersService.findOneByUserIdOrThrow(userId);
     await this.#checkUserGroupsLimitExceededOrThrow(userId);
 
-    return this.#groupsRepository.withTransaction(async (client) => {
+    return this.#transactionService.executeInTransaction(async (client) => {
       const group = await this.#groupsService.createOne(groupCreateEntity, { client });
 
       await this.#groupsUsersService.createOne(

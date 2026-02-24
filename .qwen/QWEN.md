@@ -31,7 +31,7 @@ src/
 ## Архитектурные принципы
 - **Чистая архитектура**: зависимости направлены внутрь (useCases → services → repositories)
 - **DI (Dependency Injection)**: сервисы и репозитории инжектятся через конструктор
-- **Транзакции**: `BaseRepository.withTransaction()` для атомарных операций
+- **Транзакции**: `DbTransactionService` для атомарных операций (useCases не зависит от репозиториев)
 - **Entity pattern**: сущности инкапсулируют данные через `#private` поля
 
 ## Доменная модель
@@ -41,12 +41,18 @@ src/
 
 ## Важные детали реализации
 
-### Транзакции
-Для операций, затрагивающих несколько таблиц, используется транзакция:
+### DbTransactionService
+Отдельный сервис для управления транзакциями. UseCase зависит от интерфейса `IDbTransactionService`, а не от репозитория:
 ```typescript
-groupsRepository.withTransaction(async (client) => {
-  await groupsService.createOne(entity, { client });
-  await groupsUsersService.createOne(entity, { client });
+// pkg/dbTransaction.ts
+export interface IDbTransactionService {
+  executeInTransaction<T>(fn: (client: PoolClient) => Promise<T>): Promise<T>;
+}
+
+// useCases/groups/groups.ts
+return this.#transactionService.executeInTransaction(async (client) => {
+  await this.#groupsService.createOne(entity, { client });
+  await this.#groupsUsersService.createOne(entity, { client });
 });
 ```
 При ошибке любой операции — автоматический `ROLLBACK`.

@@ -5,6 +5,7 @@ import { GroupsRepository, GroupsUsersRepository } from '@/repositories/db';
 import { GroupsService, GroupsUsersService } from '@/services';
 import { GroupsUseCases } from '@/useCases';
 import { createUsersService } from '@/api/rest/composites/utils';
+import { DbTransactionService } from '@/pkg/dbTransaction';
 
 interface CreateGroupsDependenciesProps {
   postgres: Pool;
@@ -19,12 +20,13 @@ export const createGroupsDependencies = (props: CreateGroupsDependenciesProps) =
   const usersService = createUsersService(props.postgres);
   const groupsService = new GroupsService({ groupsRepository });
   const groupsUsersService = new GroupsUsersService({ groupsUsersRepository });
+  const dbTransactionService = new DbTransactionService(props.postgres);
 
   const groupsUseCases = new GroupsUseCases({
     groupsService,
     groupsUsersService,
     usersService,
-    groupsRepository,
+    transactionService: dbTransactionService,
   });
 
   return {
