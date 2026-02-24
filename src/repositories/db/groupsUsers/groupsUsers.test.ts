@@ -21,6 +21,18 @@ const createMockPool = () => {
   return mockPool;
 };
 
+const createMockLogger = () => ({
+  level: 'debug',
+  fatal: jest.fn(),
+  error: jest.fn(),
+  warn: jest.fn(),
+  info: jest.fn(),
+  debug: jest.fn(),
+  trace: jest.fn(),
+  silent: jest.fn(),
+  child: jest.fn(),
+});
+
 const createMockUuid = (value: string): UUID => {
   return `${value}-${value}-${value}-${value}-${value}` as UUID;
 };
@@ -93,7 +105,7 @@ describe('GroupsUsersRepository', () => {
 
         (mockPool.query as jest.Mock).mockResolvedValue({ rows: [mockRow] });
 
-        const result = await repository.createOne(entity);
+        const result = await repository.createOne(entity, { logger: createMockLogger() });
 
         expect(result).toBeInstanceOf(GroupsUsersEntity);
         expect(result.userId).toBe(entity.userId);
@@ -123,7 +135,7 @@ describe('GroupsUsersRepository', () => {
 
         (mockPool.query as jest.Mock).mockResolvedValue({ rows: [mockRow] });
 
-        const result = await repository.createOne(entity);
+        const result = await repository.createOne(entity, { logger: createMockLogger() });
 
         expect(result.isOwner).toBe(false);
       });
@@ -142,7 +154,7 @@ describe('GroupsUsersRepository', () => {
         const mockRow = createMockRowData(createMockGroupsUsersEntity());
         mockClient.query.mockResolvedValue({ rows: [mockRow] });
 
-        await repository.createOne(entity, { client: mockClient as any });
+        await repository.createOne(entity, { client: mockClient as any, logger: createMockLogger() });
 
         expect(mockClient.query).toHaveBeenCalled();
         expect(mockPool.query).not.toHaveBeenCalled();
@@ -209,7 +221,7 @@ describe('GroupsUsersRepository', () => {
         const mockRow = createMockRowData(createMockGroupsUsersEntity({ userId }));
         (mockPool.query as jest.Mock).mockResolvedValue({ rows: [mockRow] });
 
-        const result = await repository.findOne(entity);
+        const result = await repository.findOne(entity, { logger: createMockLogger() });
 
         expect(result).toBeInstanceOf(GroupsUsersEntity);
         expect(result?.userId).toBe(userId);
@@ -226,7 +238,7 @@ describe('GroupsUsersRepository', () => {
         const mockRow = createMockRowData(createMockGroupsUsersEntity({ groupId }));
         (mockPool.query as jest.Mock).mockResolvedValue({ rows: [mockRow] });
 
-        const result = await repository.findOne(entity);
+        const result = await repository.findOne(entity, { logger: createMockLogger() });
 
         expect(result).toBeInstanceOf(GroupsUsersEntity);
         expect(result?.groupId).toBe(groupId);
@@ -240,7 +252,7 @@ describe('GroupsUsersRepository', () => {
         const mockRow = createMockRowData(createMockGroupsUsersEntity({ userId, groupId }));
         (mockPool.query as jest.Mock).mockResolvedValue({ rows: [mockRow] });
 
-        const result = await repository.findOne(entity);
+        const result = await repository.findOne(entity, { logger: createMockLogger() });
 
         expect(result).toBeInstanceOf(GroupsUsersEntity);
         expect(result?.userId).toBe(userId);
@@ -253,7 +265,7 @@ describe('GroupsUsersRepository', () => {
         const mockRow = createMockRowData(createMockGroupsUsersEntity({ isOwner: true }));
         (mockPool.query as jest.Mock).mockResolvedValue({ rows: [mockRow] });
 
-        const result = await repository.findOne(entity);
+        const result = await repository.findOne(entity, { logger: createMockLogger() });
 
         expect(result?.isOwner).toBe(true);
         const queryCall = (mockPool.query as jest.Mock).mock.calls[0][0];
@@ -267,7 +279,7 @@ describe('GroupsUsersRepository', () => {
 
         (mockPool.query as jest.Mock).mockResolvedValue({ rows: [] });
 
-        const result = await repository.findOne(entity);
+        const result = await repository.findOne(entity, { logger: createMockLogger() });
 
         expect(result).toBeNull();
       });
@@ -275,7 +287,7 @@ describe('GroupsUsersRepository', () => {
       it('should return null when no conditions provided', async () => {
         const entity = new GroupsUsersFindOneEntity({});
 
-        const result = await repository.findOne(entity);
+        const result = await repository.findOne(entity, { logger: createMockLogger() });
 
         expect(result).toBeNull();
         expect(mockPool.query).not.toHaveBeenCalled();
@@ -312,7 +324,7 @@ describe('GroupsUsersRepository', () => {
         ];
         (mockPool.query as jest.Mock).mockResolvedValue({ rows: mockRows });
 
-        const result = await repository.findMany(options);
+        const result = await repository.findMany(options, { logger: createMockLogger() });
 
         expect(result).toHaveLength(2);
         expect(result[0]).toBeInstanceOf(GroupsUsersEntity);
@@ -329,7 +341,7 @@ describe('GroupsUsersRepository', () => {
         ];
         (mockPool.query as jest.Mock).mockResolvedValue({ rows: mockRows });
 
-        const result = await repository.findMany(options);
+        const result = await repository.findMany(options, { logger: createMockLogger() });
 
         expect(result).toHaveLength(2);
         expect(result.every((r) => r.groupId === groupId)).toBe(true);
@@ -341,7 +353,7 @@ describe('GroupsUsersRepository', () => {
         const mockRows = [createMockRowData(createMockGroupsUsersEntity({ isOwner: true }))];
         (mockPool.query as jest.Mock).mockResolvedValue({ rows: mockRows });
 
-        const result = await repository.findMany(options);
+        const result = await repository.findMany(options, { logger: createMockLogger() });
 
         expect(result).toHaveLength(1);
         expect(result[0].isOwner).toBe(true);
@@ -354,7 +366,7 @@ describe('GroupsUsersRepository', () => {
 
         (mockPool.query as jest.Mock).mockResolvedValue({ rows: [] });
 
-        const result = await repository.findMany(options);
+        const result = await repository.findMany(options, { logger: createMockLogger() });
 
         expect(result).toEqual([]);
       });
@@ -368,7 +380,7 @@ describe('GroupsUsersRepository', () => {
         ];
         (mockPool.query as jest.Mock).mockResolvedValue({ rows: mockRows });
 
-        const result = await repository.findMany(options);
+        const result = await repository.findMany(options, { logger: createMockLogger() });
 
         expect(result).toHaveLength(2);
       });
@@ -400,7 +412,7 @@ describe('GroupsUsersRepository', () => {
 
         (mockPool.query as jest.Mock).mockResolvedValue({ rows: [{ count: '5' }] });
 
-        const result = await repository.count(options);
+        const result = await repository.count(options, { logger: createMockLogger() });
 
         expect(result).toBe(5);
         expect(mockPool.query).toHaveBeenCalledWith(expect.stringContaining('SELECT COUNT(*)'), expect.any(Array));
@@ -412,7 +424,7 @@ describe('GroupsUsersRepository', () => {
 
         (mockPool.query as jest.Mock).mockResolvedValue({ rows: [{ count: '10' }] });
 
-        const result = await repository.count(options);
+        const result = await repository.count(options, { logger: createMockLogger() });
 
         expect(result).toBe(10);
       });
@@ -422,7 +434,7 @@ describe('GroupsUsersRepository', () => {
 
         (mockPool.query as jest.Mock).mockResolvedValue({ rows: [{ count: '1' }] });
 
-        const result = await repository.count(options);
+        const result = await repository.count(options, { logger: createMockLogger() });
 
         expect(result).toBe(1);
       });
@@ -434,7 +446,7 @@ describe('GroupsUsersRepository', () => {
 
         (mockPool.query as jest.Mock).mockResolvedValue({ rows: [{ count: '0' }] });
 
-        const result = await repository.count(options);
+        const result = await repository.count(options, { logger: createMockLogger() });
 
         expect(result).toBe(0);
       });
@@ -444,7 +456,7 @@ describe('GroupsUsersRepository', () => {
 
         (mockPool.query as jest.Mock).mockResolvedValue({ rows: [{ count: '100' }] });
 
-        const result = await repository.count(options);
+        const result = await repository.count(options, { logger: createMockLogger() });
 
         expect(result).toBe(100);
       });
@@ -477,7 +489,7 @@ describe('GroupsUsersRepository', () => {
 
         (mockPool.query as jest.Mock).mockResolvedValue({ rowCount: 1 });
 
-        await repository.deleteOne(entity);
+        await repository.deleteOne(entity, { logger: createMockLogger() });
 
         expect(mockPool.query).toHaveBeenCalledWith(expect.stringContaining('DELETE FROM groups_users'), [
           groupId,

@@ -9,8 +9,9 @@ import {
 } from '@/entities';
 import { IGroupsUsersRowData } from './types';
 import { UUID } from 'node:crypto';
-import { ILogger } from '@/pkg/logger';
-import { normalizeQuery } from '@/pkg/sql';
+import { ILogger, Logger } from '@/pkg/logger';
+
+const noopLogger = new Logger({ level: 'silent' });
 
 export class GroupsUsersRepository implements IGroupsUsersRepository {
   readonly #pool: Pool;
@@ -21,9 +22,10 @@ export class GroupsUsersRepository implements IGroupsUsersRepository {
 
   async createOne(
     groupsUsersCreateEntity: GroupsUsersCreateEntity,
-    options: { client?: PoolClient; logger: ILogger },
+    options?: { client?: PoolClient; logger?: ILogger },
   ): Promise<GroupsUsersEntity> {
-    const client = options.client ?? this.#pool;
+    const client = options?.client ?? this.#pool;
+    const logger = options?.logger ?? noopLogger;
 
     const query = `
       INSERT INTO groups_users (group_id, user_id, is_owner)
@@ -34,7 +36,7 @@ export class GroupsUsersRepository implements IGroupsUsersRepository {
 
     const values = [groupsUsersCreateEntity.groupId, groupsUsersCreateEntity.userId, groupsUsersCreateEntity.isOwner];
 
-    options.logger.debug({ query: normalizeQuery(query), values }, 'GroupsUsers repository: createOne');
+    logger.debug({ query, values }, 'GroupsUsers repository: createOne');
 
     const result = await client.query<IGroupsUsersRowData>(query, values);
 
@@ -46,9 +48,10 @@ export class GroupsUsersRepository implements IGroupsUsersRepository {
 
   async findOne(
     groupsUsersFindOneEntity: GroupsUsersFindOneEntity,
-    options: { client?: PoolClient; logger: ILogger },
+    options?: { client?: PoolClient; logger?: ILogger },
   ): Promise<GroupsUsersEntity | null> {
-    const client = options.client ?? this.#pool;
+    const client = options?.client ?? this.#pool;
+    const logger = options?.logger ?? noopLogger;
 
     const { conditions, values } = this.#buildConditions(groupsUsersFindOneEntity);
     if (conditions.length === 0) return null;
@@ -59,7 +62,7 @@ export class GroupsUsersRepository implements IGroupsUsersRepository {
       WHERE ${conditions.join(' AND ')}
     `;
 
-    options.logger.debug({ query, values }, 'GroupsUsers repository: findOne');
+    logger.debug({ query, values }, 'GroupsUsers repository: findOne');
 
     const result = await client.query<IGroupsUsersRowData>(query, values);
     const row = result.rows?.[0];
@@ -69,9 +72,10 @@ export class GroupsUsersRepository implements IGroupsUsersRepository {
 
   async findMany(
     groupsUsersFindManyEntity: GroupsUsersFindManyEntity,
-    options: { client?: PoolClient; logger: ILogger },
+    options?: { client?: PoolClient; logger?: ILogger },
   ): Promise<GroupsUsersEntity[]> {
-    const client = options.client ?? this.#pool;
+    const client = options?.client ?? this.#pool;
+    const logger = options?.logger ?? noopLogger;
 
     const { conditions, values } = this.#buildConditions(groupsUsersFindManyEntity);
 
@@ -81,7 +85,7 @@ export class GroupsUsersRepository implements IGroupsUsersRepository {
       ${conditions.length > 0 ? 'WHERE ' + conditions.join(' AND ') : ''}
     `;
 
-    options.logger.debug({ query: normalizeQuery(query), values }, 'GroupsUsers repository: findMany');
+    logger.debug({ query, values }, 'GroupsUsers repository: findMany');
 
     const result = await client.query<IGroupsUsersRowData>(query, values);
     return result.rows.map((row) => this.#buildGroupsUsersEntity(row));
@@ -89,9 +93,10 @@ export class GroupsUsersRepository implements IGroupsUsersRepository {
 
   async count(
     groupsUsersFindManyEntity: GroupsUsersFindManyEntity,
-    options: { client?: PoolClient; logger: ILogger },
+    options?: { client?: PoolClient; logger?: ILogger },
   ): Promise<number> {
-    const client = options.client ?? this.#pool;
+    const client = options?.client ?? this.#pool;
+    const logger = options?.logger ?? noopLogger;
 
     const { conditions, values } = this.#buildConditions(groupsUsersFindManyEntity);
 
@@ -101,16 +106,17 @@ export class GroupsUsersRepository implements IGroupsUsersRepository {
       ${conditions.length > 0 ? 'WHERE ' + conditions.join(' AND ') : ''}
     `;
 
-    options.logger.debug({ query: normalizeQuery(query), values }, 'GroupsUsers repository: count');
+    logger.debug({ query, values }, 'GroupsUsers repository: count');
     const result = await client.query<{ count: string }>(query, values);
     return parseInt(result.rows[0].count, 10);
   }
 
   async deleteOne(
     groupsUsersDeleteEntity: GroupsUsersDeleteOneEntity,
-    options: { client?: PoolClient; logger: ILogger },
+    options?: { client?: PoolClient; logger?: ILogger },
   ): Promise<void> {
-    const client = options.client ?? this.#pool;
+    const client = options?.client ?? this.#pool;
+    const logger = options?.logger ?? noopLogger;
 
     const query = `
       DELETE FROM groups_users
@@ -119,7 +125,7 @@ export class GroupsUsersRepository implements IGroupsUsersRepository {
 
     const values = [groupsUsersDeleteEntity.groupId, groupsUsersDeleteEntity.userId];
 
-    options.logger.debug({ query: normalizeQuery(query), values }, 'GroupsUsers repository: deleteOne');
+    logger.debug({ query, values }, 'GroupsUsers repository: deleteOne');
 
     await client.query(query, values);
   }
