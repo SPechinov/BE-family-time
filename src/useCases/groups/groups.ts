@@ -5,7 +5,6 @@ import {
   GroupPatchOneEntity,
   UsersGroupsCreateEntity,
   UsersGroupsFindManyEntity,
-  UsersGroupsFindOneEntity,
 } from '@/entities';
 import { ErrorGroupNotExists, ErrorGroupsLimitExceeded } from '@/pkg';
 import { UUID } from 'node:crypto';
@@ -94,9 +93,7 @@ export class GroupsUseCases implements IGroupsUseCases {
   }
 
   async #checkUserGroupsLimitExceededOrThrow(userId: UUID) {
-    const userGroupsCount = await this.#usersGroupsService.count(
-      new UsersGroupsFindManyEntity({ userId }),
-    );
+    const userGroupsCount = await this.#usersGroupsService.count(new UsersGroupsFindManyEntity({ userId }));
     if (userGroupsCount >= CONFIG.limits.user.maxGroups) {
       throw new ErrorGroupsLimitExceeded();
     }
