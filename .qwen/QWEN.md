@@ -66,9 +66,9 @@ createOne(entity: Entity, options?: { client?: PoolClient }): Promise<Result>
 
 ### Фильтрация в findMany
 ```typescript
-groupsService.findMany(new GroupFindManyEntity({ 
-  ids: [id1, id2],  // WHERE id IN (...)
-  name: 'Ивановы'   // WHERE name ILIKE '%Ивановы%'
+groupsService.findMany(new GroupFindManyEntity({
+    ids: [id1, id2],  // WHERE id IN (...)
+    name: 'Ивановы'   // WHERE name ILIKE '%Ивановы%'
 }))
 ```
 
