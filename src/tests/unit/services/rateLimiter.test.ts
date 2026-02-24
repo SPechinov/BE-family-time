@@ -1,4 +1,4 @@
-import { RateLimiterService } from './rateLimiter';
+import { RateLimiterService } from '@/services/rateLimiter/rateLimiter';
 import { ErrorTooManyRequests } from '@/pkg/errors';
 import { createClient } from 'redis';
 

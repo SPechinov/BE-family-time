@@ -1,5 +1,5 @@
 import crypto from 'crypto';
-import { EncryptionService, derivedKeyCache } from './encryption';
+import { EncryptionService, derivedKeyCache } from '@/services/crypto/encryption/encryption';
 
 // ─────────────────────────────────────────────────────────────────────────────
 // Mocks & Config

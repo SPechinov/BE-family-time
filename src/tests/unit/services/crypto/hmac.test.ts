@@ -1,4 +1,4 @@
-import { HmacService } from './hmac';
+import { HmacService } from '@/services/crypto/hmac/hmac';
 
 // ─────────────────────────────────────────────────────────────────────────────
 // Helpers

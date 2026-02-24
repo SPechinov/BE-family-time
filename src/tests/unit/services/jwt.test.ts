@@ -1,6 +1,6 @@
 import jwt from 'jsonwebtoken';
 import { UUID } from 'node:crypto';
-import { JwtService } from './jwt';
+import { JwtService } from '@/services/jwt/jwt';
 
 // ─────────────────────────────────────────────────────────────────────────────
 // Mocks

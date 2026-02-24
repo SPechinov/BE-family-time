@@ -1,6 +1,6 @@
-import { HashPasswordService } from './hashPassword';
+import { HashPasswordService } from '@/services/crypto/hashPassword/hashPassword';
 import argon2 from 'argon2';
-import { ILogger } from '@/pkg';
+import { ILogger } from '@/pkg/logger';
 
 // ─────────────────────────────────────────────────────────────────────────────
 // Helpers
