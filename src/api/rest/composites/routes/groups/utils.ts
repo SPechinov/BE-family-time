@@ -2,7 +2,7 @@ import { Pool } from 'pg';
 import { JwtService } from '@/services/jwt';
 import { AuthMiddleware } from '@/api/rest/middlewares';
 import { GroupsRepository, UsersGroupsRepository } from '@/repositories/db';
-import { GroupsService } from '@/services';
+import { GroupsService, UsersGroupsService } from '@/services';
 import { GroupsUseCases } from '@/useCases';
 import { createUsersService } from '@/api/rest/composites/utils';
 
@@ -17,9 +17,10 @@ export const createGroupsDependencies = (props: CreateGroupsDependenciesProps) =
   const usersGroupsRepository = new UsersGroupsRepository(props.postgres);
 
   const usersService = createUsersService(props.postgres);
-  const groupsService = new GroupsService({ groupsRepository, usersGroupsRepository });
+  const groupsService = new GroupsService({ groupsRepository });
+  const usersGroupsService = new UsersGroupsService({ usersGroupsRepository });
 
-  const groupsUseCases = new GroupsUseCases({ groupsService, usersService });
+  const groupsUseCases = new GroupsUseCases({ groupsService, usersGroupsService, usersService });
 
   return {
     jwtService,
