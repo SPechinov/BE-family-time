@@ -10,6 +10,7 @@ import {
 import { IGroupRowData } from './types';
 import { UUID } from 'node:crypto';
 import { ILogger } from '@/pkg/logger';
+import { normalizeQuery } from '@/pkg/sql';
 
 export class GroupsRepository implements IGroupsRepository {
   readonly #pool: Pool;
@@ -31,7 +32,7 @@ export class GroupsRepository implements IGroupsRepository {
 
     const values = [groupCreateEntity.name, groupCreateEntity.description];
 
-    options.logger.debug({ query, values }, 'Groups repository: createOne');
+    options.logger.debug({ query: normalizeQuery(query), values }, 'Groups repository: createOne');
 
     const result = await client.query<IGroupRowData>(query, values);
 
@@ -53,7 +54,7 @@ export class GroupsRepository implements IGroupsRepository {
 
     query += ' WHERE ' + conditions.join(' AND ');
 
-    options.logger.debug({ query, values }, 'Groups repository: findOne');
+    options.logger.debug({ query: normalizeQuery(query), values }, 'Groups repository: findOne');
 
     const result = await client.query<IGroupRowData>(query, values);
     const row = result.rows?.[0];
@@ -79,7 +80,7 @@ export class GroupsRepository implements IGroupsRepository {
       ORDER BY created_at DESC
     `;
 
-    options.logger.debug({ query, values }, 'Groups repository: findMany');
+    options.logger.debug({ query: normalizeQuery(query), values }, 'Groups repository: findMany');
 
     const result = await client.query<IGroupRowData>(query, values);
     return result.rows.map((row) => this.#buildGroupEntity(row));
@@ -111,7 +112,7 @@ export class GroupsRepository implements IGroupsRepository {
       `;
     const allValues = [...findValues, ...updateValues];
 
-    options.logger.debug({ query, values: allValues }, 'Groups repository: patchOne');
+    options.logger.debug({ query: normalizeQuery(query), values: allValues }, 'Groups repository: patchOne');
 
     const result = await client.query<IGroupRowData>(query, allValues);
 
@@ -135,7 +136,7 @@ export class GroupsRepository implements IGroupsRepository {
       WHERE ${conditions.join(' AND ')}
     `;
 
-    options.logger.debug({ query, values }, 'Groups repository: deleteOne');
+    options.logger.debug({ query: normalizeQuery(query), values }, 'Groups repository: deleteOne');
 
     await client.query(query, values);
   }

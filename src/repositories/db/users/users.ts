@@ -13,6 +13,7 @@ import {
   UserPersonalInfoEncryptedEntity,
 } from '@/entities';
 import { ILogger } from '@/pkg/logger';
+import { normalizeQuery } from '@/pkg/sql';
 
 export class UsersRepository implements IUsersRepository {
   readonly #pool: Pool;
@@ -53,7 +54,7 @@ export class UsersRepository implements IUsersRepository {
       userCreateEntity.personalInfoEncrypted?.lastName,
     ];
 
-    options.logger.debug({ query, values }, 'Users repository: createOne');
+    options.logger.debug({ query: normalizeQuery(query), values }, 'Users repository: createOne');
 
     try {
       const result = await client.query<IUserRowData>(query, values);
@@ -82,7 +83,7 @@ export class UsersRepository implements IUsersRepository {
 
     query += ' WHERE ' + conditions.join(' AND ');
 
-    options.logger.debug({ query, values }, 'Users repository: findOne');
+    options.logger.debug({ query: normalizeQuery(query), values }, 'Users repository: findOne');
 
     const result = await client.query<IUserRowData>(query, values);
     const row = result.rows?.[0];
@@ -122,7 +123,7 @@ export class UsersRepository implements IUsersRepository {
 
     const allValues = [...findValues, ...updateValues];
 
-    options.logger.debug({ query, values: allValues }, 'Users repository: patchOne');
+    options.logger.debug({ query: normalizeQuery(query), values: allValues }, 'Users repository: patchOne');
 
     const result = await client.query<IUserRowData>(query, allValues);
 

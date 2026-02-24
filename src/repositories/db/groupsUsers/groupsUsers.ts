@@ -10,6 +10,7 @@ import {
 import { IGroupsUsersRowData } from './types';
 import { UUID } from 'node:crypto';
 import { ILogger } from '@/pkg/logger';
+import { normalizeQuery } from '@/pkg/sql';
 
 export class GroupsUsersRepository implements IGroupsUsersRepository {
   readonly #pool: Pool;
@@ -33,7 +34,7 @@ export class GroupsUsersRepository implements IGroupsUsersRepository {
 
     const values = [groupsUsersCreateEntity.groupId, groupsUsersCreateEntity.userId, groupsUsersCreateEntity.isOwner];
 
-    options.logger.debug({ query, values }, 'GroupsUsers repository: createOne');
+    options.logger.debug({ query: normalizeQuery(query), values }, 'GroupsUsers repository: createOne');
 
     const result = await client.query<IGroupsUsersRowData>(query, values);
 
@@ -80,7 +81,7 @@ export class GroupsUsersRepository implements IGroupsUsersRepository {
       ${conditions.length > 0 ? 'WHERE ' + conditions.join(' AND ') : ''}
     `;
 
-    options.logger.debug({ query, values }, 'GroupsUsers repository: findMany');
+    options.logger.debug({ query: normalizeQuery(query), values }, 'GroupsUsers repository: findMany');
 
     const result = await client.query<IGroupsUsersRowData>(query, values);
     return result.rows.map((row) => this.#buildGroupsUsersEntity(row));
@@ -100,7 +101,7 @@ export class GroupsUsersRepository implements IGroupsUsersRepository {
       ${conditions.length > 0 ? 'WHERE ' + conditions.join(' AND ') : ''}
     `;
 
-    options.logger.debug({ query, values }, 'GroupsUsers repository: count');
+    options.logger.debug({ query: normalizeQuery(query), values }, 'GroupsUsers repository: count');
     const result = await client.query<{ count: string }>(query, values);
     return parseInt(result.rows[0].count, 10);
   }
@@ -118,7 +119,7 @@ export class GroupsUsersRepository implements IGroupsUsersRepository {
 
     const values = [groupsUsersDeleteEntity.groupId, groupsUsersDeleteEntity.userId];
 
-    options.logger.debug({ query, values }, 'GroupsUsers repository: deleteOne');
+    options.logger.debug({ query: normalizeQuery(query), values }, 'GroupsUsers repository: deleteOne');
 
     await client.query(query, values);
   }
