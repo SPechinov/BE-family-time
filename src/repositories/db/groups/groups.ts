@@ -73,6 +73,10 @@ export class GroupsRepository implements IGroupsRepository {
 
     const { conditions, values } = this.#buildGroupsConditions(groupFindManyEntity);
 
+    if (groupFindManyEntity.ids && groupFindManyEntity.ids.length === 0 && !groupFindManyEntity.name) {
+      return [];
+    }
+
     const query = `
       SELECT * FROM groups
       ${conditions.length > 0 ? 'WHERE ' + conditions.join(' AND ') : ''}
