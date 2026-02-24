@@ -23,21 +23,20 @@ export class GroupsRepository implements IGroupsRepository {
     options: { client?: PoolClient; logger: ILogger },
   ): Promise<GroupEntity> {
     const client = options.client ?? this.#pool;
-    const logger = options.logger;
-
-    logger.debug({ name: groupCreateEntity.name }, 'Creating group');
 
     const query = `
       INSERT INTO groups (name, description)
       VALUES ($1, $2) RETURNING *
     `;
 
-    const result = await client.query<IGroupRowData>(query, [groupCreateEntity.name, groupCreateEntity.description]);
+    const values = [groupCreateEntity.name, groupCreateEntity.description];
+
+    options.logger.debug({ query, values }, 'Groups repository: createOne');
+
+    const result = await client.query<IGroupRowData>(query, values);
 
     const row = result.rows?.[0];
     if (!row) throw new Error('Group not created');
-
-    logger.debug({ id: row.id }, 'Group created');
 
     return this.#buildGroupEntity(row);
   }
@@ -47,9 +46,6 @@ export class GroupsRepository implements IGroupsRepository {
     options: { client?: PoolClient; logger: ILogger },
   ): Promise<GroupEntity | null> {
     const client = options.client ?? this.#pool;
-    const logger = options.logger;
-
-    logger.debug({ id: groupFindOneEntity.id }, 'Finding group');
 
     let query = 'SELECT * FROM groups';
     const { conditions, values } = this.#buildGroupsConditions(groupFindOneEntity);
@@ -57,15 +53,15 @@ export class GroupsRepository implements IGroupsRepository {
 
     query += ' WHERE ' + conditions.join(' AND ');
 
+    options.logger.debug({ query, values }, 'Groups repository: findOne');
+
     const result = await client.query<IGroupRowData>(query, values);
     const row = result.rows?.[0];
 
     if (!row) {
-      logger.debug({ id: groupFindOneEntity.id }, 'Group not found');
       return null;
     }
 
-    logger.debug({ id: row.id }, 'Group found');
     return this.#buildGroupEntity(row);
   }
 
@@ -74,9 +70,6 @@ export class GroupsRepository implements IGroupsRepository {
     options: { client?: PoolClient; logger: ILogger },
   ): Promise<GroupEntity[]> {
     const client = options.client ?? this.#pool;
-    const logger = options.logger;
-
-    logger.debug({ ids: groupFindManyEntity?.ids, name: groupFindManyEntity?.name }, 'Finding groups');
 
     const { conditions, values } = this.#buildGroupsConditions(groupFindManyEntity);
 
@@ -86,10 +79,11 @@ export class GroupsRepository implements IGroupsRepository {
       ORDER BY created_at DESC
     `;
 
+    options.logger.debug({ query, values }, 'Groups repository: findMany');
+
     const result = await client.query<IGroupRowData>(query, values);
     const groups = result.rows.map((row) => this.#buildGroupEntity(row));
 
-    logger.debug({ count: groups.length }, 'Groups found');
     return groups;
   }
 
@@ -104,9 +98,6 @@ export class GroupsRepository implements IGroupsRepository {
     options: { client?: PoolClient; logger: ILogger },
   ): Promise<GroupEntity> {
     const client = options.client ?? this.#pool;
-    const logger = options.logger;
-
-    logger.debug({ id: groupFindOneEntity.id }, 'Patching group');
 
     const { conditions: findConditions, values: findValues } = this.#buildGroupsConditions(groupFindOneEntity);
     if (findConditions.length === 0) throw new Error('Invalid find params');
@@ -121,12 +112,14 @@ export class GroupsRepository implements IGroupsRepository {
         RETURNING *
       `;
     const allValues = [...findValues, ...updateValues];
+
+    options.logger.debug({ query, values: allValues }, 'Groups repository: patchOne');
+
     const result = await client.query<IGroupRowData>(query, allValues);
 
     const row = result.rows?.[0];
     if (!row) throw new Error('Group not found or not updated');
 
-    logger.debug({ id: row.id }, 'Group patched');
     return this.#buildGroupEntity(row);
   }
 
@@ -135,9 +128,6 @@ export class GroupsRepository implements IGroupsRepository {
     options: { client?: PoolClient; logger: ILogger },
   ): Promise<void> {
     const client = options.client ?? this.#pool;
-    const logger = options.logger;
-
-    logger.debug({ id: groupFindOneEntity.id }, 'Deleting group');
 
     const { conditions, values } = this.#buildGroupsConditions(groupFindOneEntity);
     if (conditions.length === 0) throw new Error('Invalid delete params');
@@ -147,9 +137,9 @@ export class GroupsRepository implements IGroupsRepository {
       WHERE ${conditions.join(' AND ')}
     `;
 
-    await client.query(query, values);
+    options.logger.debug({ query, values }, 'Groups repository: deleteOne');
 
-    logger.debug({ id: groupFindOneEntity.id }, 'Group deleted');
+    await client.query(query, values);
   }
 
   #buildGroupsConditions(findEntity: GroupFindOneEntity | GroupFindManyEntity | undefined) {
