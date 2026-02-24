@@ -17,7 +17,18 @@ const CREATE = {
   }),
 };
 
+const GET = {
+  tags: ['Groups'],
+  params: z.object({
+    groupId: z.uuidv4(),
+  }),
+  response: createResponseSchema({
+    200: GROUP_SCHEMA,
+  }),
+};
+
 export const SCHEMAS = Object.freeze({
   getList: GET_LIST,
   create: CREATE,
+  get: GET,
 });

@@ -9,6 +9,7 @@ import {
 import { IGroupsService } from '@/domains/services';
 import { PoolClient } from 'pg';
 import { ILogger } from '@/pkg/logger';
+import { ErrorGroupNotExists } from '@/pkg';
 
 export class GroupsService implements IGroupsService {
   readonly #groupsRepository: IGroupsRepository;
@@ -19,21 +20,33 @@ export class GroupsService implements IGroupsService {
 
   async createOne(
     groupCreateEntity: GroupCreateEntity,
-    options: { client?: PoolClient; logger: ILogger },
+    options?: { client?: PoolClient; logger?: ILogger },
   ): Promise<GroupEntity> {
     return this.#groupsRepository.createOne(groupCreateEntity, options);
   }
 
   async findOne(
     groupFindOneEntity: GroupFindOneEntity,
-    options: { client?: PoolClient; logger: ILogger },
+    options?: { client?: PoolClient; logger?: ILogger },
   ): Promise<GroupEntity | null> {
     return this.#groupsRepository.findOne(groupFindOneEntity, options);
   }
 
+  async findOneOrThrow(
+    groupFindOneEntity: GroupFindOneEntity,
+    options?: { client?: PoolClient; logger?: ILogger },
+  ): Promise<GroupEntity> {
+    const group = await this.findOne(groupFindOneEntity, options);
+    if (!group) {
+      throw new ErrorGroupNotExists();
+    }
+
+    return group;
+  }
+
   async findMany(
     groupFindManyEntity: GroupFindManyEntity,
-    options: { client?: PoolClient; logger: ILogger },
+    options?: { client?: PoolClient; logger?: ILogger },
   ): Promise<GroupEntity[]> {
     return this.#groupsRepository.findMany(groupFindManyEntity, options);
   }
@@ -43,14 +56,14 @@ export class GroupsService implements IGroupsService {
       groupFindOneEntity: GroupFindOneEntity;
       groupPatchOneEntity: GroupPatchOneEntity;
     },
-    options: { client?: PoolClient; logger: ILogger },
+    options?: { client?: PoolClient; logger?: ILogger },
   ): Promise<GroupEntity> {
     return this.#groupsRepository.patchOne(props, options);
   }
 
   async deleteOne(
     groupFindOneEntity: GroupFindOneEntity,
-    options: { client?: PoolClient; logger: ILogger },
+    options?: { client?: PoolClient; logger?: ILogger },
   ): Promise<void> {
     return this.#groupsRepository.deleteOne(groupFindOneEntity, options);
   }

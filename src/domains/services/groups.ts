@@ -17,6 +17,10 @@ export interface IGroupsService {
     groupFindOneEntity: GroupFindOneEntity,
     options?: { client?: PoolClient; logger?: ILogger },
   ): Promise<GroupEntity | null>;
+  findOneOrThrow(
+    groupFindOneEntity: GroupFindOneEntity,
+    options?: { client?: PoolClient; logger?: ILogger },
+  ): Promise<GroupEntity>;
   findMany(
     groupFindManyEntity: GroupFindManyEntity,
     options?: { client?: PoolClient; logger?: ILogger },

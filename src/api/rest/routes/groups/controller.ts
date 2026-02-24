@@ -5,6 +5,7 @@ import { PREFIX, ROUTES } from './constants';
 import { IGroupsUseCases } from '@/domains/useCases';
 import { SCHEMAS } from './schemas';
 import { GroupCreateEntity } from '@/entities';
+import { UUID } from 'node:crypto';
 
 export class GroupsRoutesController {
   #fastify: FastifyInstance;
@@ -61,10 +62,25 @@ export class GroupsRoutesController {
           },
         );
 
-        router.get(ROUTES.get, {}, async (request, reply) => {
-          const groups = await this.#groupsUseCases.findUserGroupsList({ userId: request.userId, logger: request.log });
-          reply.status(200).send(groups);
-        });
+        router.get(
+          ROUTES.get,
+          {
+            schema: SCHEMAS.get,
+          },
+          async (request, reply) => {
+            const group = await this.#groupsUseCases.findUserGroup({
+              userId: request.userId,
+              groupId: request.params.groupId as UUID,
+              logger: request.log,
+            });
+
+            reply.status(200).send({
+              id: group.id,
+              name: group.name,
+              description: group.description,
+            });
+          },
+        );
 
         router.patch(ROUTES.patch, {}, async (request, reply) => {
           reply.status(200).send();

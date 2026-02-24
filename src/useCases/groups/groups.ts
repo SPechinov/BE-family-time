@@ -64,15 +64,11 @@ export class GroupsUseCases implements IGroupsUseCases {
     groupId,
     logger,
   }: DefaultProps<{ userId: UUID; groupId: UUID }>): Promise<GroupEntity> {
-    const [, groupUser, group] = await Promise.all([
+    const [, , group] = await Promise.all([
       this.#usersService.findOneByUserIdOrThrow(userId, { logger }),
-      this.#groupsUsersService.findOne(new GroupsUsersFindOneEntity({ groupId, userId }), { logger }),
-      this.#groupsService.findOne(new GroupFindOneEntity({ id: groupId }), { logger }),
+      this.#groupsUsersService.findOneOrThrow(new GroupsUsersFindOneEntity({ groupId, userId }), { logger }),
+      this.#groupsService.findOneOrThrow(new GroupFindOneEntity({ id: groupId }), { logger }),
     ]);
-
-    if (!groupUser || !group) {
-      throw new ErrorGroupNotExists();
-    }
 
     return group;
   }
@@ -85,18 +81,27 @@ export class GroupsUseCases implements IGroupsUseCases {
     return this.#groupsService.findMany(new GroupFindManyEntity({ ids: groupsIds }), { logger });
   }
 
-  async patchUserGroup(
-    props: DefaultProps<{
-      groupFindOneEntity: GroupFindOneEntity;
-      groupPatchOneEntity: GroupPatchOneEntity;
-    }>,
-  ): Promise<GroupEntity> {
+  async patchUserGroup({
+    groupId,
+    userId,
+    groupPatchOneEntity,
+    logger,
+  }: DefaultProps<{
+    userId: UUID;
+    groupId: UUID;
+    groupPatchOneEntity: GroupPatchOneEntity;
+  }>): Promise<GroupEntity> {
+    await Promise.all([
+      this.#usersService.findOneByUserIdOrThrow(userId, { logger }),
+      this.#groupsUsersService.findOneOrThrow(new GroupsUsersFindOneEntity({ groupId, userId }), { logger }),
+    ]);
+
     return this.#groupsService.patchOne(
       {
-        groupFindOneEntity: props.groupFindOneEntity,
-        groupPatchOneEntity: props.groupPatchOneEntity,
+        groupFindOneEntity: new GroupFindOneEntity({ id: groupId }),
+        groupPatchOneEntity: groupPatchOneEntity,
       },
-      { logger: props.logger },
+      { logger: logger },
     );
   }
 

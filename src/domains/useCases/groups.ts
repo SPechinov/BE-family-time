@@ -1,5 +1,5 @@
 import { UUID } from 'node:crypto';
-import { GroupCreateEntity, GroupEntity, GroupFindOneEntity, GroupPatchOneEntity } from '@/entities';
+import { GroupCreateEntity, GroupEntity, GroupPatchOneEntity } from '@/entities';
 import { DefaultProps } from './types';
 
 export interface IGroupsUseCases {
@@ -8,7 +8,8 @@ export interface IGroupsUseCases {
   findUserGroup(props: DefaultProps<{ userId: UUID; groupId: UUID }>): Promise<GroupEntity>;
   patchUserGroup(
     props: DefaultProps<{
-      groupFindOneEntity: GroupFindOneEntity;
+      userId: UUID;
+      groupId: UUID;
       groupPatchOneEntity: GroupPatchOneEntity;
     }>,
   ): Promise<GroupEntity>;

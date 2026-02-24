@@ -18,6 +18,10 @@ export interface IGroupsUsersService {
     groupsUsersFindOneEntity: GroupsUsersFindOneEntity,
     options?: { client?: PoolClient; logger?: ILogger },
   ): Promise<GroupsUsersEntity | null>;
+  findOneOrThrow(
+    groupsUsersFindOneEntity: GroupsUsersFindOneEntity,
+    options?: { client?: PoolClient; logger?: ILogger },
+  ): Promise<GroupsUsersEntity>;
   findMany(
     groupsUsersFindManyEntity: GroupsUsersFindManyEntity,
     options?: { client?: PoolClient; logger?: ILogger },
