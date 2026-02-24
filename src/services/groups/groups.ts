@@ -19,21 +19,21 @@ export class GroupsService implements IGroupsService {
 
   async createOne(
     groupCreateEntity: GroupCreateEntity,
-    options?: { client?: PoolClient; logger?: ILogger },
+    options: { client?: PoolClient; logger: ILogger },
   ): Promise<GroupEntity> {
     return this.#groupsRepository.createOne(groupCreateEntity, options);
   }
 
   async findOne(
     groupFindOneEntity: GroupFindOneEntity,
-    options?: { client?: PoolClient; logger?: ILogger },
+    options: { client?: PoolClient; logger: ILogger },
   ): Promise<GroupEntity | null> {
     return this.#groupsRepository.findOne(groupFindOneEntity, options);
   }
 
   async findMany(
-    groupFindManyEntity?: GroupFindManyEntity,
-    options?: { client?: PoolClient; logger?: ILogger },
+    groupFindManyEntity: GroupFindManyEntity,
+    options: { client?: PoolClient; logger: ILogger },
   ): Promise<GroupEntity[]> {
     return this.#groupsRepository.findMany(groupFindManyEntity, options);
   }
@@ -43,14 +43,14 @@ export class GroupsService implements IGroupsService {
       groupFindOneEntity: GroupFindOneEntity;
       groupPatchOneEntity: GroupPatchOneEntity;
     },
-    options?: { client?: PoolClient; logger?: ILogger },
+    options: { client?: PoolClient; logger: ILogger },
   ): Promise<GroupEntity> {
     return this.#groupsRepository.patchOne(props, options);
   }
 
   async deleteOne(
     groupFindOneEntity: GroupFindOneEntity,
-    options?: { client?: PoolClient; logger?: ILogger },
+    options: { client?: PoolClient; logger: ILogger },
   ): Promise<void> {
     return this.#groupsRepository.deleteOne(groupFindOneEntity, options);
   }

@@ -20,12 +20,12 @@ export class GroupsUsersRepository implements IGroupsUsersRepository {
 
   async createOne(
     groupsUsersCreateEntity: GroupsUsersCreateEntity,
-    options?: { client?: PoolClient; logger?: ILogger },
+    options: { client?: PoolClient; logger: ILogger },
   ): Promise<GroupsUsersEntity> {
-    const client = options?.client ?? this.#pool;
-    const logger = options?.logger;
+    const client = options.client ?? this.#pool;
+    const logger = options.logger;
 
-    logger?.debug(
+    logger.debug(
       { groupId: groupsUsersCreateEntity.groupId, userId: groupsUsersCreateEntity.userId },
       'Creating group-user relation',
     );
@@ -46,7 +46,7 @@ export class GroupsUsersRepository implements IGroupsUsersRepository {
     const row = result.rows?.[0];
     if (!row) throw new Error('User-Group relation not created');
 
-    logger?.debug(
+    logger.debug(
       { groupId: groupsUsersCreateEntity.groupId, userId: groupsUsersCreateEntity.userId },
       'Group-user relation created',
     );
@@ -56,12 +56,12 @@ export class GroupsUsersRepository implements IGroupsUsersRepository {
 
   async findOne(
     groupsUsersFindOneEntity: GroupsUsersFindOneEntity,
-    options?: { client?: PoolClient; logger?: ILogger },
+    options: { client?: PoolClient; logger: ILogger },
   ): Promise<GroupsUsersEntity | null> {
-    const client = options?.client ?? this.#pool;
-    const logger = options?.logger;
+    const client = options.client ?? this.#pool;
+    const logger = options.logger;
 
-    logger?.debug(
+    logger.debug(
       { groupId: groupsUsersFindOneEntity.groupId, userId: groupsUsersFindOneEntity.userId },
       'Finding relation',
     );
@@ -83,12 +83,12 @@ export class GroupsUsersRepository implements IGroupsUsersRepository {
 
   async findMany(
     groupsUsersFindManyEntity: GroupsUsersFindManyEntity,
-    options?: { client?: PoolClient; logger?: ILogger },
+    options: { client?: PoolClient; logger: ILogger },
   ): Promise<GroupsUsersEntity[]> {
-    const client = options?.client ?? this.#pool;
-    const logger = options?.logger;
+    const client = options.client ?? this.#pool;
+    const logger = options.logger;
 
-    logger?.debug(
+    logger.debug(
       { groupId: groupsUsersFindManyEntity.groupId, userId: groupsUsersFindManyEntity.userId },
       'Finding relations',
     );
@@ -104,18 +104,18 @@ export class GroupsUsersRepository implements IGroupsUsersRepository {
     const result = await client.query<IGroupsUsersRowData>(query, values);
     const relations = result.rows.map((row) => this.#buildGroupsUsersEntity(row));
 
-    logger?.debug({ count: relations.length }, 'Relations found');
+    logger.debug({ count: relations.length }, 'Relations found');
     return relations;
   }
 
   async count(
     groupsUsersFindManyEntity: GroupsUsersFindManyEntity,
-    options?: { client?: PoolClient; logger?: ILogger },
+    options: { client?: PoolClient; logger: ILogger },
   ): Promise<number> {
-    const client = options?.client ?? this.#pool;
-    const logger = options?.logger;
+    const client = options.client ?? this.#pool;
+    const logger = options.logger;
 
-    logger?.debug(
+    logger.debug(
       { groupId: groupsUsersFindManyEntity.groupId, userId: groupsUsersFindManyEntity.userId },
       'Counting relations',
     );
@@ -131,7 +131,7 @@ export class GroupsUsersRepository implements IGroupsUsersRepository {
     const result = await client.query<{ count: string }>(query, values);
     const count = parseInt(result.rows[0].count, 10);
 
-    logger?.debug({ count }, 'Relations count');
+    logger.debug({ count }, 'Relations count');
     return count;
   }
 
@@ -163,12 +163,12 @@ export class GroupsUsersRepository implements IGroupsUsersRepository {
 
   async deleteOne(
     groupsUsersDeleteEntity: GroupsUsersDeleteOneEntity,
-    options?: { client?: PoolClient; logger?: ILogger },
+    options: { client?: PoolClient; logger: ILogger },
   ): Promise<void> {
-    const client = options?.client ?? this.#pool;
-    const logger = options?.logger;
+    const client = options.client ?? this.#pool;
+    const logger = options.logger;
 
-    logger?.debug(
+    logger.debug(
       { groupId: groupsUsersDeleteEntity.groupId, userId: groupsUsersDeleteEntity.userId },
       'Deleting relation',
     );
@@ -180,7 +180,7 @@ export class GroupsUsersRepository implements IGroupsUsersRepository {
 
     await client.query(query, [groupsUsersDeleteEntity.groupId, groupsUsersDeleteEntity.userId]);
 
-    logger?.debug(
+    logger.debug(
       { groupId: groupsUsersDeleteEntity.groupId, userId: groupsUsersDeleteEntity.userId },
       'Relation deleted',
     );

@@ -23,12 +23,12 @@ export class UsersRepository implements IUsersRepository {
 
   async createOne(
     userCreateEntity: UserCreateEntity,
-    options?: { client?: PoolClient; logger?: ILogger },
+    options: { client?: PoolClient; logger: ILogger },
   ): Promise<UserEntity> {
-    const client = options?.client ?? this.#pool;
-    const logger = options?.logger;
+    const client = options.client ?? this.#pool;
+    const logger = options.logger;
 
-    logger?.debug({ email: userCreateEntity.contactsHashed?.email }, 'Creating user');
+    logger.debug({ email: userCreateEntity.contactsHashed?.email }, 'Creating user');
 
     const query = `
       INSERT INTO users (
@@ -60,27 +60,27 @@ export class UsersRepository implements IUsersRepository {
       const row = result.rows?.[0];
       if (!row) throw new Error('User not created');
 
-      logger?.debug({ id: row.id }, 'User created');
+      logger.debug({ id: row.id }, 'User created');
 
       return this.#buildUserEntity(row);
     } catch (error) {
       if (error instanceof Error && 'code' in error && error.code === '23505') {
-        logger?.warn({ email: userCreateEntity.contactsHashed?.email }, 'User already exists');
+        logger.warn({ email: userCreateEntity.contactsHashed?.email }, 'User already exists');
         throw new ErrorUserExists();
       }
-      logger?.error({ error }, 'Error creating user');
+      logger.error({ error }, 'Error creating user');
       throw error;
     }
   }
 
   async findOne(
     userFindEntity: UserFindOneEntity,
-    options?: { client?: PoolClient; logger?: ILogger },
+    options: { client?: PoolClient; logger: ILogger },
   ): Promise<UserEntity | null> {
-    const client = options?.client ?? this.#pool;
-    const logger = options?.logger;
+    const client = options.client ?? this.#pool;
+    const logger = options.logger;
 
-    logger?.debug({ id: userFindEntity.id }, 'Finding user');
+    logger.debug({ id: userFindEntity.id }, 'Finding user');
 
     let query = 'SELECT * FROM users';
     const { conditions, values } = this.#buildUsersConditions(userFindEntity);
@@ -92,11 +92,11 @@ export class UsersRepository implements IUsersRepository {
     const row = result.rows?.[0];
 
     if (!row) {
-      logger?.debug({ id: userFindEntity.id }, 'User not found');
+      logger.debug({ id: userFindEntity.id }, 'User not found');
       return null;
     }
 
-    logger?.debug({ id: row.id }, 'User found');
+    logger.debug({ id: row.id }, 'User found');
     return this.#buildUserEntity(row);
   }
 
@@ -108,12 +108,12 @@ export class UsersRepository implements IUsersRepository {
       userFindOneEntity: UserFindOneEntity;
       userPatchOneEntity: UserPatchOneEntity;
     },
-    options?: { client?: PoolClient; logger?: ILogger },
+    options: { client?: PoolClient; logger: ILogger },
   ): Promise<UserEntity> {
-    const client = options?.client ?? this.#pool;
-    const logger = options?.logger;
+    const client = options.client ?? this.#pool;
+    const logger = options.logger;
 
-    logger?.debug({ id: userFindOneEntity.id }, 'Patching user');
+    logger.debug({ id: userFindOneEntity.id }, 'Patching user');
 
     const { conditions: findConditions, values: findValues } = this.#buildUsersConditions(userFindOneEntity);
     if (findConditions.length === 0) throw new Error('Invalid find params');
@@ -134,7 +134,7 @@ export class UsersRepository implements IUsersRepository {
     const row = result.rows?.[0];
     if (!row) throw new Error('User not found or not updated');
 
-    logger?.debug({ id: row.id }, 'User patched');
+    logger.debug({ id: row.id }, 'User patched');
     return this.#buildUserEntity(row);
   }
 

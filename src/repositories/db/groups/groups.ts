@@ -20,12 +20,12 @@ export class GroupsRepository implements IGroupsRepository {
 
   async createOne(
     groupCreateEntity: GroupCreateEntity,
-    options?: { client?: PoolClient; logger?: ILogger },
+    options: { client?: PoolClient; logger: ILogger },
   ): Promise<GroupEntity> {
-    const client = options?.client ?? this.#pool;
-    const logger = options?.logger;
+    const client = options.client ?? this.#pool;
+    const logger = options.logger;
 
-    logger?.debug({ name: groupCreateEntity.name }, 'Creating group');
+    logger.debug({ name: groupCreateEntity.name }, 'Creating group');
 
     const query = `
       INSERT INTO groups (name, description)
@@ -37,19 +37,19 @@ export class GroupsRepository implements IGroupsRepository {
     const row = result.rows?.[0];
     if (!row) throw new Error('Group not created');
 
-    logger?.debug({ id: row.id }, 'Group created');
+    logger.debug({ id: row.id }, 'Group created');
 
     return this.#buildGroupEntity(row);
   }
 
   async findOne(
     groupFindOneEntity: GroupFindOneEntity,
-    options?: { client?: PoolClient; logger?: ILogger },
+    options: { client?: PoolClient; logger: ILogger },
   ): Promise<GroupEntity | null> {
-    const client = options?.client ?? this.#pool;
-    const logger = options?.logger;
+    const client = options.client ?? this.#pool;
+    const logger = options.logger;
 
-    logger?.debug({ id: groupFindOneEntity.id }, 'Finding group');
+    logger.debug({ id: groupFindOneEntity.id }, 'Finding group');
 
     let query = 'SELECT * FROM groups';
     const { conditions, values } = this.#buildGroupsConditions(groupFindOneEntity);
@@ -61,22 +61,22 @@ export class GroupsRepository implements IGroupsRepository {
     const row = result.rows?.[0];
 
     if (!row) {
-      logger?.debug({ id: groupFindOneEntity.id }, 'Group not found');
+      logger.debug({ id: groupFindOneEntity.id }, 'Group not found');
       return null;
     }
 
-    logger?.debug({ id: row.id }, 'Group found');
+    logger.debug({ id: row.id }, 'Group found');
     return this.#buildGroupEntity(row);
   }
 
   async findMany(
-    groupFindManyEntity?: GroupFindManyEntity,
-    options?: { client?: PoolClient; logger?: ILogger },
+    groupFindManyEntity: GroupFindManyEntity,
+    options: { client?: PoolClient; logger: ILogger },
   ): Promise<GroupEntity[]> {
-    const client = options?.client ?? this.#pool;
-    const logger = options?.logger;
+    const client = options.client ?? this.#pool;
+    const logger = options.logger;
 
-    logger?.debug({ ids: groupFindManyEntity?.ids, name: groupFindManyEntity?.name }, 'Finding groups');
+    logger.debug({ ids: groupFindManyEntity?.ids, name: groupFindManyEntity?.name }, 'Finding groups');
 
     const { conditions, values } = this.#buildGroupsConditions(groupFindManyEntity);
 
@@ -89,7 +89,7 @@ export class GroupsRepository implements IGroupsRepository {
     const result = await client.query<IGroupRowData>(query, values);
     const groups = result.rows.map((row) => this.#buildGroupEntity(row));
 
-    logger?.debug({ count: groups.length }, 'Groups found');
+    logger.debug({ count: groups.length }, 'Groups found');
     return groups;
   }
 
@@ -101,12 +101,12 @@ export class GroupsRepository implements IGroupsRepository {
       groupFindOneEntity: GroupFindOneEntity;
       groupPatchOneEntity: GroupPatchOneEntity;
     },
-    options?: { client?: PoolClient; logger?: ILogger },
+    options: { client?: PoolClient; logger: ILogger },
   ): Promise<GroupEntity> {
-    const client = options?.client ?? this.#pool;
-    const logger = options?.logger;
+    const client = options.client ?? this.#pool;
+    const logger = options.logger;
 
-    logger?.debug({ id: groupFindOneEntity.id }, 'Patching group');
+    logger.debug({ id: groupFindOneEntity.id }, 'Patching group');
 
     const { conditions: findConditions, values: findValues } = this.#buildGroupsConditions(groupFindOneEntity);
     if (findConditions.length === 0) throw new Error('Invalid find params');
@@ -126,18 +126,18 @@ export class GroupsRepository implements IGroupsRepository {
     const row = result.rows?.[0];
     if (!row) throw new Error('Group not found or not updated');
 
-    logger?.debug({ id: row.id }, 'Group patched');
+    logger.debug({ id: row.id }, 'Group patched');
     return this.#buildGroupEntity(row);
   }
 
   async deleteOne(
     groupFindOneEntity: GroupFindOneEntity,
-    options?: { client?: PoolClient; logger?: ILogger },
+    options: { client?: PoolClient; logger: ILogger },
   ): Promise<void> {
-    const client = options?.client ?? this.#pool;
-    const logger = options?.logger;
+    const client = options.client ?? this.#pool;
+    const logger = options.logger;
 
-    logger?.debug({ id: groupFindOneEntity.id }, 'Deleting group');
+    logger.debug({ id: groupFindOneEntity.id }, 'Deleting group');
 
     const { conditions, values } = this.#buildGroupsConditions(groupFindOneEntity);
     if (conditions.length === 0) throw new Error('Invalid delete params');
@@ -149,7 +149,7 @@ export class GroupsRepository implements IGroupsRepository {
 
     await client.query(query, values);
 
-    logger?.debug({ id: groupFindOneEntity.id }, 'Group deleted');
+    logger.debug({ id: groupFindOneEntity.id }, 'Group deleted');
   }
 
   #buildGroupsConditions(findEntity: GroupFindOneEntity | GroupFindManyEntity | undefined) {

@@ -62,14 +62,17 @@ export class AuthUseCases implements IAuthUseCases {
 
     const user = await this.#userService.findOne(
       new UserFindOnePlainEntity({ contactsPlain: props.userContactsPlainEntity }),
+      { logger: props.logger },
     );
 
     if (!user || !user.passwordHashed) throw new ErrorInvalidLoginOrPassword();
-    const verified = this.#userService.verifyPassword({
-      logger: props.logger,
-      password: props.userPasswordPlainEntity.password,
-      hash: user.passwordHashed.password,
-    });
+    const verified = this.#userService.verifyPassword(
+      {
+        password: props.userPasswordPlainEntity.password,
+        hash: user.passwordHashed.password,
+      },
+      { logger: props.logger },
+    );
     if (!verified) throw new ErrorInvalidLoginOrPassword();
 
     const jwtPayload = { userId: user.id, ...(props.jwtPayload ?? {}) };
@@ -120,10 +123,11 @@ export class AuthUseCases implements IAuthUseCases {
         new UserFindOnePlainEntity({
           contactsPlain: props.userCreatePlainEntity.contactsPlain,
         }),
+        { logger: props.logger },
       );
       if (foundUser) throw new ErrorUserExists();
 
-      const createdUser = await this.#userService.createOne(props.userCreatePlainEntity);
+      const createdUser = await this.#userService.createOne(props.userCreatePlainEntity, { logger: props.logger });
       props.logger.debug({ contact }, 'user created');
 
       return createdUser;
@@ -142,6 +146,7 @@ export class AuthUseCases implements IAuthUseCases {
 
     const foundUser = await this.#userService.findOne(
       new UserFindOnePlainEntity({ contactsPlain: props.userContactsPlainEntity }),
+      { logger: props.logger },
     );
     if (!foundUser) throw new ErrorUserNotExists();
 
@@ -170,12 +175,15 @@ export class AuthUseCases implements IAuthUseCases {
       props.logger.error({ error }, 'code did not deleted');
     });
 
-    const user = await this.#userService.patchOne({
-      userFindOnePlainEntity: new UserFindOnePlainEntity({ contactsPlain: props.userContactsPlainEntity }),
-      userPatchOnePlainEntity: new UserPatchOnePlainEntity({
-        passwordPlain: props.password,
-      }),
-    });
+    const user = await this.#userService.patchOne(
+      {
+        userFindOnePlainEntity: new UserFindOnePlainEntity({ contactsPlain: props.userContactsPlainEntity }),
+        userPatchOnePlainEntity: new UserPatchOnePlainEntity({
+          passwordPlain: props.password,
+        }),
+      },
+      { logger: props.logger },
+    );
 
     props.logger.debug({ contact }, 'code compare success, password updated');
 
@@ -223,7 +231,9 @@ export class AuthUseCases implements IAuthUseCases {
       throw new ErrorUnauthorized();
     }
 
-    const user = await this.#userService.findOne(new UserFindOnePlainEntity({ id: oldJwtPayload.userId }));
+    const user = await this.#userService.findOne(new UserFindOnePlainEntity({ id: oldJwtPayload.userId }), {
+      logger: props.logger,
+    });
     if (!user) {
       props.logger.warn('user does not exist');
       throw new ErrorUserNotExists();
@@ -239,7 +249,7 @@ export class AuthUseCases implements IAuthUseCases {
       expiresAt: new Date(Date.now() + CONFIG.jwt.refreshTokenExpiry),
     });
 
-    this.#refreshTokensStore.delete({ userId: user.id, refreshToken: props.refreshToken });
+    this.#refreshTokensStore.delete({ userId: user.id, refreshToken: props.refreshToken }).then(() => {});
 
     return { accessToken, refreshToken };
   }

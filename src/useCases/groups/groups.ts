@@ -38,7 +38,7 @@ export class GroupsUseCases implements IGroupsUseCases {
     groupCreateEntity,
     logger,
   }: DefaultProps<{ userId: UUID; groupCreateEntity: GroupCreateEntity }>): Promise<GroupEntity> {
-    await this.#usersService.findOneByUserIdOrThrow(userId);
+    await this.#usersService.findOneByUserIdOrThrow(userId, { logger });
     await this.#checkUserGroupsLimitExceededOrThrow(userId, { logger });
 
     return this.#transactionService.executeInTransaction(async (client) => {
@@ -77,7 +77,7 @@ export class GroupsUseCases implements IGroupsUseCases {
   }
 
   async findUserGroupsList({ userId, logger }: DefaultProps<{ userId: UUID }>): Promise<GroupEntity[]> {
-    await this.#usersService.findOneByUserIdOrThrow(userId);
+    await this.#usersService.findOneByUserIdOrThrow(userId, { logger });
 
     const groupsUsers = await this.#groupsUsersService.findUserGroups(userId, { logger });
     const groupsIds = groupsUsers.map((groupUser) => groupUser.groupId);
@@ -99,7 +99,7 @@ export class GroupsUseCases implements IGroupsUseCases {
     );
   }
 
-  async #checkUserGroupsLimitExceededOrThrow(userId: UUID, options?: { logger?: ILogger }) {
+  async #checkUserGroupsLimitExceededOrThrow(userId: UUID, options: { logger: ILogger }) {
     const userGroupsCount = await this.#groupsUsersService.count(new GroupsUsersFindManyEntity({ userId }), options);
     if (userGroupsCount >= CONFIG.limits.user.maxGroups) {
       throw new ErrorGroupsLimitExceeded();
