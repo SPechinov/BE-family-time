@@ -16,14 +16,14 @@ export class HashPasswordService implements IHashPasswordService {
     return argon2.hash(passwordPlain, OPTIONS);
   }
 
-  async verify(props: { password: string; hash: string; logger: ILogger }): Promise<boolean> {
+  async verify(props: { password: string; hash: string }, options?: { logger?: ILogger }): Promise<boolean> {
     this.#validateStringOrThrow(props.password);
     this.#validateStringOrThrow(props.hash);
 
     try {
       return await argon2.verify(props.hash, props.password);
     } catch (error) {
-      props.logger.error({ error });
+      options?.logger?.error({ error });
       return false;
     }
   }

@@ -6,6 +6,7 @@ import {
   GroupPatchOneEntity,
   GroupsUsersCreateEntity,
   GroupsUsersFindManyEntity,
+  GroupsUsersFindOneEntity,
 } from '@/entities';
 import { ErrorGroupNotExists, ErrorGroupsLimitExceeded } from '@/pkg';
 import { UUID } from 'node:crypto';
@@ -60,18 +61,18 @@ export class GroupsUseCases implements IGroupsUseCases {
 
   async findUserGroup({
     userId,
-    groupFindOneEntity,
+    groupId,
     logger,
-  }: DefaultProps<{ userId: UUID; groupFindOneEntity: GroupFindOneEntity }>): Promise<GroupEntity> {
-    const groupsUsers = await this.#groupsUsersService.findMany(
-      new GroupsUsersFindManyEntity({ userId, groupId: groupFindOneEntity.id }),
-      { logger },
-    );
+  }: DefaultProps<{ userId: UUID; groupId: UUID }>): Promise<GroupEntity> {
+    const [, groupUser, group] = await Promise.all([
+      this.#usersService.findOneByUserIdOrThrow(userId, { logger }),
+      this.#groupsUsersService.findOne(new GroupsUsersFindOneEntity({ groupId, userId }), { logger }),
+      this.#groupsService.findOne(new GroupFindOneEntity({ id: groupId }), { logger }),
+    ]);
 
-    if (groupsUsers.length === 0) throw new ErrorGroupNotExists();
-
-    const group = await this.#groupsService.findOne(groupFindOneEntity, { logger });
-    if (!group) throw new ErrorGroupNotExists();
+    if (!groupUser || !group) {
+      throw new ErrorGroupNotExists();
+    }
 
     return group;
   }

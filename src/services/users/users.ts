@@ -41,7 +41,7 @@ export class UsersService implements IUsersService {
 
   async createOne(
     userCreatePlainEntity: UserCreatePlainEntity,
-    options?: { client?: PoolClient; logger: ILogger },
+    options?: { client?: PoolClient; logger?: ILogger },
   ): Promise<UserEntity> {
     const { personalInfoPlain, contactsPlain, passwordPlain } = userCreatePlainEntity;
     const encryptionSalt = randomUUID();
@@ -66,12 +66,12 @@ export class UsersService implements IUsersService {
 
   async findOne(
     userFindOnePlainEntity: UserFindOnePlainEntity,
-    options?: { client?: PoolClient; logger: ILogger },
+    options?: { client?: PoolClient; logger?: ILogger },
   ): Promise<UserEntity | null> {
     return this.#usersRepository.findOne(this.#convertUserFindOnePlainToHashedOrThrow(userFindOnePlainEntity), options);
   }
 
-  async findOneByUserIdOrThrow(userId: UUID, options?: { client?: PoolClient; logger: ILogger }): Promise<UserEntity> {
+  async findOneByUserIdOrThrow(userId: UUID, options?: { client?: PoolClient; logger?: ILogger }): Promise<UserEntity> {
     const foundUser = await this.#usersRepository.findOne(new UserFindOneEntity({ id: userId }), options);
     if (!foundUser) {
       throw new ErrorUserNotExists();
@@ -88,7 +88,7 @@ export class UsersService implements IUsersService {
       userFindOnePlainEntity: UserFindOnePlainEntity;
       userPatchOnePlainEntity: UserPatchOnePlainEntity;
     },
-    options?: { client?: PoolClient; logger: ILogger },
+    options?: { client?: PoolClient; logger?: ILogger },
   ): Promise<UserEntity> {
     const userFindOneEntity = this.#convertUserFindOnePlainToHashedOrThrow(userFindOnePlainEntity);
 
@@ -121,8 +121,8 @@ export class UsersService implements IUsersService {
     });
   }
 
-  verifyPassword(props: { password: string; hash: string; logger: ILogger }): Promise<boolean> {
-    return this.#hashPasswordService.verify(props);
+  verifyPassword(props: { password: string; hash: string }, options?: { logger?: ILogger }): Promise<boolean> {
+    return this.#hashPasswordService.verify(props, options);
   }
 
   async #decryptContacts(
