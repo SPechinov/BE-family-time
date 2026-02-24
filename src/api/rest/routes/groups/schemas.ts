@@ -27,8 +27,25 @@ const GET = {
   }),
 };
 
+const PATCH = {
+  tags: ['Groups'],
+  params: z.object({
+    groupId: z.uuidv4(),
+  }),
+  body: z
+    .object({
+      name: GLOBAL_SCHEMAS.groupName.optional(),
+      description: GLOBAL_SCHEMAS.groupDescription.optional(),
+    })
+    .refine((data) => Object.keys(data).length > 0, { message: 'At least one field must be provided' }),
+  response: createResponseSchema({
+    200: GROUP_SCHEMA,
+  }),
+};
+
 export const SCHEMAS = Object.freeze({
   getList: GET_LIST,
   create: CREATE,
   get: GET,
+  patch: PATCH,
 });

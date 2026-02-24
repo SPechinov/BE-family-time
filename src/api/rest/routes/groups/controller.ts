@@ -4,7 +4,7 @@ import { ZodTypeProvider } from 'fastify-type-provider-zod';
 import { PREFIX, ROUTES } from './constants';
 import { IGroupsUseCases } from '@/domains/useCases';
 import { SCHEMAS } from './schemas';
-import { GroupCreateEntity } from '@/entities';
+import { GroupCreateEntity, GroupPatchOneEntity } from '@/entities';
 import { UUID } from 'node:crypto';
 
 export class GroupsRoutesController {
@@ -82,9 +82,28 @@ export class GroupsRoutesController {
           },
         );
 
-        router.patch(ROUTES.patch, {}, async (request, reply) => {
-          reply.status(200).send();
-        });
+        router.patch(
+          ROUTES.patch,
+          {
+            schema: SCHEMAS.patch,
+          },
+          async (request, reply) => {
+            const group = await this.#groupsUseCases.patchUserGroup({
+              userId: request.userId,
+              groupId: request.params.groupId as UUID,
+              groupPatchOneEntity: new GroupPatchOneEntity({
+                name: request.body.name,
+                description: request.body.description,
+              }),
+              logger: request.log,
+            });
+            reply.status(200).send({
+              id: group.id,
+              name: group.name,
+              description: group.description,
+            });
+          },
+        );
 
         router.delete(ROUTES.delete, {}, async (request, reply) => {
           reply.status(200).send();

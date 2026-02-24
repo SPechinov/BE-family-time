@@ -1,10 +1,10 @@
 meta {
-  name: group
+  name: patch
   type: http
-  seq: 3
+  seq: 4
 }
 
-get {
+patch {
   url: {{url}}/groups/:groupId
   body: formUrlEncoded
   auth: bearer
@@ -16,6 +16,17 @@ params:path {
 
 auth:bearer {
   token: {{authToken}}
+}
+
+body:json {
+  {
+    name: "Aaaaa"
+  }
+}
+
+body:form-urlencoded {
+  name: Titlteee
+  description: 123a
 }
 
 settings {
