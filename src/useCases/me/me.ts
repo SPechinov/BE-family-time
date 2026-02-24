@@ -12,9 +12,7 @@ export class MeUseCases implements IMeUseCases {
   }
 
   async getMe(props: DefaultProps<{ userId: UUID }>): Promise<UserPlainEntity> {
-    const user = await this.#usersService.findOne({
-      userFindOnePlainEntity: new UserFindOnePlainEntity({ id: props.userId }),
-    });
+    const user = await this.#usersService.findOne(new UserFindOnePlainEntity({ id: props.userId }));
     if (!user) throw new ErrorUserNotExists();
 
     return this.#usersService.decryptUser(user);

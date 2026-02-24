@@ -60,9 +60,9 @@ export class AuthUseCases implements IAuthUseCases {
 
     await this.#rateLimiter.checkLimitOrThrow({ key: contact });
 
-    const user = await this.#userService.findOne({
-      userFindOnePlainEntity: new UserFindOnePlainEntity({ contactsPlain: props.userContactsPlainEntity }),
-    });
+    const user = await this.#userService.findOne(
+      new UserFindOnePlainEntity({ contactsPlain: props.userContactsPlainEntity }),
+    );
 
     if (!user || !user.passwordHashed) throw new ErrorInvalidLoginOrPassword();
     const verified = this.#userService.verifyPassword({
@@ -116,13 +116,14 @@ export class AuthUseCases implements IAuthUseCases {
         props.logger.error({ error }, 'code did not deleted');
       });
 
-      const userFindOnePlainEntity = new UserFindOnePlainEntity({
-        contactsPlain: props.userCreatePlainEntity.contactsPlain,
-      });
-      const foundUser = await this.#userService.findOne({ userFindOnePlainEntity });
+      const foundUser = await this.#userService.findOne(
+        new UserFindOnePlainEntity({
+          contactsPlain: props.userCreatePlainEntity.contactsPlain,
+        }),
+      );
       if (foundUser) throw new ErrorUserExists();
 
-      const createdUser = await this.#userService.createOne({ userCreatePlainEntity: props.userCreatePlainEntity });
+      const createdUser = await this.#userService.createOne(props.userCreatePlainEntity);
       props.logger.debug({ contact }, 'user created');
 
       return createdUser;
@@ -139,8 +140,9 @@ export class AuthUseCases implements IAuthUseCases {
 
     await this.#rateLimiter.checkLimitOrThrow({ key: contact });
 
-    const userFindOnePlainEntity = new UserFindOnePlainEntity({ contactsPlain: props.userContactsPlainEntity });
-    const foundUser = await this.#userService.findOne({ userFindOnePlainEntity });
+    const foundUser = await this.#userService.findOne(
+      new UserFindOnePlainEntity({ contactsPlain: props.userContactsPlainEntity }),
+    );
     if (!foundUser) throw new ErrorUserNotExists();
 
     const otpCode = generateNumericCode(CONFIG.codesLength.forgotPassword);
@@ -221,9 +223,7 @@ export class AuthUseCases implements IAuthUseCases {
       throw new ErrorUnauthorized();
     }
 
-    const user = await this.#userService.findOne({
-      userFindOnePlainEntity: new UserFindOnePlainEntity({ id: oldJwtPayload.userId }),
-    });
+    const user = await this.#userService.findOne(new UserFindOnePlainEntity({ id: oldJwtPayload.userId }));
     if (!user) {
       props.logger.warn('user does not exist');
       throw new ErrorUserNotExists();

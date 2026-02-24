@@ -38,7 +38,7 @@ export class UsersService implements IUsersService {
     this.#hashPasswordService = props.hashPasswordService;
   }
 
-  async createOne({ userCreatePlainEntity }: { userCreatePlainEntity: UserCreatePlainEntity }): Promise<UserEntity> {
+  async createOne(userCreatePlainEntity: UserCreatePlainEntity): Promise<UserEntity> {
     const { personalInfoPlain, contactsPlain, passwordPlain } = userCreatePlainEntity;
     const encryptionSalt = randomUUID();
 
@@ -59,8 +59,8 @@ export class UsersService implements IUsersService {
     );
   }
 
-  async findOne(props: { userFindOnePlainEntity: UserFindOnePlainEntity }): Promise<UserEntity | null> {
-    return this.#usersRepository.findOne(this.#convertUserFindOnePlainToHashedOrThrow(props.userFindOnePlainEntity));
+  async findOne(userFindOnePlainEntity: UserFindOnePlainEntity): Promise<UserEntity | null> {
+    return this.#usersRepository.findOne(this.#convertUserFindOnePlainToHashedOrThrow(userFindOnePlainEntity));
   }
 
   async findOneByUserIdOrThrow(userId: UUID): Promise<UserEntity> {

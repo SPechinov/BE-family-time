@@ -150,7 +150,7 @@ describe('UsersService', () => {
         const mockCreatedUser = createMockUserEntity();
         mockUsersRepository.createOne.mockResolvedValue(mockCreatedUser);
 
-        const result = await usersService.createOne({ userCreatePlainEntity });
+        const result = await usersService.createOne(userCreatePlainEntity);
 
         expect(result).toBe(mockCreatedUser);
         expect(randomUUID).toHaveBeenCalledTimes(1);
@@ -168,7 +168,7 @@ describe('UsersService', () => {
 
         mockUsersRepository.createOne.mockResolvedValue(createMockUserEntity());
 
-        await usersService.createOne({ userCreatePlainEntity });
+        await usersService.createOne(userCreatePlainEntity);
 
         expect(mockEncryptionService.encrypt).toHaveBeenCalledWith('John', 'mocked-uuid-12345');
         expect(mockEncryptionService.encrypt).toHaveBeenCalledWith('Doe', 'mocked-uuid-12345');
@@ -186,7 +186,7 @@ describe('UsersService', () => {
 
         mockUsersRepository.createOne.mockResolvedValue(createMockUserEntity());
 
-        await usersService.createOne({ userCreatePlainEntity });
+        await usersService.createOne(userCreatePlainEntity);
 
         expect(mockEncryptionService.encrypt).toHaveBeenCalledWith('user@example.com', 'mocked-uuid-12345');
         expect(mockEncryptionService.encrypt).toHaveBeenCalledWith('+1234567890', 'mocked-uuid-12345');
@@ -204,7 +204,7 @@ describe('UsersService', () => {
 
         mockUsersRepository.createOne.mockResolvedValue(createMockUserEntity());
 
-        await usersService.createOne({ userCreatePlainEntity });
+        await usersService.createOne(userCreatePlainEntity);
 
         expect(mockHmacService.hash).toHaveBeenCalledWith('user@example.com');
         expect(mockHmacService.hash).toHaveBeenCalledWith('+1234567890');
@@ -219,7 +219,7 @@ describe('UsersService', () => {
 
         mockUsersRepository.createOne.mockResolvedValue(createMockUserEntity());
 
-        await usersService.createOne({ userCreatePlainEntity });
+        await usersService.createOne(userCreatePlainEntity);
 
         expect(mockHashPasswordService.hash).toHaveBeenCalledWith('password123');
       });
@@ -232,7 +232,7 @@ describe('UsersService', () => {
 
         mockUsersRepository.createOne.mockResolvedValue(createMockUserEntity());
 
-        const result = await usersService.createOne({ userCreatePlainEntity });
+        const result = await usersService.createOne(userCreatePlainEntity);
 
         expect(result).toBeDefined();
         expect(mockUsersRepository.createOne).toHaveBeenCalled();
@@ -247,7 +247,7 @@ describe('UsersService', () => {
 
         mockUsersRepository.createOne.mockResolvedValue(createMockUserEntity());
 
-        const result = await usersService.createOne({ userCreatePlainEntity });
+        const result = await usersService.createOne(userCreatePlainEntity);
 
         expect(result).toBeDefined();
       });
@@ -263,7 +263,7 @@ describe('UsersService', () => {
         const error = new Error('Database error');
         mockUsersRepository.createOne.mockRejectedValue(error);
 
-        await expect(usersService.createOne({ userCreatePlainEntity })).rejects.toThrow('Database error');
+        await expect(usersService.createOne(userCreatePlainEntity)).rejects.toThrow('Database error');
       });
     });
 
@@ -278,7 +278,7 @@ describe('UsersService', () => {
         mockUsersRepository.createOne.mockResolvedValue(createMockUserEntity());
 
         const startTime = Date.now();
-        await usersService.createOne({ userCreatePlainEntity });
+        await usersService.createOne(userCreatePlainEntity);
         const duration = Date.now() - startTime;
 
         expect(duration).toBeLessThan(100);
@@ -298,7 +298,7 @@ describe('UsersService', () => {
 
         mockUsersRepository.findOne.mockResolvedValue(mockUser);
 
-        const result = await usersService.findOne({ userFindOnePlainEntity });
+        const result = await usersService.findOne(userFindOnePlainEntity);
 
         expect(result).toBe(mockUser);
         expect(mockUsersRepository.findOne).toHaveBeenCalledWith(
@@ -313,7 +313,7 @@ describe('UsersService', () => {
 
         mockUsersRepository.findOne.mockResolvedValue(createMockUserEntity());
 
-        await usersService.findOne({ userFindOnePlainEntity });
+        await usersService.findOne(userFindOnePlainEntity);
 
         expect(mockHmacService.hash).toHaveBeenCalledWith('user@example.com');
         expect(mockUsersRepository.findOne).toHaveBeenCalledWith(
@@ -330,7 +330,7 @@ describe('UsersService', () => {
 
         mockUsersRepository.findOne.mockResolvedValue(createMockUserEntity());
 
-        await usersService.findOne({ userFindOnePlainEntity });
+        await usersService.findOne(userFindOnePlainEntity);
 
         expect(mockHmacService.hash).toHaveBeenCalledWith('+1234567890');
       });
@@ -340,7 +340,7 @@ describe('UsersService', () => {
 
         mockUsersRepository.findOne.mockResolvedValue(null);
 
-        const result = await usersService.findOne({ userFindOnePlainEntity });
+        const result = await usersService.findOne(userFindOnePlainEntity);
 
         expect(result).toBeNull();
       });
@@ -350,7 +350,7 @@ describe('UsersService', () => {
       it('should throw if neither ID nor contacts provided', async () => {
         const userFindOnePlainEntity = new UserFindOnePlainEntity({});
 
-        await expect(usersService.findOne({ userFindOnePlainEntity })).rejects.toThrow(
+        await expect(usersService.findOne(userFindOnePlainEntity)).rejects.toThrow(
           'Either id or contacts must be provided',
         );
       });
@@ -360,7 +360,7 @@ describe('UsersService', () => {
           contactsPlain: new UserContactsPlainEntity({}),
         });
 
-        await expect(usersService.findOne({ userFindOnePlainEntity })).rejects.toThrow(
+        await expect(usersService.findOne(userFindOnePlainEntity)).rejects.toThrow(
           'Either id or contacts must be provided',
         );
       });
@@ -673,13 +673,13 @@ describe('UsersService', () => {
         const createdUser = createMockUserEntity();
         mockUsersRepository.createOne.mockResolvedValue(createdUser);
 
-        await usersService.createOne({ userCreatePlainEntity: createEntity });
+        await usersService.createOne(createEntity);
 
         // Find
         const findEntity = new UserFindOnePlainEntity({ id: createMockUuid('user-123') });
         mockUsersRepository.findOne.mockResolvedValue(createdUser);
 
-        const foundUser = await usersService.findOne({ userFindOnePlainEntity: findEntity });
+        const foundUser = await usersService.findOne(findEntity);
 
         expect(foundUser).toBe(createdUser);
 
@@ -723,8 +723,8 @@ describe('UsersService', () => {
 
         mockUsersRepository.createOne.mockResolvedValue(createMockUserEntity());
 
-        await usersService.createOne({ userCreatePlainEntity: createEntity1 });
-        await usersService.createOne({ userCreatePlainEntity: createEntity2 });
+        await usersService.createOne(createEntity1);
+        await usersService.createOne(createEntity2);
 
         expect(salt1).not.toBe(salt2);
         expect(mockEncryptionService.encrypt).toHaveBeenCalledWith('user1@example.com', salt1);
@@ -739,7 +739,7 @@ describe('UsersService', () => {
 
         mockUsersRepository.createOne.mockResolvedValue(createMockUserEntity());
 
-        await usersService.createOne({ userCreatePlainEntity: createEntity });
+        await usersService.createOne(createEntity);
 
         expect(mockHmacService.hash).toHaveBeenCalledWith('user@example.com');
         expect(mockUsersRepository.createOne).toHaveBeenCalledWith(
@@ -757,7 +757,7 @@ describe('UsersService', () => {
 
         mockUsersRepository.createOne.mockResolvedValue(createMockUserEntity());
 
-        await usersService.createOne({ userCreatePlainEntity: createEntity });
+        await usersService.createOne(createEntity);
 
         expect(mockUsersRepository.createOne).toHaveBeenCalledWith(
           expect.objectContaining({
@@ -780,18 +780,16 @@ describe('UsersService', () => {
 
         // Create
         mockUsersRepository.createOne.mockResolvedValue(createMockUserEntity());
-        await usersService.createOne({
-          userCreatePlainEntity: new UserCreatePlainEntity({
+        await usersService.createOne(
+          new UserCreatePlainEntity({
             contactsPlain: new UserContactsPlainEntity({ email: 'user@example.com' }),
             passwordPlain: new UserPasswordPlainEntity('password'),
           }),
-        });
+        );
 
         // Find
         mockUsersRepository.findOne.mockResolvedValue(createMockUserEntity());
-        await usersService.findOne({
-          userFindOnePlainEntity: new UserFindOnePlainEntity({ id: createMockUuid('user-123') }),
-        });
+        await usersService.findOne(new UserFindOnePlainEntity({ id: createMockUuid('user-123') }));
 
         // Update
         mockUsersRepository.patchOne.mockResolvedValue(createMockUserEntity());
@@ -875,7 +873,7 @@ describe('UsersService', () => {
           }),
         });
 
-        await expect(usersService.findOne({ userFindOnePlainEntity })).rejects.toThrow(
+        await expect(usersService.findOne(userFindOnePlainEntity)).rejects.toThrow(
           'Either id or contacts must be provided',
         );
       });
