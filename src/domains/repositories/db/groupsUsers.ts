@@ -6,17 +6,27 @@ import {
   GroupsUsersFindManyEntity,
 } from '@/entities';
 import { PoolClient } from 'pg';
+import { ILogger } from '@/pkg/logger';
 
 export interface IGroupsUsersRepository {
   createOne(
     groupsUsersCreateEntity: GroupsUsersCreateEntity,
-    options?: { client?: PoolClient },
+    options?: { client?: PoolClient; logger?: ILogger },
   ): Promise<GroupsUsersEntity>;
   findOne(
     groupsUsersFindOneEntity: GroupsUsersFindOneEntity,
-    options?: { client?: PoolClient },
+    options?: { client?: PoolClient; logger?: ILogger },
   ): Promise<GroupsUsersEntity | null>;
-  findMany(options: GroupsUsersFindManyEntity, client?: { client?: PoolClient }): Promise<GroupsUsersEntity[]>;
-  count(options: GroupsUsersFindManyEntity, client?: { client?: PoolClient }): Promise<number>;
-  deleteOne(groupsUsersDeleteOneEntity: GroupsUsersDeleteOneEntity, options?: { client?: PoolClient }): Promise<void>;
+  findMany(
+    groupsUsersFindManyEntity: GroupsUsersFindManyEntity,
+    options?: { client?: PoolClient; logger?: ILogger },
+  ): Promise<GroupsUsersEntity[]>;
+  count(
+    groupsUsersFindManyEntity: GroupsUsersFindManyEntity,
+    options?: { client?: PoolClient; logger?: ILogger },
+  ): Promise<number>;
+  deleteOne(
+    groupsUsersDeleteOneEntity: GroupsUsersDeleteOneEntity,
+    options?: { client?: PoolClient; logger?: ILogger },
+  ): Promise<void>;
 }

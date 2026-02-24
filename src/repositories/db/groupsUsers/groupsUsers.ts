@@ -9,6 +9,7 @@ import {
 } from '@/entities';
 import { IGroupsUsersRowData } from './types';
 import { UUID } from 'node:crypto';
+import { ILogger } from '@/pkg/logger';
 
 export class GroupsUsersRepository implements IGroupsUsersRepository {
   readonly #pool: Pool;
@@ -16,11 +17,19 @@ export class GroupsUsersRepository implements IGroupsUsersRepository {
   constructor(pool: Pool) {
     this.#pool = pool;
   }
+
   async createOne(
     groupsUsersCreateEntity: GroupsUsersCreateEntity,
-    options?: { client?: PoolClient },
+    options?: { client?: PoolClient; logger?: ILogger },
   ): Promise<GroupsUsersEntity> {
     const client = options?.client ?? this.#pool;
+    const logger = options?.logger;
+
+    logger?.debug(
+      { groupId: groupsUsersCreateEntity.groupId, userId: groupsUsersCreateEntity.userId },
+      'Creating group-user relation',
+    );
+
     const query = `
       INSERT INTO groups_users (group_id, user_id, is_owner)
       VALUES ($1, $2, $3)
@@ -37,14 +46,23 @@ export class GroupsUsersRepository implements IGroupsUsersRepository {
     const row = result.rows?.[0];
     if (!row) throw new Error('User-Group relation not created');
 
+    logger?.debug(
+      { groupId: groupsUsersCreateEntity.groupId, userId: groupsUsersCreateEntity.userId },
+      'Group-user relation created',
+    );
+
     return this.#buildGroupsUsersEntity(row);
   }
 
   async findOne(
     groupsUsersFindOneEntity: GroupsUsersFindOneEntity,
-    options?: { client?: PoolClient },
+    options?: { client?: PoolClient; logger?: ILogger },
   ): Promise<GroupsUsersEntity | null> {
     const client = options?.client ?? this.#pool;
+    const logger = options?.logger;
+
+    logger?.debug({ groupId: groupsUsersFindOneEntity.groupId, userId: groupsUsersFindOneEntity.userId }, 'Finding relation');
+
     const { conditions, values } = this.#buildConditions(groupsUsersFindOneEntity);
     if (conditions.length === 0) return null;
 
@@ -62,9 +80,16 @@ export class GroupsUsersRepository implements IGroupsUsersRepository {
 
   async findMany(
     groupsUsersFindManyEntity: GroupsUsersFindManyEntity,
-    options?: { client?: PoolClient },
+    options?: { client?: PoolClient; logger?: ILogger },
   ): Promise<GroupsUsersEntity[]> {
     const client = options?.client ?? this.#pool;
+    const logger = options?.logger;
+
+    logger?.debug(
+      { groupId: groupsUsersFindManyEntity.groupId, userId: groupsUsersFindManyEntity.userId },
+      'Finding relations',
+    );
+
     const { conditions, values } = this.#buildConditions(groupsUsersFindManyEntity);
 
     const query = `
@@ -74,14 +99,24 @@ export class GroupsUsersRepository implements IGroupsUsersRepository {
     `;
 
     const result = await client.query<IGroupsUsersRowData>(query, values);
-    return result.rows.map((row) => this.#buildGroupsUsersEntity(row));
+    const relations = result.rows.map((row) => this.#buildGroupsUsersEntity(row));
+
+    logger?.debug({ count: relations.length }, 'Relations found');
+    return relations;
   }
 
   async count(
     groupsUsersFindManyEntity: GroupsUsersFindManyEntity,
-    options?: { client?: PoolClient },
+    options?: { client?: PoolClient; logger?: ILogger },
   ): Promise<number> {
     const client = options?.client ?? this.#pool;
+    const logger = options?.logger;
+
+    logger?.debug(
+      { groupId: groupsUsersFindManyEntity.groupId, userId: groupsUsersFindManyEntity.userId },
+      'Counting relations',
+    );
+
     const { conditions, values } = this.#buildConditions(groupsUsersFindManyEntity);
 
     const query = `
@@ -91,7 +126,10 @@ export class GroupsUsersRepository implements IGroupsUsersRepository {
     `;
 
     const result = await client.query<{ count: string }>(query, values);
-    return parseInt(result.rows[0].count, 10);
+    const count = parseInt(result.rows[0].count, 10);
+
+    logger?.debug({ count }, 'Relations count');
+    return count;
   }
 
   #buildConditions({ userId, groupId, isOwner }: GroupsUsersFindManyEntity) {
@@ -122,15 +160,27 @@ export class GroupsUsersRepository implements IGroupsUsersRepository {
 
   async deleteOne(
     groupsUsersDeleteEntity: GroupsUsersDeleteOneEntity,
-    options?: { client?: PoolClient },
+    options?: { client?: PoolClient; logger?: ILogger },
   ): Promise<void> {
     const client = options?.client ?? this.#pool;
+    const logger = options?.logger;
+
+    logger?.debug(
+      { groupId: groupsUsersDeleteEntity.groupId, userId: groupsUsersDeleteEntity.userId },
+      'Deleting relation',
+    );
+
     const query = `
       DELETE FROM groups_users
       WHERE group_id = $1 AND user_id = $2
     `;
 
     await client.query(query, [groupsUsersDeleteEntity.groupId, groupsUsersDeleteEntity.userId]);
+
+    logger?.debug(
+      { groupId: groupsUsersDeleteEntity.groupId, userId: groupsUsersDeleteEntity.userId },
+      'Relation deleted',
+    );
   }
 
   #buildGroupsUsersEntity(row: IGroupsUsersRowData) {

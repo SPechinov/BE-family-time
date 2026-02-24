@@ -13,6 +13,7 @@ import { IGroupsService, IGroupsUsersService, IUsersService } from '@/domains/se
 import { IDbTransactionService } from '@/pkg/dbTransaction';
 import { DefaultProps, IGroupsUseCases } from '@/domains/useCases';
 import { CONFIG } from '@/config';
+import { ILogger } from '@/pkg/logger';
 
 export class GroupsUseCases implements IGroupsUseCases {
   readonly #usersService: IUsersService;
@@ -38,10 +39,10 @@ export class GroupsUseCases implements IGroupsUseCases {
     logger,
   }: DefaultProps<{ userId: UUID; groupCreateEntity: GroupCreateEntity }>): Promise<GroupEntity> {
     await this.#usersService.findOneByUserIdOrThrow(userId);
-    await this.#checkUserGroupsLimitExceededOrThrow(userId);
+    await this.#checkUserGroupsLimitExceededOrThrow(userId, { logger });
 
     return this.#transactionService.executeInTransaction(async (client) => {
-      const group = await this.#groupsService.createOne(groupCreateEntity, { client });
+      const group = await this.#groupsService.createOne(groupCreateEntity, { client, logger });
 
       await this.#groupsUsersService.createOne(
         new GroupsUsersCreateEntity({
@@ -49,7 +50,7 @@ export class GroupsUseCases implements IGroupsUseCases {
           groupId: group.id,
           isOwner: true,
         }),
-        { client },
+        { client, logger },
       );
 
       logger.debug({ groupId: group.id }, 'Group created');
@@ -60,25 +61,27 @@ export class GroupsUseCases implements IGroupsUseCases {
   async findUserGroup({
     userId,
     groupFindOneEntity,
+    logger,
   }: DefaultProps<{ userId: UUID; groupFindOneEntity: GroupFindOneEntity }>): Promise<GroupEntity> {
     const groupsUsers = await this.#groupsUsersService.findMany(
       new GroupsUsersFindManyEntity({ userId, groupId: groupFindOneEntity.id }),
+      { logger },
     );
 
     if (groupsUsers.length === 0) throw new ErrorGroupNotExists();
 
-    const group = await this.#groupsService.findOne(groupFindOneEntity);
+    const group = await this.#groupsService.findOne(groupFindOneEntity, { logger });
     if (!group) throw new ErrorGroupNotExists();
 
     return group;
   }
 
-  async findUserGroupsList({ userId }: DefaultProps<{ userId: UUID }>): Promise<GroupEntity[]> {
+  async findUserGroupsList({ userId, logger }: DefaultProps<{ userId: UUID }>): Promise<GroupEntity[]> {
     await this.#usersService.findOneByUserIdOrThrow(userId);
 
-    const groupsUsers = await this.#groupsUsersService.findUserGroups(userId);
+    const groupsUsers = await this.#groupsUsersService.findUserGroups(userId, { logger });
     const groupsIds = groupsUsers.map((groupUser) => groupUser.groupId);
-    return this.#groupsService.findMany(new GroupFindManyEntity({ ids: groupsIds }));
+    return this.#groupsService.findMany(new GroupFindManyEntity({ ids: groupsIds }), { logger });
   }
 
   async patchUserGroup(
@@ -87,14 +90,23 @@ export class GroupsUseCases implements IGroupsUseCases {
       groupPatchOneEntity: GroupPatchOneEntity;
     }>,
   ): Promise<GroupEntity> {
-    return this.#groupsService.patchOne({
-      groupFindOneEntity: props.groupFindOneEntity,
-      groupPatchOneEntity: props.groupPatchOneEntity,
-    });
+    return this.#groupsService.patchOne(
+      {
+        groupFindOneEntity: props.groupFindOneEntity,
+        groupPatchOneEntity: props.groupPatchOneEntity,
+      },
+      { logger: props.logger },
+    );
   }
 
-  async #checkUserGroupsLimitExceededOrThrow(userId: UUID) {
-    const userGroupsCount = await this.#groupsUsersService.count(new GroupsUsersFindManyEntity({ userId }));
+  async #checkUserGroupsLimitExceededOrThrow(
+    userId: UUID,
+    options?: { logger?: ILogger },
+  ) {
+    const userGroupsCount = await this.#groupsUsersService.count(
+      new GroupsUsersFindManyEntity({ userId }),
+      options,
+    );
     if (userGroupsCount >= CONFIG.limits.user.maxGroups) {
       throw new ErrorGroupsLimitExceeded();
     }

@@ -8,6 +8,7 @@ import {
 } from '@/entities';
 import { IGroupsService } from '@/domains/services';
 import { PoolClient } from 'pg';
+import { ILogger } from '@/pkg/logger';
 
 export class GroupsService implements IGroupsService {
   readonly #groupsRepository: IGroupsRepository;
@@ -16,18 +17,24 @@ export class GroupsService implements IGroupsService {
     this.#groupsRepository = props.groupsRepository;
   }
 
-  async createOne(groupCreateEntity: GroupCreateEntity, options?: { client?: PoolClient }): Promise<GroupEntity> {
+  async createOne(
+    groupCreateEntity: GroupCreateEntity,
+    options?: { client?: PoolClient; logger?: ILogger },
+  ): Promise<GroupEntity> {
     return this.#groupsRepository.createOne(groupCreateEntity, options);
   }
 
   async findOne(
     groupFindOneEntity: GroupFindOneEntity,
-    options?: { client?: PoolClient },
+    options?: { client?: PoolClient; logger?: ILogger },
   ): Promise<GroupEntity | null> {
     return this.#groupsRepository.findOne(groupFindOneEntity, options);
   }
 
-  async findMany(groupFindManyEntity?: GroupFindManyEntity, options?: { client?: PoolClient }): Promise<GroupEntity[]> {
+  async findMany(
+    groupFindManyEntity?: GroupFindManyEntity,
+    options?: { client?: PoolClient; logger?: ILogger },
+  ): Promise<GroupEntity[]> {
     return this.#groupsRepository.findMany(groupFindManyEntity, options);
   }
 
@@ -36,12 +43,15 @@ export class GroupsService implements IGroupsService {
       groupFindOneEntity: GroupFindOneEntity;
       groupPatchOneEntity: GroupPatchOneEntity;
     },
-    options?: { client?: PoolClient },
+    options?: { client?: PoolClient; logger?: ILogger },
   ): Promise<GroupEntity> {
     return this.#groupsRepository.patchOne(props, options);
   }
 
-  async deleteOne(groupFindOneEntity: GroupFindOneEntity, options?: { client?: PoolClient }): Promise<void> {
+  async deleteOne(
+    groupFindOneEntity: GroupFindOneEntity,
+    options?: { client?: PoolClient; logger?: ILogger },
+  ): Promise<void> {
     return this.#groupsRepository.deleteOne(groupFindOneEntity, options);
   }
 }
