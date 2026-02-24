@@ -11,20 +11,24 @@ import { UUID } from 'node:crypto';
 import { IGroupsService, IGroupsUsersService, IUsersService } from '@/domains/services';
 import { DefaultProps, IGroupsUseCases } from '@/domains/useCases';
 import { CONFIG } from '@/config';
+import { IGroupsRepository } from '@/domains/repositories/db';
 
 export class GroupsUseCases implements IGroupsUseCases {
   readonly #usersService: IUsersService;
   readonly #groupsService: IGroupsService;
   readonly #groupsUsersService: IGroupsUsersService;
+  readonly #groupsRepository: IGroupsRepository;
 
   constructor(props: {
     usersService: IUsersService;
     groupsService: IGroupsService;
     groupsUsersService: IGroupsUsersService;
+    groupsRepository: IGroupsRepository;
   }) {
     this.#usersService = props.usersService;
     this.#groupsService = props.groupsService;
     this.#groupsUsersService = props.groupsUsersService;
+    this.#groupsRepository = props.groupsRepository;
   }
 
   async createUserGroup({
@@ -35,18 +39,21 @@ export class GroupsUseCases implements IGroupsUseCases {
     await this.#usersService.findOneByUserIdOrThrow(userId);
     await this.#checkUserGroupsLimitExceededOrThrow(userId);
 
-    const group = await this.#groupsService.createOne(groupCreateEntity);
+    return this.#groupsRepository.withTransaction(async (client) => {
+      const group = await this.#groupsService.createOne(groupCreateEntity, { client });
 
-    await this.#groupsUsersService.createOne(
-      new GroupsUsersCreateEntity({
-        userId,
-        groupId: group.id,
-        isOwner: true,
-      }),
-    );
+      await this.#groupsUsersService.createOne(
+        new GroupsUsersCreateEntity({
+          userId,
+          groupId: group.id,
+          isOwner: true,
+        }),
+        { client },
+      );
 
-    logger.debug({ groupId: group.id }, 'Group created');
-    return group;
+      logger.debug({ groupId: group.id }, 'Group created');
+      return group;
+    });
   }
 
   async findUserGroup({

@@ -13,8 +13,11 @@ export interface IGroupsUsersRepository extends IBaseRepository {
     groupsUsersCreateEntity: GroupsUsersCreateEntity,
     options?: { client?: PoolClient },
   ): Promise<GroupsUsersEntity>;
-  findOne(groupsUsersFindOneEntity: GroupsUsersFindOneEntity): Promise<GroupsUsersEntity | null>;
-  findMany(options: GroupsUsersFindManyEntity): Promise<GroupsUsersEntity[]>;
-  count(options: GroupsUsersFindManyEntity): Promise<number>;
-  deleteOne(groupsUsersDeleteOneEntity: GroupsUsersDeleteOneEntity): Promise<void>;
+  findOne(
+    groupsUsersFindOneEntity: GroupsUsersFindOneEntity,
+    options?: { client?: PoolClient },
+  ): Promise<GroupsUsersEntity | null>;
+  findMany(options: GroupsUsersFindManyEntity, client?: { client?: PoolClient }): Promise<GroupsUsersEntity[]>;
+  count(options: GroupsUsersFindManyEntity, client?: { client?: PoolClient }): Promise<number>;
+  deleteOne(groupsUsersDeleteOneEntity: GroupsUsersDeleteOneEntity, options?: { client?: PoolClient }): Promise<void>;
 }

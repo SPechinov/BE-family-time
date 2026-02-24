@@ -20,7 +20,12 @@ export const createGroupsDependencies = (props: CreateGroupsDependenciesProps) =
   const groupsService = new GroupsService({ groupsRepository });
   const groupsUsersService = new GroupsUsersService({ groupsUsersRepository });
 
-  const groupsUseCases = new GroupsUseCases({ groupsService, groupsUsersService, usersService });
+  const groupsUseCases = new GroupsUseCases({
+    groupsService,
+    groupsUsersService,
+    usersService,
+    groupsRepository,
+  });
 
   return {
     jwtService,

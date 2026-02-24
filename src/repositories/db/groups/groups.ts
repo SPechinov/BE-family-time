@@ -27,20 +27,25 @@ export class GroupsRepository extends BaseRepository implements IGroupsRepositor
     return this.#buildGroupEntity(row);
   }
 
-  async findOne(groupFindOneEntity: GroupFindOneEntity): Promise<GroupEntity | null> {
+  async findOne(
+    groupFindOneEntity: GroupFindOneEntity,
+    options?: { client?: PoolClient },
+  ): Promise<GroupEntity | null> {
+    const client = options?.client ?? this.pool;
     let query = 'SELECT * FROM groups';
     const { conditions, values } = this.#buildGroupsConditions(groupFindOneEntity);
     if (conditions.length === 0) throw new Error('Invalid find params');
 
     query += ' WHERE ' + conditions.join(' AND ');
 
-    const result = await this.pool.query<IGroupRowData>(query, values);
+    const result = await client.query<IGroupRowData>(query, values);
     const row = result.rows?.[0];
     if (!row) return null;
     return this.#buildGroupEntity(row);
   }
 
-  async findMany(groupFindManyEntity?: GroupFindManyEntity): Promise<GroupEntity[]> {
+  async findMany(groupFindManyEntity?: GroupFindManyEntity, options?: { client?: PoolClient }): Promise<GroupEntity[]> {
+    const client = options?.client ?? this.pool;
     const { conditions, values } = this.#buildGroupsConditions(groupFindManyEntity);
 
     const query = `
@@ -49,17 +54,21 @@ export class GroupsRepository extends BaseRepository implements IGroupsRepositor
       ORDER BY created_at DESC
     `;
 
-    const result = await this.pool.query<IGroupRowData>(query, values);
+    const result = await client.query<IGroupRowData>(query, values);
     return result.rows.map((row) => this.#buildGroupEntity(row));
   }
 
-  async patchOne({
-    groupFindOneEntity,
-    groupPatchOneEntity,
-  }: {
-    groupFindOneEntity: GroupFindOneEntity;
-    groupPatchOneEntity: GroupPatchOneEntity;
-  }): Promise<GroupEntity> {
+  async patchOne(
+    {
+      groupFindOneEntity,
+      groupPatchOneEntity,
+    }: {
+      groupFindOneEntity: GroupFindOneEntity;
+      groupPatchOneEntity: GroupPatchOneEntity;
+    },
+    options?: { client?: PoolClient },
+  ): Promise<GroupEntity> {
+    const client = options?.client ?? this.pool;
     const { conditions: findConditions, values: findValues } = this.#buildGroupsConditions(groupFindOneEntity);
     if (findConditions.length === 0) throw new Error('Invalid find params');
 
@@ -73,7 +82,7 @@ export class GroupsRepository extends BaseRepository implements IGroupsRepositor
         RETURNING *
       `;
     const allValues = [...findValues, ...updateValues];
-    const result = await this.pool.query<IGroupRowData>(query, allValues);
+    const result = await client.query<IGroupRowData>(query, allValues);
 
     const row = result.rows?.[0];
     if (!row) throw new Error('Group not found or not updated');
@@ -81,7 +90,8 @@ export class GroupsRepository extends BaseRepository implements IGroupsRepositor
     return this.#buildGroupEntity(row);
   }
 
-  async deleteOne(groupFindOneEntity: GroupFindOneEntity): Promise<void> {
+  async deleteOne(groupFindOneEntity: GroupFindOneEntity, options?: { client?: PoolClient }): Promise<void> {
+    const client = options?.client ?? this.pool;
     const { conditions, values } = this.#buildGroupsConditions(groupFindOneEntity);
     if (conditions.length === 0) throw new Error('Invalid delete params');
 
@@ -90,7 +100,7 @@ export class GroupsRepository extends BaseRepository implements IGroupsRepositor
       WHERE ${conditions.join(' AND ')}
     `;
 
-    await this.pool.query(query, values);
+    await client.query(query, values);
   }
 
   #buildGroupsConditions(findEntity: GroupFindOneEntity | GroupFindManyEntity | undefined) {

@@ -7,6 +7,7 @@ import {
   GroupPatchOneEntity,
 } from '@/entities';
 import { IGroupsService } from '@/domains/services';
+import { PoolClient } from 'pg';
 
 export class GroupsService implements IGroupsService {
   readonly #groupsRepository: IGroupsRepository;
@@ -15,26 +16,32 @@ export class GroupsService implements IGroupsService {
     this.#groupsRepository = props.groupsRepository;
   }
 
-  async createOne(groupCreateEntity: GroupCreateEntity): Promise<GroupEntity> {
-    return this.#groupsRepository.createOne(groupCreateEntity);
+  async createOne(groupCreateEntity: GroupCreateEntity, options?: { client?: PoolClient }): Promise<GroupEntity> {
+    return this.#groupsRepository.createOne(groupCreateEntity, options);
   }
 
-  async findOne(groupFindOneEntity: GroupFindOneEntity): Promise<GroupEntity | null> {
-    return this.#groupsRepository.findOne(groupFindOneEntity);
+  async findOne(
+    groupFindOneEntity: GroupFindOneEntity,
+    options?: { client?: PoolClient },
+  ): Promise<GroupEntity | null> {
+    return this.#groupsRepository.findOne(groupFindOneEntity, options);
   }
 
-  async findMany(groupFindManyEntity?: GroupFindManyEntity): Promise<GroupEntity[]> {
-    return this.#groupsRepository.findMany(groupFindManyEntity);
+  async findMany(groupFindManyEntity?: GroupFindManyEntity, options?: { client?: PoolClient }): Promise<GroupEntity[]> {
+    return this.#groupsRepository.findMany(groupFindManyEntity, options);
   }
 
-  async patchOne(props: {
-    groupFindOneEntity: GroupFindOneEntity;
-    groupPatchOneEntity: GroupPatchOneEntity;
-  }): Promise<GroupEntity> {
-    return this.#groupsRepository.patchOne(props);
+  async patchOne(
+    props: {
+      groupFindOneEntity: GroupFindOneEntity;
+      groupPatchOneEntity: GroupPatchOneEntity;
+    },
+    options?: { client?: PoolClient },
+  ): Promise<GroupEntity> {
+    return this.#groupsRepository.patchOne(props, options);
   }
 
-  async deleteOne(groupFindOneEntity: GroupFindOneEntity): Promise<void> {
-    return this.#groupsRepository.deleteOne(groupFindOneEntity);
+  async deleteOne(groupFindOneEntity: GroupFindOneEntity, options?: { client?: PoolClient }): Promise<void> {
+    return this.#groupsRepository.deleteOne(groupFindOneEntity, options);
   }
 }

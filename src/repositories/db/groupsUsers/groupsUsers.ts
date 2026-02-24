@@ -36,7 +36,11 @@ export class GroupsUsersRepository extends BaseRepository implements IGroupsUser
     return this.#buildGroupsUsersEntity(row);
   }
 
-  async findOne(groupsUsersFindOneEntity: GroupsUsersFindOneEntity): Promise<GroupsUsersEntity | null> {
+  async findOne(
+    groupsUsersFindOneEntity: GroupsUsersFindOneEntity,
+    options?: { client?: PoolClient },
+  ): Promise<GroupsUsersEntity | null> {
+    const client = options?.client ?? this.pool;
     const { conditions, values } = this.#buildConditions(groupsUsersFindOneEntity);
     if (conditions.length === 0) return null;
 
@@ -46,13 +50,17 @@ export class GroupsUsersRepository extends BaseRepository implements IGroupsUser
       WHERE ${conditions.join(' AND ')}
     `;
 
-    const result = await this.pool.query<IGroupsUsersRowData>(query, values);
+    const result = await client.query<IGroupsUsersRowData>(query, values);
     const row = result.rows?.[0];
     if (!row) return null;
     return this.#buildGroupsUsersEntity(row);
   }
 
-  async findMany(groupsUsersFindManyEntity: GroupsUsersFindManyEntity): Promise<GroupsUsersEntity[]> {
+  async findMany(
+    groupsUsersFindManyEntity: GroupsUsersFindManyEntity,
+    options?: { client?: PoolClient },
+  ): Promise<GroupsUsersEntity[]> {
+    const client = options?.client ?? this.pool;
     const { conditions, values } = this.#buildConditions(groupsUsersFindManyEntity);
 
     const query = `
@@ -61,11 +69,15 @@ export class GroupsUsersRepository extends BaseRepository implements IGroupsUser
       ${conditions.length > 0 ? 'WHERE ' + conditions.join(' AND ') : ''}
     `;
 
-    const result = await this.pool.query<IGroupsUsersRowData>(query, values);
+    const result = await client.query<IGroupsUsersRowData>(query, values);
     return result.rows.map((row) => this.#buildGroupsUsersEntity(row));
   }
 
-  async count(groupsUsersFindManyEntity: GroupsUsersFindManyEntity): Promise<number> {
+  async count(
+    groupsUsersFindManyEntity: GroupsUsersFindManyEntity,
+    options?: { client?: PoolClient },
+  ): Promise<number> {
+    const client = options?.client ?? this.pool;
     const { conditions, values } = this.#buildConditions(groupsUsersFindManyEntity);
 
     const query = `
@@ -74,7 +86,7 @@ export class GroupsUsersRepository extends BaseRepository implements IGroupsUser
       ${conditions.length > 0 ? 'WHERE ' + conditions.join(' AND ') : ''}
     `;
 
-    const result = await this.pool.query<{ count: string }>(query, values);
+    const result = await client.query<{ count: string }>(query, values);
     return parseInt(result.rows[0].count, 10);
   }
 
@@ -104,13 +116,17 @@ export class GroupsUsersRepository extends BaseRepository implements IGroupsUser
     return { conditions, values };
   }
 
-  async deleteOne(groupsUsersDeleteEntity: GroupsUsersDeleteOneEntity): Promise<void> {
+  async deleteOne(
+    groupsUsersDeleteEntity: GroupsUsersDeleteOneEntity,
+    options?: { client?: PoolClient },
+  ): Promise<void> {
+    const client = options?.client ?? this.pool;
     const query = `
       DELETE FROM groups_users
       WHERE group_id = $1 AND user_id = $2
     `;
 
-    await this.pool.query(query, [groupsUsersDeleteEntity.groupId, groupsUsersDeleteEntity.userId]);
+    await client.query(query, [groupsUsersDeleteEntity.groupId, groupsUsersDeleteEntity.userId]);
   }
 
   #buildGroupsUsersEntity(row: IGroupsUsersRowData) {

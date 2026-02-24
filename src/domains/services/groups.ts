@@ -5,14 +5,18 @@ import {
   GroupFindOneEntity,
   GroupPatchOneEntity,
 } from '@/entities';
+import { PoolClient } from 'pg';
 
 export interface IGroupsService {
-  createOne(groupCreateEntity: GroupCreateEntity): Promise<GroupEntity>;
-  findOne(groupFindOneEntity: GroupFindOneEntity): Promise<GroupEntity | null>;
-  findMany(groupFindManyEntity?: GroupFindManyEntity): Promise<GroupEntity[]>;
-  patchOne(props: {
-    groupFindOneEntity: GroupFindOneEntity;
-    groupPatchOneEntity: GroupPatchOneEntity;
-  }): Promise<GroupEntity>;
-  deleteOne(groupFindOneEntity: GroupFindOneEntity): Promise<void>;
+  createOne(groupCreateEntity: GroupCreateEntity, options?: { client?: PoolClient }): Promise<GroupEntity>;
+  findOne(groupFindOneEntity: GroupFindOneEntity, options?: { client?: PoolClient }): Promise<GroupEntity | null>;
+  findMany(groupFindManyEntity?: GroupFindManyEntity, options?: { client?: PoolClient }): Promise<GroupEntity[]>;
+  patchOne(
+    props: {
+      groupFindOneEntity: GroupFindOneEntity;
+      groupPatchOneEntity: GroupPatchOneEntity;
+    },
+    options?: { client?: PoolClient },
+  ): Promise<GroupEntity>;
+  deleteOne(groupFindOneEntity: GroupFindOneEntity, options?: { client?: PoolClient }): Promise<void>;
 }
