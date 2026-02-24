@@ -59,6 +59,24 @@ export class GroupFindOneEntity {
   }
 }
 
+export class GroupFindManyEntity {
+  readonly #ids?: UUID[];
+  readonly #name?: string;
+
+  constructor(props: { ids?: UUID[]; name?: string }) {
+    this.#ids = props.ids;
+    this.#name = props.name;
+  }
+
+  get ids() {
+    return this.#ids;
+  }
+
+  get name() {
+    return this.#name;
+  }
+}
+
 export class GroupPatchOneEntity {
   readonly #name?: string;
   readonly #description?: string | null;
