@@ -82,9 +82,7 @@ export class GroupsRepository implements IGroupsRepository {
     options.logger.debug({ query, values }, 'Groups repository: findMany');
 
     const result = await client.query<IGroupRowData>(query, values);
-    const groups = result.rows.map((row) => this.#buildGroupEntity(row));
-
-    return groups;
+    return result.rows.map((row) => this.#buildGroupEntity(row));
   }
 
   async patchOne(

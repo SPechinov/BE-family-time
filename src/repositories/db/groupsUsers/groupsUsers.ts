@@ -83,9 +83,7 @@ export class GroupsUsersRepository implements IGroupsUsersRepository {
     options.logger.debug({ query, values }, 'GroupsUsers repository: findMany');
 
     const result = await client.query<IGroupsUsersRowData>(query, values);
-    const relations = result.rows.map((row) => this.#buildGroupsUsersEntity(row));
-
-    return relations;
+    return result.rows.map((row) => this.#buildGroupsUsersEntity(row));
   }
 
   async count(
