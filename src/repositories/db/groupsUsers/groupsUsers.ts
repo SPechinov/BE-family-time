@@ -61,7 +61,10 @@ export class GroupsUsersRepository implements IGroupsUsersRepository {
     const client = options?.client ?? this.#pool;
     const logger = options?.logger;
 
-    logger?.debug({ groupId: groupsUsersFindOneEntity.groupId, userId: groupsUsersFindOneEntity.userId }, 'Finding relation');
+    logger?.debug(
+      { groupId: groupsUsersFindOneEntity.groupId, userId: groupsUsersFindOneEntity.userId },
+      'Finding relation',
+    );
 
     const { conditions, values } = this.#buildConditions(groupsUsersFindOneEntity);
     if (conditions.length === 0) return null;

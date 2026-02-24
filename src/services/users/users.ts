@@ -19,6 +19,7 @@ import {
 } from '@/entities';
 import { ErrorUserNotExists } from '@/pkg/errors';
 import { ILogger } from '@/pkg/logger';
+import { PoolClient } from 'pg';
 
 export class UsersService implements IUsersService {
   readonly #usersRepository: IUsersRepository;
@@ -38,7 +39,10 @@ export class UsersService implements IUsersService {
     this.#hashPasswordService = props.hashPasswordService;
   }
 
-  async createOne(userCreatePlainEntity: UserCreatePlainEntity): Promise<UserEntity> {
+  async createOne(
+    userCreatePlainEntity: UserCreatePlainEntity,
+    options?: { client?: PoolClient; logger?: ILogger },
+  ): Promise<UserEntity> {
     const { personalInfoPlain, contactsPlain, passwordPlain } = userCreatePlainEntity;
     const encryptionSalt = randomUUID();
 
@@ -56,15 +60,19 @@ export class UsersService implements IUsersService {
         contactsEncrypted: contactsEncrypted ?? undefined,
         passwordHashed: passwordHashed ?? undefined,
       }),
+      options,
     );
   }
 
-  async findOne(userFindOnePlainEntity: UserFindOnePlainEntity): Promise<UserEntity | null> {
-    return this.#usersRepository.findOne(this.#convertUserFindOnePlainToHashedOrThrow(userFindOnePlainEntity));
+  async findOne(
+    userFindOnePlainEntity: UserFindOnePlainEntity,
+    options?: { client?: PoolClient; logger?: ILogger },
+  ): Promise<UserEntity | null> {
+    return this.#usersRepository.findOne(this.#convertUserFindOnePlainToHashedOrThrow(userFindOnePlainEntity), options);
   }
 
-  async findOneByUserIdOrThrow(userId: UUID): Promise<UserEntity> {
-    const foundUser = await this.#usersRepository.findOne(new UserFindOneEntity({ id: userId }));
+  async findOneByUserIdOrThrow(userId: UUID, options?: { client?: PoolClient; logger?: ILogger }): Promise<UserEntity> {
+    const foundUser = await this.#usersRepository.findOne(new UserFindOneEntity({ id: userId }), options);
     if (!foundUser) {
       throw new ErrorUserNotExists();
     }
@@ -72,16 +80,19 @@ export class UsersService implements IUsersService {
     return foundUser;
   }
 
-  async patchOne({
-    userFindOnePlainEntity,
-    userPatchOnePlainEntity,
-  }: {
-    userFindOnePlainEntity: UserFindOnePlainEntity;
-    userPatchOnePlainEntity: UserPatchOnePlainEntity;
-  }): Promise<UserEntity> {
+  async patchOne(
+    {
+      userFindOnePlainEntity,
+      userPatchOnePlainEntity,
+    }: {
+      userFindOnePlainEntity: UserFindOnePlainEntity;
+      userPatchOnePlainEntity: UserPatchOnePlainEntity;
+    },
+    options?: { client?: PoolClient; logger?: ILogger },
+  ): Promise<UserEntity> {
     const userFindOneEntity = this.#convertUserFindOnePlainToHashedOrThrow(userFindOnePlainEntity);
 
-    const foundUser = await this.#usersRepository.findOne(userFindOneEntity);
+    const foundUser = await this.#usersRepository.findOne(userFindOneEntity, options);
     if (!foundUser) throw new ErrorUserNotExists();
 
     const userPatchOneEntity = await this.#convertUserPatchOnePlainToHashedOrThrow({
@@ -89,7 +100,7 @@ export class UsersService implements IUsersService {
       encryptionSalt: foundUser.encryptionSalt,
     });
 
-    const userEntity = await this.#usersRepository.patchOne({ userFindOneEntity, userPatchOneEntity });
+    const userEntity = await this.#usersRepository.patchOne({ userFindOneEntity, userPatchOneEntity }, options);
     if (!userEntity) throw new ErrorUserNotExists();
 
     return userEntity;

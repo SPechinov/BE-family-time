@@ -1,4 +1,4 @@
-import { Pool } from 'pg';
+import { Pool, PoolClient } from 'pg';
 import { IUsersRepository } from '@/domains/repositories/db';
 import { ErrorUserExists } from '@/pkg';
 import { IUserRowData } from './types';
@@ -12,6 +12,7 @@ import {
   UserPatchOneEntity,
   UserPersonalInfoEncryptedEntity,
 } from '@/entities';
+import { ILogger } from '@/pkg/logger';
 
 export class UsersRepository implements IUsersRepository {
   readonly #pool: Pool;
@@ -20,7 +21,15 @@ export class UsersRepository implements IUsersRepository {
     this.#pool = pool;
   }
 
-  async createOne(userCreateEntity: UserCreateEntity): Promise<UserEntity> {
+  async createOne(
+    userCreateEntity: UserCreateEntity,
+    options?: { client?: PoolClient; logger?: ILogger },
+  ): Promise<UserEntity> {
+    const client = options?.client ?? this.#pool;
+    const logger = options?.logger;
+
+    logger?.debug({ email: userCreateEntity.contactsHashed?.email }, 'Creating user');
+
     const query = `
       INSERT INTO users (
         encryption_salt,
@@ -37,7 +46,7 @@ export class UsersRepository implements IUsersRepository {
     `;
 
     try {
-      const result = await this.#pool.query<IUserRowData>(query, [
+      const result = await client.query<IUserRowData>(query, [
         userCreateEntity.encryptionSalt,
         userCreateEntity.contactsHashed?.email,
         userCreateEntity.contactsEncrypted?.email,
@@ -51,35 +60,61 @@ export class UsersRepository implements IUsersRepository {
       const row = result.rows?.[0];
       if (!row) throw new Error('User not created');
 
+      logger?.debug({ id: row.id }, 'User created');
+
       return this.#buildUserEntity(row);
     } catch (error) {
       if (error instanceof Error && 'code' in error && error.code === '23505') {
+        logger?.warn({ email: userCreateEntity.contactsHashed?.email }, 'User already exists');
         throw new ErrorUserExists();
       }
+      logger?.error({ error }, 'Error creating user');
       throw error;
     }
   }
 
-  async findOne(userFindEntity: UserFindOneEntity): Promise<UserEntity | null> {
+  async findOne(
+    userFindEntity: UserFindOneEntity,
+    options?: { client?: PoolClient; logger?: ILogger },
+  ): Promise<UserEntity | null> {
+    const client = options?.client ?? this.#pool;
+    const logger = options?.logger;
+
+    logger?.debug({ id: userFindEntity.id }, 'Finding user');
+
     let query = 'SELECT * FROM users';
     const { conditions, values } = this.#buildUsersConditions(userFindEntity);
     if (conditions.length === 0) throw new Error('Invalid find params');
 
     query += ' WHERE ' + conditions.join(' AND ');
 
-    const result = await this.#pool.query<IUserRowData>(query, values);
+    const result = await client.query<IUserRowData>(query, values);
     const row = result.rows?.[0];
-    if (!row) return null;
+
+    if (!row) {
+      logger?.debug({ id: userFindEntity.id }, 'User not found');
+      return null;
+    }
+
+    logger?.debug({ id: row.id }, 'User found');
     return this.#buildUserEntity(row);
   }
 
-  async patchOne({
-    userFindOneEntity,
-    userPatchOneEntity,
-  }: {
-    userFindOneEntity: UserFindOneEntity;
-    userPatchOneEntity: UserPatchOneEntity;
-  }): Promise<UserEntity> {
+  async patchOne(
+    {
+      userFindOneEntity,
+      userPatchOneEntity,
+    }: {
+      userFindOneEntity: UserFindOneEntity;
+      userPatchOneEntity: UserPatchOneEntity;
+    },
+    options?: { client?: PoolClient; logger?: ILogger },
+  ): Promise<UserEntity> {
+    const client = options?.client ?? this.#pool;
+    const logger = options?.logger;
+
+    logger?.debug({ id: userFindOneEntity.id }, 'Patching user');
+
     const { conditions: findConditions, values: findValues } = this.#buildUsersConditions(userFindOneEntity);
     if (findConditions.length === 0) throw new Error('Invalid find params');
 
@@ -94,11 +129,12 @@ export class UsersRepository implements IUsersRepository {
         RETURNING *
       `;
     const allValues = [...findValues, ...updateValues];
-    const result = await this.#pool.query<IUserRowData>(query, allValues);
+    const result = await client.query<IUserRowData>(query, allValues);
 
     const row = result.rows?.[0];
     if (!row) throw new Error('User not found or not updated');
 
+    logger?.debug({ id: row.id }, 'User patched');
     return this.#buildUserEntity(row);
   }
 

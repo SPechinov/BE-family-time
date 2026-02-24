@@ -30,16 +30,7 @@ export interface IGroupsUsersService {
     groupsUsersDeleteOneEntity: GroupsUsersDeleteOneEntity,
     options?: { client?: PoolClient; logger?: ILogger },
   ): Promise<void>;
-  findUserGroups(
-    userId: UUID,
-    options?: { client?: PoolClient; logger?: ILogger },
-  ): Promise<GroupsUsersEntity[]>;
-  findGroupUsers(
-    groupId: UUID,
-    options?: { client?: PoolClient; logger?: ILogger },
-  ): Promise<GroupsUsersEntity[]>;
-  findGroupOwners(
-    groupId: UUID,
-    options?: { client?: PoolClient; logger?: ILogger },
-  ): Promise<GroupsUsersEntity[]>;
+  findUserGroups(userId: UUID, options?: { client?: PoolClient; logger?: ILogger }): Promise<GroupsUsersEntity[]>;
+  findGroupUsers(groupId: UUID, options?: { client?: PoolClient; logger?: ILogger }): Promise<GroupsUsersEntity[]>;
+  findGroupOwners(groupId: UUID, options?: { client?: PoolClient; logger?: ILogger }): Promise<GroupsUsersEntity[]>;
 }

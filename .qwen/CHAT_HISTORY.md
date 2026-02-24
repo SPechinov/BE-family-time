@@ -77,14 +77,15 @@ createOne(entity: Entity, options?: {
 ```
 
 **Логирование добавлено:**
-- ✅ `GroupsRepository` — все методы
-- ✅ `GroupsUsersRepository` — все методы
-- ✅ `GroupsService`, `GroupsUsersService` — пробрасывают logger
+- ✅ `UsersRepository`, `UsersService` — все методы
+- ✅ `GroupsRepository`, `GroupsService` — все методы
+- ✅ `GroupsUsersRepository`, `GroupsUsersService` — все методы
 - ✅ `GroupsUseCases` — передаёт logger во все сервисы
 
 **Пример логов:**
 ```
-Creating group → Group created
+Creating user → User created
+Creating group → Group created  
 Creating group-user relation → Group-user relation created
 Group created { groupId: ... }
 ```
@@ -101,15 +102,19 @@ src/
 │   ├── group.ts                # + GroupFindManyEntity
 │   └── groupsUsers.ts
 ├── domains/services/
+│   ├── users.ts
 │   ├── groups.ts
 │   └── groupsUsers.ts
 ├── domains/repositories/db/
+│   ├── users.ts
 │   ├── groups.ts
 │   └── groupsUsers.ts
 ├── repositories/db/
+│   ├── users/users.ts
 │   ├── groups/groups.ts
 │   └── groupsUsers/groupsUsers.ts
 ├── services/
+│   ├── users/users.ts
 │   ├── groups/groups.ts
 │   └── groupsUsers/groupsUsers.ts
 └── useCases/groups/groups.ts

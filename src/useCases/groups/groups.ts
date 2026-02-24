@@ -99,14 +99,8 @@ export class GroupsUseCases implements IGroupsUseCases {
     );
   }
 
-  async #checkUserGroupsLimitExceededOrThrow(
-    userId: UUID,
-    options?: { logger?: ILogger },
-  ) {
-    const userGroupsCount = await this.#groupsUsersService.count(
-      new GroupsUsersFindManyEntity({ userId }),
-      options,
-    );
+  async #checkUserGroupsLimitExceededOrThrow(userId: UUID, options?: { logger?: ILogger }) {
+    const userGroupsCount = await this.#groupsUsersService.count(new GroupsUsersFindManyEntity({ userId }), options);
     if (userGroupsCount >= CONFIG.limits.user.maxGroups) {
       throw new ErrorGroupsLimitExceeded();
     }

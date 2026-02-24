@@ -28,8 +28,5 @@ export interface IGroupsService {
     },
     options?: { client?: PoolClient; logger?: ILogger },
   ): Promise<GroupEntity>;
-  deleteOne(
-    groupFindOneEntity: GroupFindOneEntity,
-    options?: { client?: PoolClient; logger?: ILogger },
-  ): Promise<void>;
+  deleteOne(groupFindOneEntity: GroupFindOneEntity, options?: { client?: PoolClient; logger?: ILogger }): Promise<void>;
 }
