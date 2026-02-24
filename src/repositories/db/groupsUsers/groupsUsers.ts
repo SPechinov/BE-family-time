@@ -9,9 +9,7 @@ import {
 } from '@/entities';
 import { IGroupsUsersRowData } from './types';
 import { UUID } from 'node:crypto';
-import { ILogger, Logger } from '@/pkg/logger';
-
-const noopLogger = new Logger({ level: 'silent' });
+import { ILogger } from '@/pkg/logger';
 
 export class GroupsUsersRepository implements IGroupsUsersRepository {
   readonly #pool: Pool;
@@ -25,7 +23,6 @@ export class GroupsUsersRepository implements IGroupsUsersRepository {
     options?: { client?: PoolClient; logger?: ILogger },
   ): Promise<GroupsUsersEntity> {
     const client = options?.client ?? this.#pool;
-    const logger = options?.logger ?? noopLogger;
 
     const query = `
       INSERT INTO groups_users (group_id, user_id, is_owner)
@@ -36,7 +33,7 @@ export class GroupsUsersRepository implements IGroupsUsersRepository {
 
     const values = [groupsUsersCreateEntity.groupId, groupsUsersCreateEntity.userId, groupsUsersCreateEntity.isOwner];
 
-    logger.debug({ query, values }, 'GroupsUsers repository: createOne');
+    options?.logger?.debug({ query, values }, 'GroupsUsers repository: createOne');
 
     const result = await client.query<IGroupsUsersRowData>(query, values);
 
@@ -51,7 +48,6 @@ export class GroupsUsersRepository implements IGroupsUsersRepository {
     options?: { client?: PoolClient; logger?: ILogger },
   ): Promise<GroupsUsersEntity | null> {
     const client = options?.client ?? this.#pool;
-    const logger = options?.logger ?? noopLogger;
 
     const { conditions, values } = this.#buildConditions(groupsUsersFindOneEntity);
     if (conditions.length === 0) return null;
@@ -62,7 +58,7 @@ export class GroupsUsersRepository implements IGroupsUsersRepository {
       WHERE ${conditions.join(' AND ')}
     `;
 
-    logger.debug({ query, values }, 'GroupsUsers repository: findOne');
+    options?.logger?.debug({ query, values }, 'GroupsUsers repository: findOne');
 
     const result = await client.query<IGroupsUsersRowData>(query, values);
     const row = result.rows?.[0];
@@ -75,7 +71,6 @@ export class GroupsUsersRepository implements IGroupsUsersRepository {
     options?: { client?: PoolClient; logger?: ILogger },
   ): Promise<GroupsUsersEntity[]> {
     const client = options?.client ?? this.#pool;
-    const logger = options?.logger ?? noopLogger;
 
     const { conditions, values } = this.#buildConditions(groupsUsersFindManyEntity);
 
@@ -85,7 +80,7 @@ export class GroupsUsersRepository implements IGroupsUsersRepository {
       ${conditions.length > 0 ? 'WHERE ' + conditions.join(' AND ') : ''}
     `;
 
-    logger.debug({ query, values }, 'GroupsUsers repository: findMany');
+    options?.logger?.debug({ query, values }, 'GroupsUsers repository: findMany');
 
     const result = await client.query<IGroupsUsersRowData>(query, values);
     return result.rows.map((row) => this.#buildGroupsUsersEntity(row));
@@ -96,7 +91,6 @@ export class GroupsUsersRepository implements IGroupsUsersRepository {
     options?: { client?: PoolClient; logger?: ILogger },
   ): Promise<number> {
     const client = options?.client ?? this.#pool;
-    const logger = options?.logger ?? noopLogger;
 
     const { conditions, values } = this.#buildConditions(groupsUsersFindManyEntity);
 
@@ -106,7 +100,7 @@ export class GroupsUsersRepository implements IGroupsUsersRepository {
       ${conditions.length > 0 ? 'WHERE ' + conditions.join(' AND ') : ''}
     `;
 
-    logger.debug({ query, values }, 'GroupsUsers repository: count');
+    options?.logger?.debug({ query, values }, 'GroupsUsers repository: count');
     const result = await client.query<{ count: string }>(query, values);
     return parseInt(result.rows[0].count, 10);
   }
@@ -116,7 +110,6 @@ export class GroupsUsersRepository implements IGroupsUsersRepository {
     options?: { client?: PoolClient; logger?: ILogger },
   ): Promise<void> {
     const client = options?.client ?? this.#pool;
-    const logger = options?.logger ?? noopLogger;
 
     const query = `
       DELETE FROM groups_users
@@ -125,7 +118,7 @@ export class GroupsUsersRepository implements IGroupsUsersRepository {
 
     const values = [groupsUsersDeleteEntity.groupId, groupsUsersDeleteEntity.userId];
 
-    logger.debug({ query, values }, 'GroupsUsers repository: deleteOne');
+    options?.logger?.debug({ query, values }, 'GroupsUsers repository: deleteOne');
 
     await client.query(query, values);
   }

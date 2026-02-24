@@ -12,9 +12,7 @@ import {
   UserPatchOneEntity,
   UserPersonalInfoEncryptedEntity,
 } from '@/entities';
-import { ILogger, Logger } from '@/pkg/logger';
-
-const noopLogger = new Logger({ level: 'silent' });
+import { ILogger } from '@/pkg/logger';
 
 export class UsersRepository implements IUsersRepository {
   readonly #pool: Pool;
@@ -28,7 +26,6 @@ export class UsersRepository implements IUsersRepository {
     options?: { client?: PoolClient; logger?: ILogger },
   ): Promise<UserEntity> {
     const client = options?.client ?? this.#pool;
-    const logger = options?.logger ?? noopLogger;
 
     const query = `
       INSERT INTO users (
@@ -56,7 +53,7 @@ export class UsersRepository implements IUsersRepository {
       userCreateEntity.personalInfoEncrypted?.lastName,
     ];
 
-    logger.debug({ query, values }, 'Users repository: createOne');
+    options?.logger?.debug({ query, values }, 'Users repository: createOne');
 
     try {
       const result = await client.query<IUserRowData>(query, values);
@@ -78,7 +75,6 @@ export class UsersRepository implements IUsersRepository {
     options?: { client?: PoolClient; logger?: ILogger },
   ): Promise<UserEntity | null> {
     const client = options?.client ?? this.#pool;
-    const logger = options?.logger ?? noopLogger;
 
     let query = 'SELECT * FROM users';
     const { conditions, values } = this.#buildUsersConditions(userFindEntity);
@@ -86,7 +82,7 @@ export class UsersRepository implements IUsersRepository {
 
     query += ' WHERE ' + conditions.join(' AND ');
 
-    logger.debug({ query, values }, 'Users repository: findOne');
+    options?.logger?.debug({ query, values }, 'Users repository: findOne');
 
     const result = await client.query<IUserRowData>(query, values);
     const row = result.rows?.[0];
@@ -109,7 +105,6 @@ export class UsersRepository implements IUsersRepository {
     options?: { client?: PoolClient; logger?: ILogger },
   ): Promise<UserEntity> {
     const client = options?.client ?? this.#pool;
-    const logger = options?.logger ?? noopLogger;
 
     const { conditions: findConditions, values: findValues } = this.#buildUsersConditions(userFindOneEntity);
     if (findConditions.length === 0) throw new Error('Invalid find params');
@@ -127,7 +122,7 @@ export class UsersRepository implements IUsersRepository {
 
     const allValues = [...findValues, ...updateValues];
 
-    logger.debug({ query, values: allValues }, 'Users repository: patchOne');
+    options?.logger?.debug({ query, values: allValues }, 'Users repository: patchOne');
 
     const result = await client.query<IUserRowData>(query, allValues);
 

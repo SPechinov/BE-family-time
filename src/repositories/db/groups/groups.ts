@@ -9,9 +9,7 @@ import {
 } from '@/entities';
 import { IGroupRowData } from './types';
 import { UUID } from 'node:crypto';
-import { ILogger, Logger } from '@/pkg/logger';
-
-const noopLogger = new Logger({ level: 'silent' });
+import { ILogger } from '@/pkg/logger';
 
 export class GroupsRepository implements IGroupsRepository {
   readonly #pool: Pool;
@@ -25,7 +23,6 @@ export class GroupsRepository implements IGroupsRepository {
     options?: { client?: PoolClient; logger?: ILogger },
   ): Promise<GroupEntity> {
     const client = options?.client ?? this.#pool;
-    const logger = options?.logger ?? noopLogger;
 
     const query = `
       INSERT INTO groups (name, description)
@@ -34,7 +31,7 @@ export class GroupsRepository implements IGroupsRepository {
 
     const values = [groupCreateEntity.name, groupCreateEntity.description];
 
-    logger.debug({ query, values }, 'Groups repository: createOne');
+    options?.logger?.debug({ query, values }, 'Groups repository: createOne');
 
     const result = await client.query<IGroupRowData>(query, values);
 
@@ -49,7 +46,6 @@ export class GroupsRepository implements IGroupsRepository {
     options?: { client?: PoolClient; logger?: ILogger },
   ): Promise<GroupEntity | null> {
     const client = options?.client ?? this.#pool;
-    const logger = options?.logger ?? noopLogger;
 
     let query = 'SELECT * FROM groups';
     const { conditions, values } = this.#buildGroupsConditions(groupFindOneEntity);
@@ -57,7 +53,7 @@ export class GroupsRepository implements IGroupsRepository {
 
     query += ' WHERE ' + conditions.join(' AND ');
 
-    logger.debug({ query, values }, 'Groups repository: findOne');
+    options?.logger?.debug({ query, values }, 'Groups repository: findOne');
 
     const result = await client.query<IGroupRowData>(query, values);
     const row = result.rows?.[0];
@@ -74,7 +70,6 @@ export class GroupsRepository implements IGroupsRepository {
     options?: { client?: PoolClient; logger?: ILogger },
   ): Promise<GroupEntity[]> {
     const client = options?.client ?? this.#pool;
-    const logger = options?.logger ?? noopLogger;
 
     const { conditions, values } = this.#buildGroupsConditions(groupFindManyEntity);
 
@@ -84,7 +79,7 @@ export class GroupsRepository implements IGroupsRepository {
       ORDER BY created_at DESC
     `;
 
-    logger.debug({ query, values }, 'Groups repository: findMany');
+    options?.logger?.debug({ query, values }, 'Groups repository: findMany');
 
     const result = await client.query<IGroupRowData>(query, values);
     return result.rows.map((row) => this.#buildGroupEntity(row));
@@ -101,7 +96,6 @@ export class GroupsRepository implements IGroupsRepository {
     options?: { client?: PoolClient; logger?: ILogger },
   ): Promise<GroupEntity> {
     const client = options?.client ?? this.#pool;
-    const logger = options?.logger ?? noopLogger;
 
     const { conditions: findConditions, values: findValues } = this.#buildGroupsConditions(groupFindOneEntity);
     if (findConditions.length === 0) throw new Error('Invalid find params');
@@ -117,7 +111,7 @@ export class GroupsRepository implements IGroupsRepository {
       `;
     const allValues = [...findValues, ...updateValues];
 
-    logger.debug({ query, values: allValues }, 'Groups repository: patchOne');
+    options?.logger?.debug({ query, values: allValues }, 'Groups repository: patchOne');
 
     const result = await client.query<IGroupRowData>(query, allValues);
 
@@ -132,7 +126,6 @@ export class GroupsRepository implements IGroupsRepository {
     options?: { client?: PoolClient; logger?: ILogger },
   ): Promise<void> {
     const client = options?.client ?? this.#pool;
-    const logger = options?.logger ?? noopLogger;
 
     const { conditions, values } = this.#buildGroupsConditions(groupFindOneEntity);
     if (conditions.length === 0) throw new Error('Invalid delete params');
@@ -142,7 +135,7 @@ export class GroupsRepository implements IGroupsRepository {
       WHERE ${conditions.join(' AND ')}
     `;
 
-    logger.debug({ query, values }, 'Groups repository: deleteOne');
+    options?.logger?.debug({ query, values }, 'Groups repository: deleteOne');
 
     await client.query(query, values);
   }
