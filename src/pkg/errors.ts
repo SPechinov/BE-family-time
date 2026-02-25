@@ -12,6 +12,7 @@ const CODES = {
   invalidUserAgent: 'invalidUserAgent',
   groupNotExists: 'groupNotExists',
   groupsLimitExceeded: 'groupsLimitExceeded',
+  groupUsersCountLimitExceeded: 'groupUsersCountLimitExceeded',
   userIsNotGroupOwner: 'userIsNotGroupOwner',
   userInGroup: 'userInGroup',
   userNotInGroup: 'userNotInGroup',
@@ -122,6 +123,14 @@ export class ErrorGroupsLimitExceeded extends BusinessError {
 
   constructor() {
     super(CODES.groupsLimitExceeded);
+  }
+}
+
+export class ErrorGroupUsersCountLimitExceeded extends BusinessError {
+  statusCode = 403;
+
+  constructor() {
+    super(CODES.groupUsersCountLimitExceeded);
   }
 }
 

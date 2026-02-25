@@ -13,6 +13,7 @@ import {
   ErrorGroupHasUsers,
   ErrorGroupNotExists,
   ErrorGroupsLimitExceeded,
+  ErrorGroupUsersCountLimitExceeded,
   ErrorUserInGroup,
   ErrorUserIsGroupOwner,
   ErrorUserIsNotGroupOwner,
@@ -49,7 +50,7 @@ export class GroupsUseCases implements IGroupsUseCases {
     logger,
   }: DefaultProps<{ userId: UUID; groupCreateEntity: GroupCreateEntity }>): Promise<GroupEntity> {
     await this.#usersService.findOneByUserIdOrThrow(userId, { logger });
-    await this.#checkUserGroupsLimitExceededOrThrow(userId, { logger });
+    await this.#checkLimitExceededUserGroupsOrThrow(userId, { logger });
 
     return this.#transactionService.executeInTransaction(async (client) => {
       const group = await this.#groupsService.createOne(groupCreateEntity, { client, logger });
@@ -134,6 +135,8 @@ export class GroupsUseCases implements IGroupsUseCases {
     await this.#checkIsGroupOwnerOrThrow(groupId, actorUserId, { logger });
     await this.#checkUserNotInGroupOrThrow(groupId, targetUserId, { logger });
 
+    await this.#checkLimitExceededUsersInGroupOrThrow(groupId, { logger });
+
     await this.#groupsUsersService.createOne(
       new GroupsUsersCreateEntity({ userId: targetUserId, groupId: groupId, isOwner: false }),
       { logger: logger },
@@ -215,7 +218,20 @@ export class GroupsUseCases implements IGroupsUseCases {
     }
   }
 
-  async #checkUserGroupsLimitExceededOrThrow(userId: UUID, options: { logger: ILogger }) {
+  async #checkLimitExceededUsersInGroupOrThrow(groupId: UUID, options: { logger: ILogger }) {
+    const usersCount = await this.#groupsUsersService.count(
+      new GroupsUsersFindManyEntity({
+        groupId,
+      }),
+      options,
+    );
+
+    if (usersCount >= CONFIG.limits.group.maxUsers) {
+      throw new ErrorGroupUsersCountLimitExceeded();
+    }
+  }
+
+  async #checkLimitExceededUserGroupsOrThrow(userId: UUID, options: { logger: ILogger }) {
     const userGroupsCount = await this.#groupsUsersService.count(new GroupsUsersFindManyEntity({ userId }), options);
     if (userGroupsCount >= CONFIG.limits.user.maxGroups) {
       throw new ErrorGroupsLimitExceeded();
