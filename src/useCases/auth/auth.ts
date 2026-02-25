@@ -66,7 +66,7 @@ export class AuthUseCases implements IAuthUseCases {
     );
 
     if (!user || !user.passwordHashed) throw new ErrorInvalidLoginOrPassword();
-    const verified = this.#userService.verifyPassword(
+    const verified = await this.#userService.verifyPassword(
       {
         password: props.userPasswordPlainEntity.password,
         hash: user.passwordHashed.password,

@@ -10,7 +10,7 @@ export const GLOBAL_SCHEMAS = {
       .length(length)
       .refine((v) => !isNaN(Number(v)), { message: 'Invalid number' }),
   userAgent: z.string().min(1),
-  groupName: z.string().max(50),
+  groupName: z.string().min(1).max(50),
   groupDescription: z.string().max(1000),
   groupId: z.uuidv4(),
   userId: z.uuidv4(),

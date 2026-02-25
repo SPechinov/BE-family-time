@@ -23,7 +23,7 @@ export default defineConfig(
     },
   },
   {
-    ignores: ['node_modules', 'build', '.prettierrc.js', 'eslint.config.mjs', 'jest.config.js'],
+    ignores: ['node_modules', 'build', '.prettierrc.js', 'eslint.config.mjs', 'jest.config.js', 'src/tests/global-setup.cjs'],
   },
   {
     rules: {

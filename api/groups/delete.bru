@@ -1,0 +1,30 @@
+meta {
+  name: delete
+  type: http
+  seq: 7
+}
+
+delete {
+  url: {{url}}/groups/:groupId
+  body: formUrlEncoded
+  auth: bearer
+}
+
+params:path {
+  groupId: 49e875ba-0275-4924-9cdc-e5156c2f7a05
+}
+
+auth:bearer {
+  token: {{authToken}}
+}
+
+body:json {
+  {
+    name: "Aaaaa"
+  }
+}
+
+settings {
+  encodeUrl: true
+  timeout: 0
+}
