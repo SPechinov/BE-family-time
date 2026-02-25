@@ -69,6 +69,16 @@ const EXCLUDE = {
   }),
 };
 
+const DELETE = {
+  tags: ['Groups'],
+  params: z.object({
+    groupId: GLOBAL_SCHEMAS.groupId,
+  }),
+  response: createResponseSchema({
+    200: z.void(),
+  }),
+};
+
 export const SCHEMAS = Object.freeze({
   getList: GET_LIST,
   create: CREATE,
@@ -76,4 +86,5 @@ export const SCHEMAS = Object.freeze({
   patch: PATCH,
   invite: INVITE,
   exclude: EXCLUDE,
+  delete: DELETE,
 });

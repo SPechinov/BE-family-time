@@ -15,4 +15,5 @@ export interface IGroupsUseCases {
   ): Promise<GroupEntity>;
   inviteUserInGroup(props: DefaultProps<{ targetUserId: UUID; actorUserId: UUID; groupId: UUID }>): Promise<void>;
   excludeUserFromGroup(props: DefaultProps<{ targetUserId: UUID; actorUserId: UUID; groupId: UUID }>): Promise<void>;
+  deleteUserGroup(props: DefaultProps<{ userId: UUID; groupId: UUID }>): Promise<void>;
 }

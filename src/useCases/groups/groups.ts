@@ -10,6 +10,7 @@ import {
   GroupsUsersFindOneEntity,
 } from '@/entities';
 import {
+  ErrorGroupHasUsers,
   ErrorGroupNotExists,
   ErrorGroupsLimitExceeded,
   ErrorUserInGroup,
@@ -162,6 +163,21 @@ export class GroupsUseCases implements IGroupsUseCases {
       new GroupsUsersDeleteOneEntity({ userId: targetUserId, groupId: groupId }),
       { logger: logger },
     );
+  }
+
+  async deleteUserGroup({ groupId, userId, logger }: DefaultProps<{ userId: UUID; groupId: UUID }>): Promise<void> {
+    await this.#usersService.findOneByUserIdOrThrow(userId, { logger });
+    await this.#checkIsGroupOwnerOrThrow(groupId, userId, { logger });
+
+    const groupUsersCount = await this.#groupsUsersService.count(new GroupsUsersFindManyEntity({ groupId }), {
+      logger,
+    });
+
+    if (groupUsersCount > 1) {
+      throw new ErrorGroupHasUsers();
+    }
+
+    await this.#groupsService.deleteOne(new GroupFindOneEntity({ id: groupId }), { logger });
   }
 
   async #checkUserNotInGroupOrThrow(groupId: UUID, userId: UUID, options: { logger: ILogger }) {

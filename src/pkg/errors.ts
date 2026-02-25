@@ -16,6 +16,7 @@ const CODES = {
   userInGroup: 'userInGroup',
   userNotInGroup: 'userNotInGroup',
   userIsGroupOwner: 'userIsGroupOwner',
+  groupHasUsers: 'groupHasUsers',
 };
 
 export abstract class BusinessError extends Error {
@@ -149,5 +150,12 @@ export class ErrorUserIsNotGroupOwner extends BusinessError {
   statusCode = 400;
   constructor() {
     super(CODES.userIsNotGroupOwner);
+  }
+}
+
+export class ErrorGroupHasUsers extends BusinessError {
+  statusCode = 400;
+  constructor() {
+    super(CODES.groupHasUsers);
   }
 }

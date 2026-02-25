@@ -137,9 +137,20 @@ export class GroupsRoutesController {
           },
         );
 
-        router.delete(ROUTES.delete, {}, async (request, reply) => {
-          reply.status(200).send();
-        });
+        router.delete(
+          ROUTES.delete,
+          {
+            schema: SCHEMAS.delete,
+          },
+          async (request, reply) => {
+            await this.#groupsUseCases.deleteUserGroup({
+              userId: request.userId,
+              groupId: request.params.groupId as UUID,
+              logger: request.log,
+            });
+            reply.status(200).send();
+          },
+        );
       },
       { prefix: PREFIX },
     );
