@@ -1,4 +1,4 @@
-import { faker } from '@faker-js/faker';
+import { faker } from '../mocks/faker';
 
 /**
  * User data for test fixtures

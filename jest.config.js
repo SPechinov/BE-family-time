@@ -3,6 +3,9 @@ export default {
   testEnvironment: 'node',
   testMatch: ['**/src/tests/**/*.test.ts'],
   testPathIgnorePatterns: ['/node_modules/', '/benchmarks/'],
+  transformIgnorePatterns: [
+    '/node_modules/(?!(nanoid|@faker-js/faker)/)',
+  ],
   moduleNameMapper: {
     '^@/(.*)$': '<rootDir>/src/$1',
     '^(\\.{1,2}/.*)\\.js$': '$1',
