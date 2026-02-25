@@ -28,42 +28,58 @@ const CALENDAR_EVENT_SCHEMA = z.object({
   updatedAt: z.string().datetime(),
 });
 
-const CREATE_EVENT_BODY = z
-  .object({
-    title: z.string().min(1).max(100),
-    description: z.string().max(1000).optional(),
-    eventType: z.enum(['one-time', 'yearly', 'weekly', 'monthly', 'work-schedule']),
-    startDate: z.string().datetime(),
-    endDate: z.string().datetime(),
-    isAllDay: z.boolean().optional().default(false),
-    recurrencePattern: z
-      .object({
-        type: z.enum(['weekly', 'monthly', 'work-schedule']),
-        weekdays: z.array(z.number().min(1).max(7)).min(1).optional(),
-        dayOfMonth: z.number().min(1).max(31).optional(),
-        shiftPattern: z.array(z.number().min(0).max(1)).min(2).optional(),
-        startDate: z.string().date().optional(),
-        shiftDuration: z.number().positive().optional(),
-      })
-      .optional(),
-  })
-  .refine(
-    (data) => {
-      if (data.recurrencePattern) {
-        if (data.recurrencePattern.type === 'weekly' && !data.recurrencePattern.weekdays) return false;
-        if (data.recurrencePattern.type === 'monthly' && !data.recurrencePattern.dayOfMonth) return false;
-        if (
-          data.recurrencePattern.type === 'work-schedule' &&
-          (!data.recurrencePattern.shiftPattern || !data.recurrencePattern.startDate)
-        )
-          return false;
-      }
-      return true;
-    },
-    { message: 'Invalid recurrencePattern for eventType' },
-  );
+const CREATE_EVENT_BODY_BASE = z.object({
+  title: z.string().min(1).max(100),
+  description: z.string().max(1000).optional(),
+  eventType: z.enum(['one-time', 'yearly', 'weekly', 'monthly', 'work-schedule']),
+  startDate: z.string().datetime(),
+  endDate: z.string().datetime(),
+  isAllDay: z.boolean().optional().default(false),
+  recurrencePattern: z
+    .object({
+      type: z.enum(['weekly', 'monthly', 'work-schedule']),
+      weekdays: z.array(z.number().min(1).max(7)).min(1).optional(),
+      dayOfMonth: z.number().min(1).max(31).optional(),
+      shiftPattern: z.array(z.number().min(0).max(1)).min(2).optional(),
+      startDate: z.string().date().optional(),
+      shiftDuration: z.number().positive().optional(),
+    })
+    .optional(),
+});
 
-const PATCH_EVENT_BODY = CREATE_EVENT_BODY.partial();
+const CREATE_EVENT_BODY = CREATE_EVENT_BODY_BASE.refine(
+  (data) => {
+    if (data.recurrencePattern) {
+      if (data.recurrencePattern.type === 'weekly' && !data.recurrencePattern.weekdays) return false;
+      if (data.recurrencePattern.type === 'monthly' && !data.recurrencePattern.dayOfMonth) return false;
+      if (
+        data.recurrencePattern.type === 'work-schedule' &&
+        (!data.recurrencePattern.shiftPattern || !data.recurrencePattern.startDate)
+      )
+        return false;
+    }
+    return true;
+  },
+  { message: 'Invalid recurrencePattern for eventType' },
+);
+
+const PATCH_EVENT_BODY_BASE = CREATE_EVENT_BODY_BASE.partial();
+
+const PATCH_EVENT_BODY = PATCH_EVENT_BODY_BASE.refine(
+  (data) => {
+    if (data.recurrencePattern) {
+      if (data.recurrencePattern.type === 'weekly' && !data.recurrencePattern.weekdays) return false;
+      if (data.recurrencePattern.type === 'monthly' && !data.recurrencePattern.dayOfMonth) return false;
+      if (
+        data.recurrencePattern.type === 'work-schedule' &&
+        (!data.recurrencePattern.shiftPattern || !data.recurrencePattern.startDate)
+      )
+        return false;
+    }
+    return true;
+  },
+  { message: 'Invalid recurrencePattern for eventType' },
+);
 
 const GET_LIST = {
   tags: ['Calendar'],

@@ -18,12 +18,16 @@ export class GroupsComposite {
   #register() {
     const dependencies = createGroupsDependencies({ postgres: this.#postgres });
 
-    new GroupsRoutesController({
+    // Register groups routes first
+    const groupsController = new GroupsRoutesController({
       fastify: this.#fastifyInstance,
       authMiddleware: dependencies.authMiddleware,
       groupsUseCases: dependencies.groupsUseCases,
-    }).register();
+    });
+    groupsController.register();
 
+    // Register calendar routes inside groups routes to inherit :groupId parameter
+    // Calendar routes use prefix /groups/:groupId/calendar
     new CalendarRoutesController({
       fastify: this.#fastifyInstance,
       authMiddleware: dependencies.authMiddleware,
