@@ -1,6 +1,7 @@
 export * from './users';
 export * from './groups';
 export * from './groupsUsers';
+export * from './calendarEvents';
 export * from './rateLimiter';
 export * from './hash';
 export * from './hashPassword';
