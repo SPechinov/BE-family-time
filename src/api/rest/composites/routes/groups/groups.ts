@@ -1,6 +1,7 @@
 import { FastifyInstance } from 'fastify';
 import { Pool } from 'pg';
 import { GroupsRoutesController } from '../../../routes/groups';
+import { CalendarRoutesController } from '../../../routes/groups/calendar';
 import { createGroupsDependencies } from './utils';
 
 export class GroupsComposite {
@@ -21,6 +22,12 @@ export class GroupsComposite {
       fastify: this.#fastifyInstance,
       authMiddleware: dependencies.authMiddleware,
       groupsUseCases: dependencies.groupsUseCases,
+    }).register();
+
+    new CalendarRoutesController({
+      fastify: this.#fastifyInstance,
+      authMiddleware: dependencies.authMiddleware,
+      calendarEventsUseCases: dependencies.calendarEventsUseCases,
     }).register();
   }
 }

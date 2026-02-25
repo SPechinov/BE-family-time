@@ -1,9 +1,9 @@
 import { Pool } from 'pg';
 import { JwtService } from '@/services/jwt';
 import { AuthMiddleware } from '@/api/rest/middlewares';
-import { GroupsRepository, GroupsUsersRepository } from '@/repositories/db';
-import { GroupsService, GroupsUsersService } from '@/services';
-import { GroupsUseCases } from '@/useCases';
+import { GroupsRepository, GroupsUsersRepository, CalendarEventsRepository } from '@/repositories/db';
+import { GroupsService, GroupsUsersService, CalendarEventsService } from '@/services';
+import { GroupsUseCases, CalendarEventsUseCases } from '@/useCases';
 import { createUsersService } from '@/api/rest/composites/utils';
 import { DbTransactionService } from '@/pkg/dbTransaction';
 
@@ -29,9 +29,17 @@ export const createGroupsDependencies = (props: CreateGroupsDependenciesProps) =
     transactionService: dbTransactionService,
   });
 
+  const calendarEventsRepository = new CalendarEventsRepository(props.postgres);
+  const calendarEventsService = new CalendarEventsService({ calendarEventsRepository });
+  const calendarEventsUseCases = new CalendarEventsUseCases({
+    calendarEventsService,
+    groupsUsersService,
+  });
+
   return {
     jwtService,
     authMiddleware,
     groupsUseCases,
+    calendarEventsUseCases,
   };
 };
