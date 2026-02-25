@@ -6,8 +6,6 @@
   "scripts": {
     "dev": "nodemon",
     "build": "tsc",
-    "test": "npx jest",
-    "test:unit": "npx jest src/tests/unit",
     "migrations:up": "cross-env DATABASE_URL=postgresql://root:root@localhost:5432/postgres node-pg-migrate up",
     "migrations:create": "node-pg-migrate create 1 -j sql"
   },
