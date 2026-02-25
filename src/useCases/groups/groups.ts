@@ -10,10 +10,11 @@ import {
   GroupsUsersFindOneEntity,
 } from '@/entities';
 import {
+  ErrorGroupNotExists,
   ErrorGroupsLimitExceeded,
   ErrorUserInGroup,
   ErrorUserIsGroupOwner,
-  ErrorUserNotGroupOwner,
+  ErrorUserIsNotGroupOwner,
   ErrorUserNotInGroup,
 } from '@/pkg';
 import { UUID } from 'node:crypto';
@@ -121,9 +122,10 @@ export class GroupsUseCases implements IGroupsUseCases {
     await Promise.all([
       this.#usersService.findOneByUserIdOrThrow(ownerUserId, { logger }),
       this.#usersService.findOneByUserIdOrThrow(invitingUserId, { logger }),
-      this.#checkUserNotInGroupOrThrow(groupId, invitingUserId, { logger }),
-      this.#checkIsGroupOwnerOrThrow(groupId, ownerUserId, { logger }),
     ]);
+
+    await this.#checkIsGroupOwnerOrThrow(groupId, ownerUserId, { logger });
+    await this.#checkUserNotInGroupOrThrow(groupId, invitingUserId, { logger });
 
     await this.#groupsUsersService.createOne(
       new GroupsUsersCreateEntity({ userId: invitingUserId, groupId: groupId, isOwner: false }),
@@ -139,13 +141,16 @@ export class GroupsUseCases implements IGroupsUseCases {
   }: DefaultProps<{ excludingUserId: UUID; ownerUserId: UUID; groupId: UUID }>): Promise<void> {
     await Promise.all([
       this.#usersService.findOneByUserIdOrThrow(ownerUserId, { logger }),
-      this.#checkUserInGroupOrThrow(groupId, excludingUserId, { logger }),
-      this.#checkIsGroupOwnerOrThrow(groupId, ownerUserId, { logger }),
+      this.#usersService.findOneByUserIdOrThrow(excludingUserId, { logger }),
     ]);
+
+    await this.#checkIsGroupOwnerOrThrow(groupId, ownerUserId, { logger });
 
     if (ownerUserId === excludingUserId) {
       throw new ErrorUserIsGroupOwner();
     }
+
+    await this.#checkUserInGroupOrThrow(groupId, excludingUserId, { logger });
 
     await this.#groupsUsersService.deleteOne(
       new GroupsUsersDeleteOneEntity({ userId: excludingUserId, groupId: groupId }),
@@ -166,24 +171,25 @@ export class GroupsUseCases implements IGroupsUseCases {
   }
 
   async #checkUserInGroupOrThrow(groupId: UUID, userId: UUID, options: { logger: ILogger }) {
-    return this.#groupsUsersService.findOneOrThrow(
-      new GroupsUsersFindOneEntity({
-        groupId,
-        userId,
-      }),
-      { logger: options.logger, error: ErrorUserNotInGroup },
-    );
+    return this.#groupsUsersService.findOneOrThrow(new GroupsUsersFindOneEntity({ groupId, userId }), {
+      logger: options.logger,
+      error: ErrorUserNotInGroup,
+    });
   }
 
   async #checkIsGroupOwnerOrThrow(groupId: UUID, userId: UUID, options: { logger: ILogger }) {
-    return this.#groupsUsersService.findOneOrThrow(
-      new GroupsUsersFindOneEntity({
-        groupId,
-        userId,
-        isOwner: true,
-      }),
-      { logger: options.logger, error: ErrorUserNotGroupOwner },
+    const groupUser = await this.#groupsUsersService.findOne(
+      new GroupsUsersFindOneEntity({ groupId, userId }),
+      options,
     );
+
+    if (!groupUser) {
+      throw new ErrorGroupNotExists();
+    }
+
+    if (!groupUser.isOwner) {
+      throw new ErrorUserIsNotGroupOwner();
+    }
   }
 
   async #checkUserGroupsLimitExceededOrThrow(userId: UUID, options: { logger: ILogger }) {
