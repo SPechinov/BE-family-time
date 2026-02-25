@@ -105,15 +105,39 @@ export class GroupsRoutesController {
           },
         );
 
+        router.post(
+          ROUTES.inviteUser,
+          {
+            schema: SCHEMAS.invite,
+          },
+          async (request, reply) => {
+            await this.#groupsUseCases.inviteUserInGroup({
+              groupId: request.params.groupId as UUID,
+              ownerUserId: request.userId,
+              invitingUserId: request.body.invitingUserId as UUID,
+              logger: request.log,
+            });
+            reply.status(200).send();
+          },
+        );
+
+        router.post(
+          ROUTES.excludeUser,
+          {
+            schema: SCHEMAS.exclude,
+          },
+          async (request, reply) => {
+            await this.#groupsUseCases.excludeUserFromGroup({
+              groupId: request.params.groupId as UUID,
+              ownerUserId: request.userId,
+              excludingUserId: request.body.excludingUserId as UUID,
+              logger: request.log,
+            });
+            reply.status(200).send();
+          },
+        );
+
         router.delete(ROUTES.delete, {}, async (request, reply) => {
-          reply.status(200).send();
-        });
-
-        router.post(ROUTES.inviteUser, {}, async (request, reply) => {
-          reply.status(200).send();
-        });
-
-        router.post(ROUTES.excludeUser, {}, async (request, reply) => {
           reply.status(200).send();
         });
       },

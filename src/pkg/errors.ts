@@ -12,6 +12,10 @@ const CODES = {
   invalidUserAgent: 'invalidUserAgent',
   groupNotExists: 'groupNotExists',
   groupsLimitExceeded: 'groupsLimitExceeded',
+  userNotGroupOwner: 'userNotGroupOwner',
+  userInGroup: 'userInGroup',
+  userNotInGroup: 'userNotInGroup',
+  userIsGroupOwner: 'userIsGroupOwner',
 };
 
 export abstract class BusinessError extends Error {
@@ -117,5 +121,33 @@ export class ErrorGroupsLimitExceeded extends BusinessError {
 
   constructor() {
     super(CODES.groupsLimitExceeded);
+  }
+}
+
+export class ErrorUserNotGroupOwner extends BusinessError {
+  statusCode = 400;
+  constructor() {
+    super(CODES.userNotGroupOwner);
+  }
+}
+
+export class ErrorUserInGroup extends BusinessError {
+  statusCode = 400;
+  constructor() {
+    super(CODES.userInGroup);
+  }
+}
+
+export class ErrorUserNotInGroup extends BusinessError {
+  statusCode = 400;
+  constructor() {
+    super(CODES.userNotInGroup);
+  }
+}
+
+export class ErrorUserIsGroupOwner extends BusinessError {
+  statusCode = 400;
+  constructor() {
+    super(CODES.userIsGroupOwner);
   }
 }

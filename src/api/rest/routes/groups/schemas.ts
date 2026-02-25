@@ -20,7 +20,7 @@ const CREATE = {
 const GET = {
   tags: ['Groups'],
   params: z.object({
-    groupId: z.uuidv4(),
+    groupId: GLOBAL_SCHEMAS.groupId,
   }),
   response: createResponseSchema({
     200: GROUP_SCHEMA,
@@ -30,7 +30,7 @@ const GET = {
 const PATCH = {
   tags: ['Groups'],
   params: z.object({
-    groupId: z.uuidv4(),
+    groupId: GLOBAL_SCHEMAS.groupId,
   }),
   body: z
     .object({
@@ -43,9 +43,37 @@ const PATCH = {
   }),
 };
 
+const INVITE = {
+  tags: ['Groups'],
+  params: z.object({
+    groupId: GLOBAL_SCHEMAS.groupId,
+  }),
+  body: z.object({
+    invitingUserId: GLOBAL_SCHEMAS.userId,
+  }),
+  response: createResponseSchema({
+    200: z.void(),
+  }),
+};
+
+const EXCLUDE = {
+  tags: ['Groups'],
+  params: z.object({
+    groupId: GLOBAL_SCHEMAS.groupId,
+  }),
+  body: z.object({
+    excludingUserId: GLOBAL_SCHEMAS.userId,
+  }),
+  response: createResponseSchema({
+    200: z.void(),
+  }),
+};
+
 export const SCHEMAS = Object.freeze({
   getList: GET_LIST,
   create: CREATE,
   get: GET,
   patch: PATCH,
+  invite: INVITE,
+  exclude: EXCLUDE,
 });

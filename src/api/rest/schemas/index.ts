@@ -12,6 +12,8 @@ export const GLOBAL_SCHEMAS = {
   userAgent: z.string().min(1),
   groupName: z.string().max(50),
   groupDescription: z.string().max(1000),
+  groupId: z.uuidv4(),
+  userId: z.uuidv4(),
 };
 
 export const SESSION_SCHEMA = z

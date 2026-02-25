@@ -13,4 +13,6 @@ export interface IGroupsUseCases {
       groupPatchOneEntity: GroupPatchOneEntity;
     }>,
   ): Promise<GroupEntity>;
+  inviteUserInGroup(props: DefaultProps<{ invitingUserId: UUID; ownerUserId: UUID; groupId: UUID }>): Promise<void>;
+  excludeUserFromGroup(props: DefaultProps<{ excludingUserId: UUID; ownerUserId: UUID; groupId: UUID }>): Promise<void>;
 }

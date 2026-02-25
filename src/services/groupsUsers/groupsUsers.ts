@@ -35,11 +35,12 @@ export class GroupsUsersService implements IGroupsUsersService {
 
   async findOneOrThrow(
     groupsUsersFindOneEntity: GroupsUsersFindOneEntity,
-    options?: { client?: PoolClient; logger?: ILogger },
+    options?: { client?: PoolClient; logger?: ILogger; error?: typeof BusinessError },
   ): Promise<GroupsUsersEntity> {
     const groupUser = await this.findOne(groupsUsersFindOneEntity, options);
     if (!groupUser) {
-      throw new ErrorGroupNotExists();
+      const ErrorClass = options?.error ?? ErrorGroupNotExists;
+      throw new ErrorClass();
     }
 
     return groupUser;
