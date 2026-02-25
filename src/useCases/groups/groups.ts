@@ -74,12 +74,13 @@ export class GroupsUseCases implements IGroupsUseCases {
   }: DefaultProps<{ userId: UUID; groupId: UUID }>): Promise<GroupEntity> {
     await this.#usersService.findOneByUserIdOrThrow(userId, { logger });
 
-    const [groupUser, group] = await Promise.all([
-      this.#groupsUsersService.findOne(new GroupsUsersFindOneEntity({ groupId, userId }), { logger }),
-      this.#groupsService.findOne(new GroupFindOneEntity({ id: groupId }), { logger }),
-    ]);
+    const groupUser = await this.#groupsUsersService.findOne(new GroupsUsersFindOneEntity({ groupId, userId }), {
+      logger,
+    });
+    if (!groupUser) throw new ErrorGroupNotExists();
 
-    if (!groupUser || !group) throw new ErrorGroupNotExists();
+    const group = await this.#groupsService.findOne(new GroupFindOneEntity({ id: groupId }), { logger });
+    if (!group) throw new ErrorGroupNotExists();
 
     return group;
   }
@@ -104,10 +105,10 @@ export class GroupsUseCases implements IGroupsUseCases {
   }>): Promise<GroupEntity> {
     await this.#usersService.findOneByUserIdOrThrow(userId, { logger });
 
-    const groupUser = await this.#groupsUsersService.findOne(new GroupsUsersFindOneEntity({ groupId, userId }), {
-      logger,
-    });
-    if (!groupUser) throw new ErrorGroupNotExists();
+    await this.#checkIsGroupOwnerOrThrow(groupId, userId, { logger });
+
+    const group = await this.#groupsService.findOne(new GroupFindOneEntity({ id: groupId }), { logger });
+    if (!group) throw new ErrorGroupNotExists();
 
     return this.#groupsService.patchOne(
       {

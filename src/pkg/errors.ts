@@ -110,7 +110,7 @@ export class ErrorTokenExpired extends BusinessError {
 }
 
 export class ErrorGroupNotExists extends BusinessError {
-  statusCode = 401;
+  statusCode = 404;
   constructor() {
     super(CODES.groupNotExists);
   }
@@ -121,13 +121,6 @@ export class ErrorGroupsLimitExceeded extends BusinessError {
 
   constructor() {
     super(CODES.groupsLimitExceeded);
-  }
-}
-
-export class ErrorUserIsNotGroupOwner extends BusinessError {
-  statusCode = 400;
-  constructor() {
-    super(CODES.userIsNotGroupOwner);
   }
 }
 
@@ -149,5 +142,12 @@ export class ErrorUserIsGroupOwner extends BusinessError {
   statusCode = 400;
   constructor() {
     super(CODES.userIsGroupOwner);
+  }
+}
+
+export class ErrorUserIsNotGroupOwner extends BusinessError {
+  statusCode = 400;
+  constructor() {
+    super(CODES.userIsNotGroupOwner);
   }
 }
