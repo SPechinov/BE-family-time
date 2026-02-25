@@ -154,7 +154,7 @@ export class GroupsUseCases implements IGroupsUseCases {
   }
 
   async #checkUserNotInGroupOrThrow(groupId: UUID, userId: UUID, options: { logger: ILogger }) {
-    const groupUser = await this.#groupsUsersService.findOneOrThrow(
+    const groupUser = await this.#groupsUsersService.findOne(
       new GroupsUsersFindOneEntity({
         groupId,
         userId,

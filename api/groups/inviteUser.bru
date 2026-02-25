@@ -1,0 +1,34 @@
+meta {
+  name: inviteUser
+  type: http
+  seq: 5
+}
+
+post {
+  url: {{url}}/groups/:groupId/inviteUser
+  body: formUrlEncoded
+  auth: bearer
+}
+
+params:path {
+  groupId: 89003197-1724-44b4-b674-d033ed157d77
+}
+
+auth:bearer {
+  token: {{authToken}}
+}
+
+body:json {
+  {
+    name: "Aaaaa"
+  }
+}
+
+body:form-urlencoded {
+  invitingUserId: 8d8b5112-c7f7-4044-a1b9-ee5ae7743fae
+}
+
+settings {
+  encodeUrl: true
+  timeout: 0
+}
