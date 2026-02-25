@@ -50,6 +50,6 @@ CREATE TRIGGER update_calendar_events_updated_at
   EXECUTE FUNCTION update_updated_at_column();
 
 -- Down Migration
--- DROP TRIGGER IF EXISTS update_calendar_events_updated_at ON calendar_events;
--- DROP FUNCTION IF EXISTS update_updated_at_column();
--- DROP TABLE IF EXISTS calendar_events;
+DROP TRIGGER IF EXISTS update_calendar_events_updated_at ON calendar_events;
+DROP FUNCTION IF EXISTS update_updated_at_column();
+DROP TABLE IF EXISTS calendar_events;
