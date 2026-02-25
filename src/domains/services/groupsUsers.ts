@@ -8,7 +8,6 @@ import {
 import { PoolClient } from 'pg';
 import { ILogger } from '@/pkg/logger';
 import { UUID } from 'node:crypto';
-import { BusinessError } from '@/pkg';
 
 export interface IGroupsUsersService {
   createOne(
@@ -19,10 +18,6 @@ export interface IGroupsUsersService {
     groupsUsersFindOneEntity: GroupsUsersFindOneEntity,
     options?: { client?: PoolClient; logger?: ILogger },
   ): Promise<GroupsUsersEntity | null>;
-  findOneOrThrow(
-    groupsUsersFindOneEntity: GroupsUsersFindOneEntity,
-    options?: { client?: PoolClient; logger?: ILogger; error?: typeof BusinessError },
-  ): Promise<GroupsUsersEntity>;
   findMany(
     groupsUsersFindManyEntity: GroupsUsersFindManyEntity,
     options?: { client?: PoolClient; logger?: ILogger },

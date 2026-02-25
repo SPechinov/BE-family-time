@@ -72,11 +72,14 @@ export class GroupsUseCases implements IGroupsUseCases {
     groupId,
     logger,
   }: DefaultProps<{ userId: UUID; groupId: UUID }>): Promise<GroupEntity> {
-    const [, , group] = await Promise.all([
-      this.#usersService.findOneByUserIdOrThrow(userId, { logger }),
-      this.#groupsUsersService.findOneOrThrow(new GroupsUsersFindOneEntity({ groupId, userId }), { logger }),
-      this.#groupsService.findOneOrThrow(new GroupFindOneEntity({ id: groupId }), { logger }),
+    await this.#usersService.findOneByUserIdOrThrow(userId, { logger });
+
+    const [groupUser, group] = await Promise.all([
+      this.#groupsUsersService.findOne(new GroupsUsersFindOneEntity({ groupId, userId }), { logger }),
+      this.#groupsService.findOne(new GroupFindOneEntity({ id: groupId }), { logger }),
     ]);
+
+    if (!groupUser || !group) throw new ErrorGroupNotExists();
 
     return group;
   }
@@ -99,10 +102,12 @@ export class GroupsUseCases implements IGroupsUseCases {
     groupId: UUID;
     groupPatchOneEntity: GroupPatchOneEntity;
   }>): Promise<GroupEntity> {
-    await Promise.all([
-      this.#usersService.findOneByUserIdOrThrow(userId, { logger }),
-      this.#groupsUsersService.findOneOrThrow(new GroupsUsersFindOneEntity({ groupId, userId }), { logger }),
-    ]);
+    await this.#usersService.findOneByUserIdOrThrow(userId, { logger });
+
+    const groupUser = await this.#groupsUsersService.findOne(new GroupsUsersFindOneEntity({ groupId, userId }), {
+      logger,
+    });
+    if (!groupUser) throw new ErrorGroupNotExists();
 
     return this.#groupsService.patchOne(
       {
@@ -171,10 +176,11 @@ export class GroupsUseCases implements IGroupsUseCases {
   }
 
   async #checkUserInGroupOrThrow(groupId: UUID, userId: UUID, options: { logger: ILogger }) {
-    return this.#groupsUsersService.findOneOrThrow(new GroupsUsersFindOneEntity({ groupId, userId }), {
-      logger: options.logger,
-      error: ErrorUserNotInGroup,
-    });
+    const groupUser = await this.#groupsUsersService.findOne(
+      new GroupsUsersFindOneEntity({ groupId, userId }),
+      options,
+    );
+    if (!groupUser) throw new ErrorUserNotInGroup();
   }
 
   async #checkIsGroupOwnerOrThrow(groupId: UUID, userId: UUID, options: { logger: ILogger }) {

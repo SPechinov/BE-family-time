@@ -10,7 +10,6 @@ import { IGroupsUsersService } from '@/domains/services';
 import { PoolClient } from 'pg';
 import { ILogger } from '@/pkg/logger';
 import { UUID } from 'node:crypto';
-import { ErrorGroupNotExists } from '@/pkg';
 
 export class GroupsUsersService implements IGroupsUsersService {
   readonly #groupsUsersRepository: IGroupsUsersRepository;
@@ -31,19 +30,6 @@ export class GroupsUsersService implements IGroupsUsersService {
     options?: { client?: PoolClient; logger?: ILogger },
   ): Promise<GroupsUsersEntity | null> {
     return this.#groupsUsersRepository.findOne(groupsUsersFindOneEntity, options);
-  }
-
-  async findOneOrThrow(
-    groupsUsersFindOneEntity: GroupsUsersFindOneEntity,
-    options?: { client?: PoolClient; logger?: ILogger; error?: typeof BusinessError },
-  ): Promise<GroupsUsersEntity> {
-    const groupUser = await this.findOne(groupsUsersFindOneEntity, options);
-    if (!groupUser) {
-      const ErrorClass = options?.error ?? ErrorGroupNotExists;
-      throw new ErrorClass();
-    }
-
-    return groupUser;
   }
 
   async findMany(

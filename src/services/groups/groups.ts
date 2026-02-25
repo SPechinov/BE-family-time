@@ -32,18 +32,6 @@ export class GroupsService implements IGroupsService {
     return this.#groupsRepository.findOne(groupFindOneEntity, options);
   }
 
-  async findOneOrThrow(
-    groupFindOneEntity: GroupFindOneEntity,
-    options?: { client?: PoolClient; logger?: ILogger },
-  ): Promise<GroupEntity> {
-    const group = await this.findOne(groupFindOneEntity, options);
-    if (!group) {
-      throw new ErrorGroupNotExists();
-    }
-
-    return group;
-  }
-
   async findMany(
     groupFindManyEntity: GroupFindManyEntity,
     options?: { client?: PoolClient; logger?: ILogger },
