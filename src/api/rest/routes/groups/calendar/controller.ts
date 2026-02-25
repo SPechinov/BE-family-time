@@ -43,9 +43,7 @@ export class CalendarRoutesController {
               logger: request.log,
             });
 
-            reply.status(200).send(
-              events.map((event) => this.#serializeEvent(event)),
-            );
+            reply.status(200).send(events.map((event) => this.#serializeEvent(event)));
           },
         );
 

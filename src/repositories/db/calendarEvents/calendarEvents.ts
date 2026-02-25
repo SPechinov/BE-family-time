@@ -4,7 +4,6 @@ import {
   CalendarEventEntity,
   CalendarEventCreateEntity,
   CalendarEventFindOneEntity,
-  CalendarEventFindManyEntity,
   CalendarEventPatchEntity,
 } from '@/entities';
 import { ICalendarEventRow } from './types';
@@ -212,10 +211,7 @@ export class CalendarEventsRepository implements ICalendarEventsRepository {
     return this.#buildCalendarEventEntity(row);
   }
 
-  async deleteOne(
-    id: UUID,
-    options?: { client?: PoolClient; logger?: ILogger },
-  ): Promise<void> {
+  async deleteOne(id: UUID, options?: { client?: PoolClient; logger?: ILogger }): Promise<void> {
     const client = options?.client ?? this.#pool;
 
     const query = `DELETE FROM calendar_events WHERE id = $1`;
@@ -230,10 +226,7 @@ export class CalendarEventsRepository implements ICalendarEventsRepository {
     }
   }
 
-  async deleteSeries(
-    parentEventId: UUID,
-    options?: { client?: PoolClient; logger?: ILogger },
-  ): Promise<void> {
+  async deleteSeries(parentEventId: UUID, options?: { client?: PoolClient; logger?: ILogger }): Promise<void> {
     const client = options?.client ?? this.#pool;
 
     // Удаляем все исключения и само родительское событие
@@ -267,10 +260,9 @@ export class CalendarEventsRepository implements ICalendarEventsRepository {
     const client = options?.client ?? this.#pool;
 
     // Получаем родительское событие для копирования основных полей
-    const parentResult = await client.query<ICalendarEventRow>(
-      'SELECT * FROM calendar_events WHERE id = $1',
-      [entity.parentEventId],
-    );
+    const parentResult = await client.query<ICalendarEventRow>('SELECT * FROM calendar_events WHERE id = $1', [
+      entity.parentEventId,
+    ]);
 
     const parent = parentResult.rows?.[0];
     if (!parent) {

@@ -2,7 +2,6 @@ import {
   CalendarEventEntity,
   CalendarEventCreateEntity,
   CalendarEventFindOneEntity,
-  CalendarEventFindManyEntity,
   CalendarEventPatchEntity,
 } from '@/entities';
 import { PoolClient } from 'pg';
@@ -20,10 +19,7 @@ export interface ICalendarEventsRepository {
     options?: { client?: PoolClient; logger?: ILogger },
   ): Promise<CalendarEventEntity | null>;
 
-  findByGroupId(
-    groupId: UUID,
-    options?: { client?: PoolClient; logger?: ILogger },
-  ): Promise<CalendarEventEntity[]>;
+  findByGroupId(groupId: UUID, options?: { client?: PoolClient; logger?: ILogger }): Promise<CalendarEventEntity[]>;
 
   findForPeriod(
     groupId: UUID,
@@ -45,15 +41,9 @@ export interface ICalendarEventsRepository {
     options?: { client?: PoolClient; logger?: ILogger },
   ): Promise<CalendarEventEntity>;
 
-  deleteOne(
-    id: UUID,
-    options?: { client?: PoolClient; logger?: ILogger },
-  ): Promise<void>;
+  deleteOne(id: UUID, options?: { client?: PoolClient; logger?: ILogger }): Promise<void>;
 
-  deleteSeries(
-    parentEventId: UUID,
-    options?: { client?: PoolClient; logger?: ILogger },
-  ): Promise<void>;
+  deleteSeries(parentEventId: UUID, options?: { client?: PoolClient; logger?: ILogger }): Promise<void>;
 
   createException(
     entity: {

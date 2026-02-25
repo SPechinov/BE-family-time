@@ -1,9 +1,5 @@
 import { ICalendarEventsRepository } from '@/domains/repositories/db';
-import {
-  CalendarEventEntity,
-  CalendarEventCreateEntity,
-  CalendarEventPatchEntity,
-} from '@/entities';
+import { CalendarEventEntity, CalendarEventCreateEntity, CalendarEventPatchEntity } from '@/entities';
 import { ICalendarEventsService } from '@/domains/services';
 import { PoolClient } from 'pg';
 import { ILogger } from '@/pkg/logger';
@@ -175,11 +171,7 @@ export class CalendarEventsService implements ICalendarEventsService {
         );
 
         const occurrenceEnd = new Date(currentYear, eventMonth, eventDay);
-        occurrenceEnd.setHours(
-          event.endDate.getHours(),
-          event.endDate.getMinutes(),
-          event.endDate.getSeconds(),
-        );
+        occurrenceEnd.setHours(event.endDate.getHours(), event.endDate.getMinutes(), event.endDate.getSeconds());
 
         if (occurrenceStart >= periodStart && occurrenceStart <= periodEnd) {
           occurrences.push(
@@ -232,11 +224,7 @@ export class CalendarEventsService implements ICalendarEventsService {
         );
 
         const occurrenceEnd = new Date(current);
-        occurrenceEnd.setHours(
-          event.endDate.getHours(),
-          event.endDate.getMinutes(),
-          event.endDate.getSeconds(),
-        );
+        occurrenceEnd.setHours(event.endDate.getHours(), event.endDate.getMinutes(), event.endDate.getSeconds());
 
         occurrences.push(
           new CalendarEventEntity({
@@ -286,11 +274,7 @@ export class CalendarEventsService implements ICalendarEventsService {
         );
 
         const occurrenceEnd = new Date(current.getFullYear(), current.getMonth(), dayOfMonth);
-        occurrenceEnd.setHours(
-          event.endDate.getHours(),
-          event.endDate.getMinutes(),
-          event.endDate.getSeconds(),
-        );
+        occurrenceEnd.setHours(event.endDate.getHours(), event.endDate.getMinutes(), event.endDate.getSeconds());
 
         if (occurrenceStart >= periodStart && occurrenceStart <= periodEnd) {
           occurrences.push(
@@ -383,13 +367,8 @@ export class CalendarEventsService implements ICalendarEventsService {
   /**
    * Применяет исключения к вхождениям
    */
-  #applyExceptions(
-    occurrences: CalendarEventEntity[],
-    exceptions: CalendarEventEntity[],
-  ): CalendarEventEntity[] {
-    const exceptionDates = new Set(
-      exceptions.map((e) => this.#formatDate(e.exceptionDate ?? e.startDate)),
-    );
+  #applyExceptions(occurrences: CalendarEventEntity[], exceptions: CalendarEventEntity[]): CalendarEventEntity[] {
+    const exceptionDates = new Set(exceptions.map((e) => this.#formatDate(e.exceptionDate ?? e.startDate)));
 
     return occurrences.filter((occ) => !exceptionDates.has(this.#formatDate(occ.startDate)));
   }

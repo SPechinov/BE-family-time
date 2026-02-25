@@ -26,10 +26,7 @@ export interface ICalendarEventsService {
   /**
    * Получить одно событие по ID
    */
-  getEventById(
-    id: UUID,
-    options?: { client?: PoolClient; logger?: ILogger },
-  ): Promise<CalendarEventEntity | null>;
+  getEventById(id: UUID, options?: { client?: PoolClient; logger?: ILogger }): Promise<CalendarEventEntity | null>;
 
   /**
    * Обновить событие

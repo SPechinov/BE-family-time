@@ -61,21 +61,51 @@ export class CalendarEventEntity {
     this.#updatedAt = props.updatedAt;
   }
 
-  get id(): UUID { return this.#id; }
-  get groupId(): UUID { return this.#groupId; }
-  get creatorUserId(): UUID { return this.#creatorUserId; }
-  get title(): string { return this.#title; }
-  get description(): string | undefined { return this.#description; }
-  get eventType(): CalendarEventType { return this.#eventType; }
-  get startDate(): Date { return this.#startDate; }
-  get endDate(): Date { return this.#endDate; }
-  get isAllDay(): boolean { return this.#isAllDay; }
-  get recurrencePattern(): RecurrencePattern | undefined { return this.#recurrencePattern; }
-  get parentEventId(): UUID | undefined { return this.#parentEventId; }
-  get isException(): boolean { return this.#isException; }
-  get exceptionDate(): Date | undefined { return this.#exceptionDate; }
-  get createdAt(): Date { return this.#createdAt; }
-  get updatedAt(): Date { return this.#updatedAt; }
+  get id(): UUID {
+    return this.#id;
+  }
+  get groupId(): UUID {
+    return this.#groupId;
+  }
+  get creatorUserId(): UUID {
+    return this.#creatorUserId;
+  }
+  get title(): string {
+    return this.#title;
+  }
+  get description(): string | undefined {
+    return this.#description;
+  }
+  get eventType(): CalendarEventType {
+    return this.#eventType;
+  }
+  get startDate(): Date {
+    return this.#startDate;
+  }
+  get endDate(): Date {
+    return this.#endDate;
+  }
+  get isAllDay(): boolean {
+    return this.#isAllDay;
+  }
+  get recurrencePattern(): RecurrencePattern | undefined {
+    return this.#recurrencePattern;
+  }
+  get parentEventId(): UUID | undefined {
+    return this.#parentEventId;
+  }
+  get isException(): boolean {
+    return this.#isException;
+  }
+  get exceptionDate(): Date | undefined {
+    return this.#exceptionDate;
+  }
+  get createdAt(): Date {
+    return this.#createdAt;
+  }
+  get updatedAt(): Date {
+    return this.#updatedAt;
+  }
 }
 
 /**
@@ -114,15 +144,33 @@ export class CalendarEventCreateEntity {
     this.#recurrencePattern = props.recurrencePattern;
   }
 
-  get groupId(): UUID { return this.#groupId; }
-  get creatorUserId(): UUID { return this.#creatorUserId; }
-  get title(): string { return this.#title; }
-  get description(): string | undefined { return this.#description; }
-  get eventType(): CalendarEventType { return this.#eventType; }
-  get startDate(): Date { return this.#startDate; }
-  get endDate(): Date { return this.#endDate; }
-  get isAllDay(): boolean { return this.#isAllDay; }
-  get recurrencePattern(): RecurrencePattern | undefined { return this.#recurrencePattern; }
+  get groupId(): UUID {
+    return this.#groupId;
+  }
+  get creatorUserId(): UUID {
+    return this.#creatorUserId;
+  }
+  get title(): string {
+    return this.#title;
+  }
+  get description(): string | undefined {
+    return this.#description;
+  }
+  get eventType(): CalendarEventType {
+    return this.#eventType;
+  }
+  get startDate(): Date {
+    return this.#startDate;
+  }
+  get endDate(): Date {
+    return this.#endDate;
+  }
+  get isAllDay(): boolean {
+    return this.#isAllDay;
+  }
+  get recurrencePattern(): RecurrencePattern | undefined {
+    return this.#recurrencePattern;
+  }
 }
 
 /**
@@ -135,7 +183,9 @@ export class CalendarEventFindOneEntity {
     this.#id = props.id;
   }
 
-  get id(): UUID { return this.#id; }
+  get id(): UUID {
+    return this.#id;
+  }
 }
 
 /**
@@ -162,11 +212,21 @@ export class CalendarEventFindManyEntity {
     this.#search = props.search;
   }
 
-  get groupId(): UUID { return this.#groupId; }
-  get startDate(): Date | undefined { return this.#startDate; }
-  get endDate(): Date | undefined { return this.#endDate; }
-  get eventType(): CalendarEventType | undefined { return this.#eventType; }
-  get search(): string | undefined { return this.#search; }
+  get groupId(): UUID {
+    return this.#groupId;
+  }
+  get startDate(): Date | undefined {
+    return this.#startDate;
+  }
+  get endDate(): Date | undefined {
+    return this.#endDate;
+  }
+  get eventType(): CalendarEventType | undefined {
+    return this.#eventType;
+  }
+  get search(): string | undefined {
+    return this.#search;
+  }
 }
 
 /**
@@ -179,13 +239,7 @@ export class CalendarEventPatchEntity {
   readonly #endDate?: Date;
   readonly #isAllDay?: boolean;
 
-  constructor(props: {
-    title?: string;
-    description?: string;
-    startDate?: Date;
-    endDate?: Date;
-    isAllDay?: boolean;
-  }) {
+  constructor(props: { title?: string; description?: string; startDate?: Date; endDate?: Date; isAllDay?: boolean }) {
     this.#title = props.title;
     this.#description = props.description;
     this.#startDate = props.startDate;
@@ -193,11 +247,21 @@ export class CalendarEventPatchEntity {
     this.#isAllDay = props.isAllDay;
   }
 
-  get title(): string | undefined { return this.#title; }
-  get description(): string | undefined { return this.#description; }
-  get startDate(): Date | undefined { return this.#startDate; }
-  get endDate(): Date | undefined { return this.#endDate; }
-  get isAllDay(): boolean | undefined { return this.#isAllDay; }
+  get title(): string | undefined {
+    return this.#title;
+  }
+  get description(): string | undefined {
+    return this.#description;
+  }
+  get startDate(): Date | undefined {
+    return this.#startDate;
+  }
+  get endDate(): Date | undefined {
+    return this.#endDate;
+  }
+  get isAllDay(): boolean | undefined {
+    return this.#isAllDay;
+  }
 }
 
 /**
@@ -212,6 +276,10 @@ export class CalendarEventDeleteEntity {
     this.#deleteMode = props.deleteMode;
   }
 
-  get id(): UUID { return this.#id; }
-  get deleteMode(): 'single' | 'all' { return this.#deleteMode; }
+  get id(): UUID {
+    return this.#id;
+  }
+  get deleteMode(): 'single' | 'all' {
+    return this.#deleteMode;
+  }
 }

@@ -1,5 +1,10 @@
 import { UUID } from 'node:crypto';
-import { CalendarEventEntity, CalendarEventCreateEntity, CalendarEventPatchEntity, GroupsUsersFindOneEntity } from '@/entities';
+import {
+  CalendarEventEntity,
+  CalendarEventCreateEntity,
+  CalendarEventPatchEntity,
+  GroupsUsersFindOneEntity,
+} from '@/entities';
 import { ICalendarEventsUseCases } from '@/domains/useCases';
 import { ICalendarEventsService, IGroupsUsersService } from '@/domains/services';
 import { ErrorCalendarEventNotExists, ErrorUserNotInGroup } from '@/pkg';
@@ -10,10 +15,7 @@ export class CalendarEventsUseCases implements ICalendarEventsUseCases {
   readonly #calendarEventsService: ICalendarEventsService;
   readonly #groupsUsersService: IGroupsUsersService;
 
-  constructor(props: {
-    calendarEventsService: ICalendarEventsService;
-    groupsUsersService: IGroupsUsersService;
-  }) {
+  constructor(props: { calendarEventsService: ICalendarEventsService; groupsUsersService: IGroupsUsersService }) {
     this.#calendarEventsService = props.calendarEventsService;
     this.#groupsUsersService = props.groupsUsersService;
   }
