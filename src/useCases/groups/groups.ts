@@ -121,45 +121,45 @@ export class GroupsUseCases implements IGroupsUseCases {
 
   async inviteUserInGroup({
     groupId,
-    ownerUserId,
-    invitingUserId,
+    actorUserId,
+    targetUserId,
     logger,
-  }: DefaultProps<{ invitingUserId: UUID; ownerUserId: UUID; groupId: UUID }>): Promise<void> {
+  }: DefaultProps<{ targetUserId: UUID; actorUserId: UUID; groupId: UUID }>): Promise<void> {
     await Promise.all([
-      this.#usersService.findOneByUserIdOrThrow(ownerUserId, { logger }),
-      this.#usersService.findOneByUserIdOrThrow(invitingUserId, { logger }),
+      this.#usersService.findOneByUserIdOrThrow(actorUserId, { logger }),
+      this.#usersService.findOneByUserIdOrThrow(targetUserId, { logger }),
     ]);
 
-    await this.#checkIsGroupOwnerOrThrow(groupId, ownerUserId, { logger });
-    await this.#checkUserNotInGroupOrThrow(groupId, invitingUserId, { logger });
+    await this.#checkIsGroupOwnerOrThrow(groupId, actorUserId, { logger });
+    await this.#checkUserNotInGroupOrThrow(groupId, targetUserId, { logger });
 
     await this.#groupsUsersService.createOne(
-      new GroupsUsersCreateEntity({ userId: invitingUserId, groupId: groupId, isOwner: false }),
+      new GroupsUsersCreateEntity({ userId: targetUserId, groupId: groupId, isOwner: false }),
       { logger: logger },
     );
   }
 
   async excludeUserFromGroup({
     groupId,
-    ownerUserId,
-    excludingUserId,
+    actorUserId,
+    targetUserId,
     logger,
-  }: DefaultProps<{ excludingUserId: UUID; ownerUserId: UUID; groupId: UUID }>): Promise<void> {
+  }: DefaultProps<{ targetUserId: UUID; actorUserId: UUID; groupId: UUID }>): Promise<void> {
     await Promise.all([
-      this.#usersService.findOneByUserIdOrThrow(ownerUserId, { logger }),
-      this.#usersService.findOneByUserIdOrThrow(excludingUserId, { logger }),
+      this.#usersService.findOneByUserIdOrThrow(actorUserId, { logger }),
+      this.#usersService.findOneByUserIdOrThrow(targetUserId, { logger }),
     ]);
 
-    await this.#checkIsGroupOwnerOrThrow(groupId, ownerUserId, { logger });
+    await this.#checkIsGroupOwnerOrThrow(groupId, actorUserId, { logger });
 
-    if (ownerUserId === excludingUserId) {
+    if (actorUserId === targetUserId) {
       throw new ErrorUserIsGroupOwner();
     }
 
-    await this.#checkUserInGroupOrThrow(groupId, excludingUserId, { logger });
+    await this.#checkUserInGroupOrThrow(groupId, targetUserId, { logger });
 
     await this.#groupsUsersService.deleteOne(
-      new GroupsUsersDeleteOneEntity({ userId: excludingUserId, groupId: groupId }),
+      new GroupsUsersDeleteOneEntity({ userId: targetUserId, groupId: groupId }),
       { logger: logger },
     );
   }

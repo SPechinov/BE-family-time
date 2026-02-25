@@ -113,8 +113,8 @@ export class GroupsRoutesController {
           async (request, reply) => {
             await this.#groupsUseCases.inviteUserInGroup({
               groupId: request.params.groupId as UUID,
-              ownerUserId: request.userId,
-              invitingUserId: request.body.invitingUserId as UUID,
+              actorUserId: request.userId,
+              targetUserId: request.body.targetUserId as UUID,
               logger: request.log,
             });
             reply.status(200).send();
@@ -129,8 +129,8 @@ export class GroupsRoutesController {
           async (request, reply) => {
             await this.#groupsUseCases.excludeUserFromGroup({
               groupId: request.params.groupId as UUID,
-              ownerUserId: request.userId,
-              excludingUserId: request.body.excludingUserId as UUID,
+              actorUserId: request.userId,
+              targetUserId: request.body.targetUserId as UUID,
               logger: request.log,
             });
             reply.status(200).send();

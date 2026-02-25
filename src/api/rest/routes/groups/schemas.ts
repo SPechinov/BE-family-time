@@ -49,7 +49,7 @@ const INVITE = {
     groupId: GLOBAL_SCHEMAS.groupId,
   }),
   body: z.object({
-    invitingUserId: GLOBAL_SCHEMAS.userId,
+    targetUserId: GLOBAL_SCHEMAS.userId,
   }),
   response: createResponseSchema({
     200: z.void(),
@@ -62,7 +62,7 @@ const EXCLUDE = {
     groupId: GLOBAL_SCHEMAS.groupId,
   }),
   body: z.object({
-    excludingUserId: GLOBAL_SCHEMAS.userId,
+    targetUserId: GLOBAL_SCHEMAS.userId,
   }),
   response: createResponseSchema({
     200: z.void(),
