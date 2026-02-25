@@ -1,0 +1,1 @@
+export { CalendarRoutesController } from './controller';
