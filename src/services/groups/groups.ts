@@ -9,7 +9,6 @@ import {
 import { IGroupsService } from '@/domains/services';
 import { PoolClient } from 'pg';
 import { ILogger } from '@/pkg/logger';
-import { ErrorGroupNotExists } from '@/pkg';
 
 export class GroupsService implements IGroupsService {
   readonly #groupsRepository: IGroupsRepository;
