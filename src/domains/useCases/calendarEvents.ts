@@ -23,6 +23,7 @@ export interface ICalendarEventsUseCases {
       groupId: UUID;
       startDate: Date;
       endDate: Date;
+      eventType?: import('@/entities').CalendarEventType;
     }>,
   ): Promise<CalendarEventEntity[]>;
 

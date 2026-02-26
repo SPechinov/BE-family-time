@@ -97,10 +97,11 @@ export class CalendarEventsService implements ICalendarEventsService {
 
     // Если это recurring событие с deleteMode='single' — создаём исключение
     if (['weekly', 'monthly', 'work-schedule', 'yearly'].includes(event.eventType) && deleteMode === 'single') {
-      // Для yearly/single событий создаём исключение
+      // Для recurring событий создаём исключение
+      const parentEventId = event.parentEventId ?? event.id;
       await this.#calendarEventsRepository.createException(
         {
-          parentEventId: event.id,
+          parentEventId,
           exceptionDate: event.startDate,
         },
         options,

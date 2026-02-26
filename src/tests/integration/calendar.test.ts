@@ -613,8 +613,7 @@ describe('Calendar API Integration Tests', () => {
     });
 
     // TODO: Backend needs to implement eventType filter parameter
-    // Currently the eventType query parameter is not being applied
-    it.skip('should filter events by eventType', async () => {
+    it('should filter events by eventType', async () => {
       // Create weekly event
       await request
         .post(`${API_PREFIX}/${groupId}/calendar/events`)
@@ -963,8 +962,7 @@ describe('Calendar API Integration Tests', () => {
     });
 
     // TODO: This test fails with 500 due to backend implementation issue with deleteMode=single
-    // The feature needs to be implemented to create an exception record when deleting a single occurrence
-    it.skip('should delete single occurrence with deleteMode=single (creates exception)', async () => {
+    it('should delete single occurrence with deleteMode=single (creates exception)', async () => {
       const response = await request
         .delete(`${API_PREFIX}/${groupId}/calendar/events/${recurringEventId}`)
         .query({ deleteMode: 'single' })

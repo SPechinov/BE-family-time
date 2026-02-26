@@ -274,7 +274,7 @@ export class CalendarEventsRepository implements ICalendarEventsRepository {
         group_id, creator_user_id, title, description, event_type,
         start_date, end_date, is_all_day, recurrence_pattern,
         parent_event_id, is_exception, exception_date
-      ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, true, $11)
+      ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, true, $11::date)
       RETURNING *
     `;
 
@@ -289,7 +289,7 @@ export class CalendarEventsRepository implements ICalendarEventsRepository {
       entity.isAllDay ?? parent.is_all_day,
       null, // recurrence_pattern для исключения
       entity.parentEventId,
-      entity.exceptionDate,
+      entity.exceptionDate.toISOString().split('T')[0], // Конвертируем в DATE
     ];
 
     options?.logger?.debug({ query, values }, 'CalendarEvents repository: createException');

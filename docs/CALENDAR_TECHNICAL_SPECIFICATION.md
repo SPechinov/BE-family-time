@@ -593,7 +593,7 @@ src/
 
 ### 3.2. Миграция БД
 
-**Файл:** `migrations/4_create_calendar-events_table.sql`
+**Файл:** `migrations/4_create_group_calendar_table.sql`
 
 ```sql
 -- Up Migration
@@ -1000,7 +1000,7 @@ logger.error({ error }, 'Failed to generate occurrences');
 
 | № | Этап | Описание | Статус |
 |---|-------|----------|--------|
-| 1 | Миграция БД | Создать `migrations/4_create_calendar-events_table.sql` | ⬜ |
+| 1 | Миграция БД | Создать `migrations/4_create_group_calendar_table.sql` | ⬜ |
 | 2 | Entities | `src/entities/calendarEvent.ts` | ⬜ |
 | 3 | Repository (DB) | `src/repositories/db/calendarEvents/` | ⬜ |
 | 4 | Repository Interface | `src/domains/repositories/db/calendarEvents.ts` | ⬜ |

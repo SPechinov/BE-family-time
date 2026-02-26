@@ -40,6 +40,7 @@ export class CalendarRoutesController {
               groupId: request.params.groupId as UUID,
               startDate: new Date(request.query.startDate),
               endDate: new Date(request.query.endDate),
+              eventType: request.query.eventType,
               logger: request.log,
             });
 

@@ -47,19 +47,28 @@ export class CalendarEventsUseCases implements ICalendarEventsUseCases {
     groupId,
     startDate,
     endDate,
+    eventType,
     logger,
   }: DefaultProps<{
     userId: UUID;
     groupId: UUID;
     startDate: Date;
     endDate: Date;
+    eventType?: import('@/entities').CalendarEventType;
   }>): Promise<CalendarEventEntity[]> {
     // Проверяем что пользователь является участником группы
     await this.#checkUserInGroupOrThrow(userId, groupId, logger);
 
     logger?.debug({ userId, groupId, startDate, endDate }, 'Getting calendar events for group');
 
-    return this.#calendarEventsService.getEventsByGroupId(groupId, startDate, endDate, { logger });
+    const events = await this.#calendarEventsService.getEventsByGroupId(groupId, startDate, endDate, { logger });
+
+    // Фильтруем по eventType если указан
+    if (eventType) {
+      return events.filter((event) => event.eventType === eventType);
+    }
+
+    return events;
   }
 
   async getCalendarEventById({
