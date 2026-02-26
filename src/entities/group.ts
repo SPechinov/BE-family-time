@@ -1,7 +1,9 @@
 import { UUID } from 'node:crypto';
 
+export type GroupId = UUID;
+
 export class GroupEntity {
-  readonly #id: UUID;
+  readonly #id: GroupId;
   readonly #name: string;
   readonly #description?: string;
   readonly #createdAt: Date;

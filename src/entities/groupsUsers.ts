@@ -1,8 +1,10 @@
 import { UUID } from 'node:crypto';
+import { UserId } from '@/entities/user';
+import { GroupId } from '@/entities/group';
 
 export class GroupsUsersEntity {
-  readonly #userId: UUID;
-  readonly #groupId: UUID;
+  readonly #userId: UserId;
+  readonly #groupId: GroupId;
   readonly #isOwner: boolean;
   readonly #createdAt: Date;
 
