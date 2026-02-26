@@ -25,8 +25,5 @@ export interface IEventsService {
     options?: { client?: PoolClient; logger?: ILogger },
   ): Promise<EventEntity>;
 
-  deleteOne(
-    eventFindOneEntity: EventFindOneEntity,
-    options?: { client?: PoolClient; logger?: ILogger },
-  ): Promise<void>;
+  deleteOne(eventFindOneEntity: EventFindOneEntity, options?: { client?: PoolClient; logger?: ILogger }): Promise<void>;
 }
