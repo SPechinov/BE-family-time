@@ -1,5 +1,5 @@
-import { ICalendarService, IGroupsUsersService } from '@/domains/services';
-import { DefaultProps, ICalendarUseCases } from '@/domains/useCases';
+import { IEventsService, IGroupsUsersService } from '@/domains/services';
+import { DefaultProps, IEventsUseCases } from '@/domains/useCases';
 import {
   EventCreateEntity,
   EventEntity,
@@ -11,33 +11,33 @@ import {
   GroupsUsersFindOneEntity,
   UserId,
 } from '@/entities';
-import { ErrorCalendarEventNotExists, ErrorGroupNotExists, ILogger } from '@/pkg';
+import { ErrorEventNotExists, ErrorGroupNotExists, ILogger } from '@/pkg';
 
-export class CalendarUseCases implements ICalendarUseCases {
-  readonly #calendarService: ICalendarService;
+export class EventsUseCases implements IEventsUseCases {
+  readonly #eventsService: IEventsService;
   readonly #groupsUsersService: IGroupsUsersService;
 
-  constructor(props: { calendarEventsService: ICalendarService; groupsUsersService: IGroupsUsersService }) {
-    this.#calendarService = props.calendarEventsService;
+  constructor(props: { eventsService: IEventsService; groupsUsersService: IGroupsUsersService }) {
+    this.#eventsService = props.eventsService;
     this.#groupsUsersService = props.groupsUsersService;
   }
 
-  async createCalendarEvent({
+  async createEvent({
     userId,
     groupId,
-    calendarEventCreateEntity,
+    eventCreateEntity,
     logger,
   }: DefaultProps<{
     userId: UserId;
     groupId: GroupId;
-    calendarEventCreateEntity: EventCreateEntity;
+    eventCreateEntity: EventCreateEntity;
   }>): Promise<EventEntity> {
     const options = { logger };
     await this.#checkUserInGroupOrThrow(userId, groupId, options);
-    return await this.#calendarService.createOne(calendarEventCreateEntity, options);
+    return await this.#eventsService.createOne(eventCreateEntity, options);
   }
 
-  async getCalendarEventsByGroupId({
+  async getEventsByGroupId({
     userId,
     groupId,
     startDate,
@@ -53,10 +53,10 @@ export class CalendarUseCases implements ICalendarUseCases {
     const options = { logger };
     await this.#checkUserInGroupOrThrow(userId, groupId, options);
 
-    return this.#calendarService.getEventsByGroupId(groupId, startDate, endDate, options);
+    return this.#eventsService.getEventsByGroupId(groupId, startDate, endDate, options);
   }
 
-  async getCalendarEventById({
+  async getEventById({
     userId,
     groupId,
     eventId,
@@ -69,47 +69,47 @@ export class CalendarUseCases implements ICalendarUseCases {
     const options = { logger };
     await this.#checkUserInGroupOrThrow(userId, groupId, options);
 
-    const event = await this.#calendarService.findOne(new EventFindOneEntity({ id: eventId }), options);
+    const event = await this.#eventsService.findOne(new EventFindOneEntity({ id: eventId }), options);
 
     if (!event) {
-      throw new ErrorCalendarEventNotExists();
+      throw new ErrorEventNotExists();
     }
 
     return event;
   }
 
-  async patchCalendarEvent({
+  async patchEvent({
     userId,
     groupId,
     eventId,
-    calendarEventPatchOneEntity,
+    eventPatchOneEntity,
     logger,
   }: DefaultProps<{
     userId: UserId;
     groupId: GroupId;
     eventId: EventId;
-    calendarEventPatchOneEntity: EventPatchOneEntity;
+    eventPatchOneEntity: EventPatchOneEntity;
   }>): Promise<EventEntity> {
     const options = { logger };
     await this.#checkUserInGroupOrThrow(userId, groupId, options);
-    const calendarEventFindOneEntity = new EventFindOneEntity({ id: eventId });
+    const eventFindOneEntity = new EventFindOneEntity({ id: eventId });
 
-    const event = await this.#calendarService.findOne(calendarEventFindOneEntity, options);
+    const event = await this.#eventsService.findOne(eventFindOneEntity, options);
 
     if (!event) {
-      throw new ErrorCalendarEventNotExists();
+      throw new ErrorEventNotExists();
     }
 
-    return await this.#calendarService.patchOne(
+    return await this.#eventsService.patchOne(
       {
-        calendarEventFindOneEntity,
-        calendarEventPatchOneEntity,
+        eventFindOneEntity: eventFindOneEntity,
+        eventPatchOneEntity: eventPatchOneEntity,
       },
       options,
     );
   }
 
-  async deleteCalendarEvent({
+  async deleteEvent({
     userId,
     groupId,
     eventId,
@@ -121,15 +121,15 @@ export class CalendarUseCases implements ICalendarUseCases {
   }>): Promise<void> {
     const options = { logger };
     await this.#checkUserInGroupOrThrow(userId, groupId, options);
-    const calendarEventFindOneEntity = new EventFindOneEntity({ id: eventId });
+    const eventFindOneEntity = new EventFindOneEntity({ id: eventId });
 
-    const event = await this.#calendarService.findOne(calendarEventFindOneEntity, options);
+    const event = await this.#eventsService.findOne(eventFindOneEntity, options);
 
     if (!event) {
-      throw new ErrorCalendarEventNotExists();
+      throw new ErrorEventNotExists();
     }
 
-    await this.#calendarService.deleteOne(calendarEventFindOneEntity, options);
+    await this.#eventsService.deleteOne(eventFindOneEntity, options);
   }
 
   async #checkUserInGroupOrThrow(userId: UserId, groupId: GroupId, options?: { logger: ILogger }): Promise<void> {

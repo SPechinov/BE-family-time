@@ -18,7 +18,7 @@ const CODES = {
   userNotInGroup: 'userNotInGroup',
   userIsGroupOwner: 'userIsGroupOwner',
   groupHasUsers: 'groupHasUsers',
-  calendarEventNotExists: 'calendarEventNotExists',
+  eventNotExists: 'eventNotExists',
 };
 
 export abstract class BusinessError extends Error {
@@ -170,9 +170,9 @@ export class ErrorGroupHasUsers extends BusinessError {
   }
 }
 
-export class ErrorCalendarEventNotExists extends BusinessError {
+export class ErrorEventNotExists extends BusinessError {
   statusCode = 404;
   constructor() {
-    super(CODES.calendarEventNotExists);
+    super(CODES.eventNotExists);
   }
 }

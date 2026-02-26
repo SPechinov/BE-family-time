@@ -1,18 +1,9 @@
-import {
-  EventCreateEntity,
-  EventEntity,
-  EventFindOneEntity,
-  EventPatchOneEntity,
-  GroupId,
-} from '@/entities';
+import { EventCreateEntity, EventEntity, EventFindOneEntity, EventPatchOneEntity, GroupId } from '@/entities';
 import { PoolClient } from 'pg';
 import { ILogger } from '@/pkg';
 
-export interface ICalendarService {
-  createOne(
-    entity: EventCreateEntity,
-    options?: { client?: PoolClient; logger?: ILogger },
-  ): Promise<EventEntity>;
+export interface IEventsService {
+  createOne(entity: EventCreateEntity, options?: { client?: PoolClient; logger?: ILogger }): Promise<EventEntity>;
 
   getEventsByGroupId(
     groupId: GroupId,
@@ -22,20 +13,20 @@ export interface ICalendarService {
   ): Promise<EventEntity[]>;
 
   findOne(
-    calendarEventFindOneEntity: EventFindOneEntity,
+    eventFindOneEntity: EventFindOneEntity,
     options?: { client?: PoolClient; logger?: ILogger },
   ): Promise<EventEntity | null>;
 
   patchOne(
     props: {
-      calendarEventFindOneEntity: EventFindOneEntity;
-      calendarEventPatchOneEntity: EventPatchOneEntity;
+      eventFindOneEntity: EventFindOneEntity;
+      eventPatchOneEntity: EventPatchOneEntity;
     },
     options?: { client?: PoolClient; logger?: ILogger },
   ): Promise<EventEntity>;
 
   deleteOne(
-    calendarEventFindOneEntity: EventFindOneEntity,
+    eventFindOneEntity: EventFindOneEntity,
     options?: { client?: PoolClient; logger?: ILogger },
   ): Promise<void>;
 }

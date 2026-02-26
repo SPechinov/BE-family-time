@@ -1,7 +1,7 @@
 import { UUID } from 'node:crypto';
 import { EventType, EventIterationType, EventRecurrencePattern } from '@/entities';
 
-export interface ICalendarEventRow {
+export interface IEventRow {
   id: UUID;
   group_id: UUID;
   creator_user_id: UUID;

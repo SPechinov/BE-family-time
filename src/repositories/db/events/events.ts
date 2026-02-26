@@ -1,5 +1,5 @@
 import { Pool, PoolClient } from 'pg';
-import { ICalendarRepository } from '@/domains/repositories/db';
+import { IEventsRepository } from '@/domains/repositories/db';
 import {
   EventEntity,
   EventCreateEntity,
@@ -7,11 +7,11 @@ import {
   EventPatchOneEntity,
   EventFindManyEntity,
 } from '@/entities';
-import { ICalendarEventRow } from './types';
+import { IEventRow } from './types';
 import { UUID } from 'node:crypto';
 import { ILogger } from '@/pkg/logger';
 
-export class CalendarRepository implements ICalendarRepository {
+export class EventsRepository implements IEventsRepository {
   readonly #pool: Pool;
 
   constructor(pool: Pool) {
@@ -25,7 +25,7 @@ export class CalendarRepository implements ICalendarRepository {
     const client = options?.client ?? this.#pool;
 
     const query = `
-      INSERT INTO group_calendar (
+      INSERT INTO events (
         group_id, creator_user_id, title, description, event_type,
         iteration_type, start_date, end_date, recurrence_pattern
       ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)
@@ -44,14 +44,14 @@ export class CalendarRepository implements ICalendarRepository {
       entity.recurrencePattern ? JSON.stringify(entity.recurrencePattern) : null,
     ];
 
-    options?.logger?.debug({ query, values }, 'CalendarEvents repository: createOne');
+    options?.logger?.debug({ query, values }, 'Events repository: createOne');
 
-    const result = await client.query<ICalendarEventRow>(query, values);
+    const result = await client.query<IEventRow>(query, values);
 
     const row = result.rows?.[0];
-    if (!row) throw new Error('Calendar event not created');
+    if (!row) throw new Error('Event not created');
 
-    return this.#buildCalendarEventEntity(row);
+    return this.#buildEventEntity(row);
   }
 
   async findOne(
@@ -61,22 +61,22 @@ export class CalendarRepository implements ICalendarRepository {
     const client = options?.client ?? this.#pool;
 
     const query = `
-      SELECT * FROM group_calendar
+      SELECT * FROM events
       WHERE id = $1
     `;
 
     const values = [entity.id];
 
-    options?.logger?.debug({ query, values }, 'CalendarEvents repository: findOne');
+    options?.logger?.debug({ query, values }, 'Events repository: findOne');
 
-    const result = await client.query<ICalendarEventRow>(query, values);
+    const result = await client.query<IEventRow>(query, values);
     const row = result.rows?.[0];
 
     if (!row) {
       return null;
     }
 
-    return this.#buildCalendarEventEntity(row);
+    return this.#buildEventEntity(row);
   }
 
   async findMany(
@@ -109,35 +109,32 @@ export class CalendarRepository implements ICalendarRepository {
     const whereClause = conditions.length > 0 ? `WHERE ${conditions.join(' AND ')}` : '';
 
     const query = `
-      SELECT * FROM group_calendar
+      SELECT * FROM events
       ${whereClause}
       ORDER BY start_date ASC
     `;
 
-    options?.logger?.debug({ query, values }, 'CalendarEvents repository: findMany');
+    options?.logger?.debug({ query, values }, 'Events repository: findMany');
 
-    const result = await client.query<ICalendarEventRow>(query, values);
-    return result.rows.map((row) => this.#buildCalendarEventEntity(row));
+    const result = await client.query<IEventRow>(query, values);
+    return result.rows.map((row) => this.#buildEventEntity(row));
   }
 
-  async findByGroupId(
-    groupId: UUID,
-    options?: { client?: PoolClient; logger?: ILogger },
-  ): Promise<EventEntity[]> {
+  async findByGroupId(groupId: UUID, options?: { client?: PoolClient; logger?: ILogger }): Promise<EventEntity[]> {
     const client = options?.client ?? this.#pool;
 
     const query = `
-      SELECT * FROM group_calendar
+      SELECT * FROM events
       WHERE group_id = $1
       ORDER BY start_date ASC
     `;
 
     const values = [groupId];
 
-    options?.logger?.debug({ query, values }, 'CalendarEvents repository: findByGroupId');
+    options?.logger?.debug({ query, values }, 'Events repository: findByGroupId');
 
-    const result = await client.query<ICalendarEventRow>(query, values);
-    return result.rows.map((row) => this.#buildCalendarEventEntity(row));
+    const result = await client.query<IEventRow>(query, values);
+    return result.rows.map((row) => this.#buildEventEntity(row));
   }
 
   async findForPeriod(
@@ -151,7 +148,7 @@ export class CalendarRepository implements ICalendarRepository {
     const client = options?.client ?? this.#pool;
 
     const query = `
-      SELECT * FROM group_calendar
+      SELECT * FROM events
       WHERE group_id = $1
         AND (
           (iteration_type = 'oneTime' AND start_date <= $3 AND (end_date IS NULL OR end_date >= $2))
@@ -162,23 +159,23 @@ export class CalendarRepository implements ICalendarRepository {
 
     const values = [groupId, period.startDate ?? null, period.endDate ?? null];
 
-    options?.logger?.debug({ query, values }, 'CalendarEvents repository: findForPeriod');
+    options?.logger?.debug({ query, values }, 'Events repository: findForPeriod');
 
-    const result = await client.query<ICalendarEventRow>(query, values);
-    return result.rows.map((row) => this.#buildCalendarEventEntity(row));
+    const result = await client.query<IEventRow>(query, values);
+    return result.rows.map((row) => this.#buildEventEntity(row));
   }
 
   async patchOne(
     props: {
-      calendarEventFindOneEntity: EventFindOneEntity;
-      calendarEventPatchOneEntity: EventPatchOneEntity;
+      eventFindOneEntity: EventFindOneEntity;
+      eventPatchOneEntity: EventPatchOneEntity;
     },
     options?: { client?: PoolClient; logger?: ILogger },
   ): Promise<EventEntity> {
     const client = options?.client ?? this.#pool;
 
-    const findOneEntity = props.calendarEventFindOneEntity;
-    const patchOneEntity = props.calendarEventPatchOneEntity;
+    const findOneEntity = props.eventFindOneEntity;
+    const patchOneEntity = props.eventPatchOneEntity;
 
     const updates: string[] = [];
     const values: any[] = [];
@@ -220,43 +217,43 @@ export class CalendarRepository implements ICalendarRepository {
     values.push(findOneEntity.id);
 
     const query = `
-      UPDATE group_calendar
+      UPDATE events
       SET ${updates.join(', ')}
       WHERE id = $${paramIndex}
       RETURNING *
     `;
 
-    options?.logger?.debug({ query, values }, 'CalendarEvents repository: patchOne');
+    options?.logger?.debug({ query, values }, 'Events repository: patchOne');
 
-    const result = await client.query<ICalendarEventRow>(query, values);
+    const result = await client.query<IEventRow>(query, values);
     const row = result.rows?.[0];
 
     if (!row) {
-      throw new Error('Calendar event not found');
+      throw new Error('Event not found');
     }
 
-    return this.#buildCalendarEventEntity(row);
+    return this.#buildEventEntity(row);
   }
 
   async deleteOne(
-    calendarEventFindOneEntity: EventFindOneEntity,
+    eventFindOneEntity: EventFindOneEntity,
     options?: { client?: PoolClient; logger?: ILogger },
   ): Promise<void> {
     const client = options?.client ?? this.#pool;
 
-    const query = `DELETE FROM group_calendar WHERE id = $1`;
-    const values = [calendarEventFindOneEntity.id];
+    const query = `DELETE FROM events WHERE id = $1`;
+    const values = [eventFindOneEntity.id];
 
-    options?.logger?.debug({ query, values }, 'CalendarEvents repository: deleteOne');
+    options?.logger?.debug({ query, values }, 'Events repository: deleteOne');
 
     const result = await client.query(query, values);
 
     if (result.rowCount === 0) {
-      throw new Error('Calendar event not found');
+      throw new Error('Event not found');
     }
   }
 
-  #buildCalendarEventEntity(row: ICalendarEventRow): EventEntity {
+  #buildEventEntity(row: IEventRow): EventEntity {
     return new EventEntity({
       id: row.id,
       groupId: row.group_id,

@@ -2,7 +2,7 @@ import { FastifyInstance } from 'fastify';
 import { IAuthMiddleware } from '@/api/rest/domains';
 import { ZodTypeProvider } from 'fastify-type-provider-zod';
 import { PREFIX, ROUTES } from './constants';
-import { ICalendarEventsUseCases } from '@/domains/useCases';
+import { IEventsUseCases } from '@/domains/useCases';
 import { SCHEMAS } from './schemas';
 import { EventCreateEntity, CalendarEventPatchEntity, RecurrencePattern } from '@/entities';
 import { UUID } from 'node:crypto';
@@ -10,12 +10,12 @@ import { UUID } from 'node:crypto';
 export class CalendarRoutesController {
   #fastify: FastifyInstance;
   #authMiddleware: IAuthMiddleware;
-  #calendarEventsUseCases: ICalendarEventsUseCases;
+  #calendarEventsUseCases: IEventsUseCases;
 
   constructor(props: {
     fastify: FastifyInstance;
     authMiddleware: IAuthMiddleware;
-    calendarEventsUseCases: ICalendarEventsUseCases;
+    calendarEventsUseCases: IEventsUseCases;
   }) {
     this.#fastify = props.fastify;
     this.#authMiddleware = props.authMiddleware;
@@ -35,7 +35,7 @@ export class CalendarRoutesController {
             schema: SCHEMAS.getList,
           },
           async (request, reply) => {
-            const events = await this.#calendarEventsUseCases.getCalendarEventsByGroupId({
+            const events = await this.#calendarEventsUseCases.getEventsByGroupId({
               userId: request.userId,
               groupId: request.params.groupId as UUID,
               startDate: new Date(request.query.startDate),
@@ -55,7 +55,7 @@ export class CalendarRoutesController {
             schema: SCHEMAS.get,
           },
           async (request, reply) => {
-            const event = await this.#calendarEventsUseCases.getCalendarEventById({
+            const event = await this.#calendarEventsUseCases.getEventById({
               userId: request.userId,
               eventId: request.params.eventId as UUID,
               logger: request.log,
@@ -76,10 +76,10 @@ export class CalendarRoutesController {
               ? this.#buildRecurrencePattern(request.body.recurrencePattern)
               : undefined;
 
-            const event = await this.#calendarEventsUseCases.createCalendarEvent({
+            const event = await this.#calendarEventsUseCases.createEvent({
               userId: request.userId,
               groupId: request.params.groupId as UUID,
-              calendarEventCreateEntity: new EventCreateEntity({
+              eventCreateEntity: new EventCreateEntity({
                 groupId: request.params.groupId as UUID,
                 creatorUserId: request.userId,
                 title: request.body.title,
@@ -130,7 +130,7 @@ export class CalendarRoutesController {
             schema: SCHEMAS.delete,
           },
           async (request, reply) => {
-            await this.#calendarEventsUseCases.deleteCalendarEvent({
+            await this.#calendarEventsUseCases.deleteEvent({
               userId: request.userId,
               eventId: request.params.eventId as UUID,
               deleteMode: request.query.deleteMode,

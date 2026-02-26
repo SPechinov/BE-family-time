@@ -1,27 +1,18 @@
-import { ICalendarRepository } from '@/domains/repositories/db';
-import {
-  EventCreateEntity,
-  EventEntity,
-  EventFindOneEntity,
-  EventPatchOneEntity,
-  GroupId,
-} from '@/entities';
+import { IEventsRepository } from '@/domains/repositories/db';
+import { EventCreateEntity, EventEntity, EventFindOneEntity, EventPatchOneEntity, GroupId } from '@/entities';
 import { PoolClient } from 'pg';
 import { ILogger } from '@/pkg';
-import { ICalendarService } from '@/domains/services';
+import { IEventsService } from '@/domains/services';
 
-export class CalendarService implements ICalendarService {
-  readonly #calendarRepository: ICalendarRepository;
+export class EventsService implements IEventsService {
+  readonly #eventsRepository: IEventsRepository;
 
-  constructor(props: { calendarRepository: ICalendarRepository }) {
-    this.#calendarRepository = props.calendarRepository;
+  constructor(props: { eventsRepository: IEventsRepository }) {
+    this.#eventsRepository = props.eventsRepository;
   }
 
-  createOne(
-    entity: EventCreateEntity,
-    options?: { client?: PoolClient; logger?: ILogger },
-  ): Promise<EventEntity> {
-    return this.#calendarRepository.createOne(entity, options);
+  createOne(entity: EventCreateEntity, options?: { client?: PoolClient; logger?: ILogger }): Promise<EventEntity> {
+    return this.#eventsRepository.createOne(entity, options);
   }
 
   getEventsByGroupId(
@@ -30,30 +21,30 @@ export class CalendarService implements ICalendarService {
     endDate?: Date,
     options?: { client?: PoolClient; logger?: ILogger },
   ): Promise<EventEntity[]> {
-    return this.#calendarRepository.findForPeriod(groupId, { startDate, endDate }, options);
+    return this.#eventsRepository.findForPeriod(groupId, { startDate, endDate }, options);
   }
 
   findOne(
-    calendarEventFindOneEntity: EventFindOneEntity,
+    eventFindOneEntity: EventFindOneEntity,
     options?: { client?: PoolClient; logger?: ILogger },
   ): Promise<EventEntity | null> {
-    return this.#calendarRepository.findOne(calendarEventFindOneEntity, options);
+    return this.#eventsRepository.findOne(eventFindOneEntity, options);
   }
 
   patchOne(
     props: {
-      calendarEventFindOneEntity: EventFindOneEntity;
-      calendarEventPatchOneEntity: EventPatchOneEntity;
+      eventFindOneEntity: EventFindOneEntity;
+      eventPatchOneEntity: EventPatchOneEntity;
     },
     options?: { client?: PoolClient; logger?: ILogger },
   ): Promise<EventEntity> {
-    return this.#calendarRepository.patchOne(props, options);
+    return this.#eventsRepository.patchOne(props, options);
   }
 
   deleteOne(
-    calendarEventFindOneEntity: EventFindOneEntity,
+    eventFindOneEntity: EventFindOneEntity,
     options?: { client?: PoolClient; logger?: ILogger },
   ): Promise<void> {
-    return this.#calendarRepository.deleteOne(calendarEventFindOneEntity, options);
+    return this.#eventsRepository.deleteOne(eventFindOneEntity, options);
   }
 }
