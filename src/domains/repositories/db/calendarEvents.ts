@@ -1,9 +1,9 @@
 import {
-  CalendarEventEntity,
-  CalendarEventCreateEntity,
-  CalendarEventFindOneEntity,
-  CalendarEventPatchOneEntity,
-  CalendarEventFindManyEntity,
+  EventEntity,
+  EventCreateEntity,
+  EventFindOneEntity,
+  EventPatchOneEntity,
+  EventFindManyEntity,
 } from '@/entities';
 import { PoolClient } from 'pg';
 import { ILogger } from '@/pkg/logger';
@@ -11,21 +11,21 @@ import { UUID } from 'node:crypto';
 
 export interface ICalendarRepository {
   createOne(
-    entity: CalendarEventCreateEntity,
+    entity: EventCreateEntity,
     options?: { client?: PoolClient; logger?: ILogger },
-  ): Promise<CalendarEventEntity>;
+  ): Promise<EventEntity>;
 
   findOne(
-    entity: CalendarEventFindOneEntity,
+    entity: EventFindOneEntity,
     options?: { client?: PoolClient; logger?: ILogger },
-  ): Promise<CalendarEventEntity | null>;
+  ): Promise<EventEntity | null>;
 
   findMany(
-    filter: CalendarEventFindManyEntity,
+    filter: EventFindManyEntity,
     options?: { client?: PoolClient; logger?: ILogger },
-  ): Promise<CalendarEventEntity[]>;
+  ): Promise<EventEntity[]>;
 
-  findByGroupId(groupId: UUID, options?: { client?: PoolClient; logger?: ILogger }): Promise<CalendarEventEntity[]>;
+  findByGroupId(groupId: UUID, options?: { client?: PoolClient; logger?: ILogger }): Promise<EventEntity[]>;
 
   findForPeriod(
     groupId: UUID,
@@ -34,18 +34,18 @@ export interface ICalendarRepository {
       endDate?: Date;
     },
     options?: { client?: PoolClient; logger?: ILogger },
-  ): Promise<CalendarEventEntity[]>;
+  ): Promise<EventEntity[]>;
 
   patchOne(
     props: {
-      calendarEventFindOneEntity: CalendarEventFindOneEntity;
-      calendarEventPatchOneEntity: CalendarEventPatchOneEntity;
+      calendarEventFindOneEntity: EventFindOneEntity;
+      calendarEventPatchOneEntity: EventPatchOneEntity;
     },
     options?: { client?: PoolClient; logger?: ILogger },
-  ): Promise<CalendarEventEntity>;
+  ): Promise<EventEntity>;
 
   deleteOne(
-    calendarEventFindOneEntity: CalendarEventFindOneEntity,
+    calendarEventFindOneEntity: EventFindOneEntity,
     options?: { client?: PoolClient; logger?: ILogger },
   ): Promise<void>;
 }

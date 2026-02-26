@@ -1,11 +1,11 @@
 import { Pool, PoolClient } from 'pg';
 import { ICalendarRepository } from '@/domains/repositories/db';
 import {
-  CalendarEventEntity,
-  CalendarEventCreateEntity,
-  CalendarEventFindOneEntity,
-  CalendarEventPatchOneEntity,
-  CalendarEventFindManyEntity,
+  EventEntity,
+  EventCreateEntity,
+  EventFindOneEntity,
+  EventPatchOneEntity,
+  EventFindManyEntity,
 } from '@/entities';
 import { ICalendarEventRow } from './types';
 import { UUID } from 'node:crypto';
@@ -19,9 +19,9 @@ export class CalendarRepository implements ICalendarRepository {
   }
 
   async createOne(
-    entity: CalendarEventCreateEntity,
+    entity: EventCreateEntity,
     options?: { client?: PoolClient; logger?: ILogger },
-  ): Promise<CalendarEventEntity> {
+  ): Promise<EventEntity> {
     const client = options?.client ?? this.#pool;
 
     const query = `
@@ -55,9 +55,9 @@ export class CalendarRepository implements ICalendarRepository {
   }
 
   async findOne(
-    entity: CalendarEventFindOneEntity,
+    entity: EventFindOneEntity,
     options?: { client?: PoolClient; logger?: ILogger },
-  ): Promise<CalendarEventEntity | null> {
+  ): Promise<EventEntity | null> {
     const client = options?.client ?? this.#pool;
 
     const query = `
@@ -80,9 +80,9 @@ export class CalendarRepository implements ICalendarRepository {
   }
 
   async findMany(
-    filter: CalendarEventFindManyEntity,
+    filter: EventFindManyEntity,
     options?: { client?: PoolClient; logger?: ILogger },
-  ): Promise<CalendarEventEntity[]> {
+  ): Promise<EventEntity[]> {
     const client = options?.client ?? this.#pool;
 
     const conditions: string[] = [];
@@ -123,7 +123,7 @@ export class CalendarRepository implements ICalendarRepository {
   async findByGroupId(
     groupId: UUID,
     options?: { client?: PoolClient; logger?: ILogger },
-  ): Promise<CalendarEventEntity[]> {
+  ): Promise<EventEntity[]> {
     const client = options?.client ?? this.#pool;
 
     const query = `
@@ -147,7 +147,7 @@ export class CalendarRepository implements ICalendarRepository {
       endDate?: Date;
     },
     options?: { client?: PoolClient; logger?: ILogger },
-  ): Promise<CalendarEventEntity[]> {
+  ): Promise<EventEntity[]> {
     const client = options?.client ?? this.#pool;
 
     const query = `
@@ -170,11 +170,11 @@ export class CalendarRepository implements ICalendarRepository {
 
   async patchOne(
     props: {
-      calendarEventFindOneEntity: CalendarEventFindOneEntity;
-      calendarEventPatchOneEntity: CalendarEventPatchOneEntity;
+      calendarEventFindOneEntity: EventFindOneEntity;
+      calendarEventPatchOneEntity: EventPatchOneEntity;
     },
     options?: { client?: PoolClient; logger?: ILogger },
-  ): Promise<CalendarEventEntity> {
+  ): Promise<EventEntity> {
     const client = options?.client ?? this.#pool;
 
     const findOneEntity = props.calendarEventFindOneEntity;
@@ -239,7 +239,7 @@ export class CalendarRepository implements ICalendarRepository {
   }
 
   async deleteOne(
-    calendarEventFindOneEntity: CalendarEventFindOneEntity,
+    calendarEventFindOneEntity: EventFindOneEntity,
     options?: { client?: PoolClient; logger?: ILogger },
   ): Promise<void> {
     const client = options?.client ?? this.#pool;
@@ -256,8 +256,8 @@ export class CalendarRepository implements ICalendarRepository {
     }
   }
 
-  #buildCalendarEventEntity(row: ICalendarEventRow): CalendarEventEntity {
-    return new CalendarEventEntity({
+  #buildCalendarEventEntity(row: ICalendarEventRow): EventEntity {
+    return new EventEntity({
       id: row.id,
       groupId: row.group_id,
       creatorUserId: row.creator_user_id,

@@ -1,4 +1,4 @@
 export * from './user';
 export * from './group';
 export * from './groupsUsers';
-export * from './calendarEvent';
+export * from './events';

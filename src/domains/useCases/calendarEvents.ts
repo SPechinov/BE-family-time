@@ -1,5 +1,5 @@
 import { UUID } from 'node:crypto';
-import { CalendarEventEntity, CalendarEventCreateEntity, CalendarEventPatchEntity } from '@/entities';
+import { EventEntity, EventCreateEntity, CalendarEventPatchEntity } from '@/entities';
 import { DefaultProps } from './types';
 
 export interface ICalendarEventsUseCases {
@@ -10,9 +10,9 @@ export interface ICalendarEventsUseCases {
     props: DefaultProps<{
       userId: UUID;
       groupId: UUID;
-      calendarEventCreateEntity: CalendarEventCreateEntity;
+      calendarEventCreateEntity: EventCreateEntity;
     }>,
-  ): Promise<CalendarEventEntity>;
+  ): Promise<EventEntity>;
 
   /**
    * Получить события календаря группы за период
@@ -23,9 +23,9 @@ export interface ICalendarEventsUseCases {
       groupId: UUID;
       startDate: Date;
       endDate: Date;
-      eventType?: import('@/entities').CalendarEventType;
+      eventType?: import('@/entities').EventType;
     }>,
-  ): Promise<CalendarEventEntity[]>;
+  ): Promise<EventEntity[]>;
 
   /**
    * Получить одно событие календаря
@@ -35,7 +35,7 @@ export interface ICalendarEventsUseCases {
       userId: UUID;
       eventId: UUID;
     }>,
-  ): Promise<CalendarEventEntity>;
+  ): Promise<EventEntity>;
 
   /**
    * Обновить событие календаря
@@ -46,7 +46,7 @@ export interface ICalendarEventsUseCases {
       eventId: UUID;
       calendarEventPatchEntity: CalendarEventPatchEntity;
     }>,
-  ): Promise<CalendarEventEntity>;
+  ): Promise<EventEntity>;
 
   /**
    * Удалить событие календаря

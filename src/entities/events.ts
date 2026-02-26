@@ -2,38 +2,36 @@ import { UUID } from 'node:crypto';
 import { UserId } from './user';
 import { GroupId } from './group';
 
-export type CalendarEventId = UUID;
-export type CalendarEventType = 'birthday' | 'vacation' | 'monthly' | 'holiday';
-export type CalendarEventIterationType = 'oneTime' | 'weekly' | 'monthly' | 'yearly';
+export type EventId = UUID;
+export type EventType = 'birthday' | 'vacation' | 'monthly' | 'holiday';
+export type EventIterationType = 'oneTime' | 'weekly' | 'monthly' | 'yearly';
 
-export type CalendarEventRecurrencePattern =
-  | { type: 'weekly'; dayOfWeek: number }
-  | { type: 'monthly'; dayOfMonth: number };
+export type EventRecurrencePattern = { type: 'weekly'; dayOfWeek: number } | { type: 'monthly'; dayOfMonth: number };
 
-export class CalendarEventEntity {
-  readonly #id: CalendarEventId;
+export class EventEntity {
+  readonly #id: EventId;
   readonly #groupId: GroupId;
   readonly #creatorUserId?: UserId;
   readonly #title: string;
   readonly #description?: string;
-  readonly #eventType: CalendarEventType;
-  readonly #iterationType: CalendarEventIterationType;
+  readonly #eventType: EventType;
+  readonly #iterationType: EventIterationType;
   readonly #startDate: Date;
   readonly #endDate?: Date;
-  readonly #recurrencePattern?: CalendarEventRecurrencePattern;
+  readonly #recurrencePattern?: EventRecurrencePattern;
   readonly #createdAt: Date;
 
   constructor(props: {
-    id: CalendarEventId;
+    id: EventId;
     groupId: GroupId;
     creatorUserId?: UserId;
     title: string;
     description?: string;
-    eventType: CalendarEventType;
-    iterationType: CalendarEventIterationType;
+    eventType: EventType;
+    iterationType: EventIterationType;
     startDate: Date;
     endDate?: Date;
-    recurrencePattern?: CalendarEventRecurrencePattern;
+    recurrencePattern?: EventRecurrencePattern;
     createdAt: Date;
   }) {
     this.#id = props.id;
@@ -94,27 +92,27 @@ export class CalendarEventEntity {
   }
 }
 
-export class CalendarEventCreateEntity {
+export class EventCreateEntity {
   readonly #groupId: GroupId;
   readonly #creatorUserId: UserId;
   readonly #title: string;
   readonly #description?: string;
-  readonly #eventType: CalendarEventType;
-  readonly #iterationType: CalendarEventIterationType;
+  readonly #eventType: EventType;
+  readonly #iterationType: EventIterationType;
   readonly #startDate: Date;
   readonly #endDate?: Date;
-  readonly #recurrencePattern?: CalendarEventRecurrencePattern;
+  readonly #recurrencePattern?: EventRecurrencePattern;
 
   constructor(props: {
     groupId: GroupId;
     creatorUserId: UserId;
     title: string;
     description?: string;
-    eventType: CalendarEventType;
-    iterationType: CalendarEventIterationType;
+    eventType: EventType;
+    iterationType: EventIterationType;
     startDate: Date;
     endDate?: Date;
-    recurrencePattern?: CalendarEventRecurrencePattern;
+    recurrencePattern?: EventRecurrencePattern;
   }) {
     this.#groupId = props.groupId;
     this.#creatorUserId = props.creatorUserId;
@@ -164,23 +162,23 @@ export class CalendarEventCreateEntity {
   }
 }
 
-export class CalendarEventPatchOneEntity {
+export class EventPatchOneEntity {
   readonly #title?: string;
   readonly #description?: string | null;
-  readonly #eventType?: CalendarEventType;
-  readonly #iterationType?: CalendarEventIterationType;
+  readonly #eventType?: EventType;
+  readonly #iterationType?: EventIterationType;
   readonly #startDate?: Date;
   readonly #endDate?: Date | null;
-  readonly #recurrencePattern?: CalendarEventRecurrencePattern | null;
+  readonly #recurrencePattern?: EventRecurrencePattern | null;
 
   constructor(props: {
     title?: string;
     description?: string | null;
-    eventType?: CalendarEventType;
-    iterationType?: CalendarEventIterationType;
+    eventType?: EventType;
+    iterationType?: EventIterationType;
     startDate?: Date;
     endDate?: Date | null;
-    recurrencePattern?: CalendarEventRecurrencePattern | null;
+    recurrencePattern?: EventRecurrencePattern | null;
   }) {
     this.#title = props.title;
     this.#description = props.description;
@@ -220,10 +218,10 @@ export class CalendarEventPatchOneEntity {
   }
 }
 
-export class CalendarEventFindOneEntity {
-  readonly #id?: CalendarEventId;
+export class EventFindOneEntity {
+  readonly #id?: EventId;
 
-  constructor(props: { id?: CalendarEventId }) {
+  constructor(props: { id?: EventId }) {
     this.#id = props.id;
   }
 
@@ -232,18 +230,13 @@ export class CalendarEventFindOneEntity {
   }
 }
 
-export class CalendarEventFindManyEntity {
-  readonly #ids?: CalendarEventId[];
+export class EventFindManyEntity {
+  readonly #ids?: EventId[];
   readonly #groupId?: GroupId;
   readonly #creatorUserId?: UserId;
-  readonly #eventType?: CalendarEventType;
+  readonly #eventType?: EventType;
 
-  constructor(props: {
-    ids?: CalendarEventId[];
-    groupId?: GroupId;
-    creatorUserId?: UserId;
-    eventType?: CalendarEventType;
-  }) {
+  constructor(props: { ids?: EventId[]; groupId?: GroupId; creatorUserId?: UserId; eventType?: EventType }) {
     this.#ids = props.ids;
     this.#groupId = props.groupId;
     this.#creatorUserId = props.creatorUserId;

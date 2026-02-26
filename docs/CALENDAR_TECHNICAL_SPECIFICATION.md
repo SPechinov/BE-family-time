@@ -553,7 +553,7 @@ WHERE title ILIKE $1 OR description ILIKE $1
 ```
 src/
 ├── entities/
-│   └── calendarEvent.ts          # Сущности (CalendarEventEntity, CalendarEventCreateEntity, ...)
+│   └── events.ts          # Сущности (CalendarEventEntity, CalendarEventCreateEntity, ...)
 │
 ├── repositories/
 │   └── db/
@@ -655,7 +655,7 @@ DROP TABLE IF EXISTS calendar_events;
 
 ---
 
-### 3.3. Entity (calendarEvent.ts)
+### 3.3. Entity (events.ts)
 
 ```typescript
 import { UUID } from 'node:crypto';
@@ -1001,7 +1001,7 @@ logger.error({ error }, 'Failed to generate occurrences');
 | № | Этап | Описание | Статус |
 |---|-------|----------|--------|
 | 1 | Миграция БД | Создать `migrations/4_create_group_calendar_table.sql` | ⬜ |
-| 2 | Entities | `src/entities/calendarEvent.ts` | ⬜ |
+| 2 | Entities | `src/entities/events.ts` | ⬜ |
 | 3 | Repository (DB) | `src/repositories/db/calendarEvents/` | ⬜ |
 | 4 | Repository Interface | `src/domains/repositories/db/calendar.ts` | ⬜ |
 | 5 | Service Interface | `src/domains/services/calendar.ts` | ⬜ |

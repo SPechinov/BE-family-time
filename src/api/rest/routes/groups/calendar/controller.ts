@@ -4,7 +4,7 @@ import { ZodTypeProvider } from 'fastify-type-provider-zod';
 import { PREFIX, ROUTES } from './constants';
 import { ICalendarEventsUseCases } from '@/domains/useCases';
 import { SCHEMAS } from './schemas';
-import { CalendarEventCreateEntity, CalendarEventPatchEntity, RecurrencePattern } from '@/entities';
+import { EventCreateEntity, CalendarEventPatchEntity, RecurrencePattern } from '@/entities';
 import { UUID } from 'node:crypto';
 
 export class CalendarRoutesController {
@@ -79,7 +79,7 @@ export class CalendarRoutesController {
             const event = await this.#calendarEventsUseCases.createCalendarEvent({
               userId: request.userId,
               groupId: request.params.groupId as UUID,
-              calendarEventCreateEntity: new CalendarEventCreateEntity({
+              calendarEventCreateEntity: new EventCreateEntity({
                 groupId: request.params.groupId as UUID,
                 creatorUserId: request.userId,
                 title: request.body.title,
@@ -147,7 +147,7 @@ export class CalendarRoutesController {
     );
   }
 
-  #serializeEvent(event: import('@/entities').CalendarEventEntity) {
+  #serializeEvent(event: import('@/entities').EventEntity) {
     return {
       id: event.id,
       groupId: event.groupId,
