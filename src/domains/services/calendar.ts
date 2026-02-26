@@ -1,40 +1,30 @@
 import {
-  CalendarEventEntity,
   CalendarEventCreateEntity,
+  CalendarEventEntity,
   CalendarEventFindOneEntity,
   CalendarEventPatchOneEntity,
-  CalendarEventFindManyEntity,
+  GroupId,
 } from '@/entities';
 import { PoolClient } from 'pg';
-import { ILogger } from '@/pkg/logger';
-import { UUID } from 'node:crypto';
+import { ILogger } from '@/pkg';
 
-export interface ICalendarRepository {
+export interface ICalendarService {
   createOne(
     entity: CalendarEventCreateEntity,
     options?: { client?: PoolClient; logger?: ILogger },
   ): Promise<CalendarEventEntity>;
 
+  getEventsByGroupId(
+    groupId: GroupId,
+    startDate?: Date,
+    endDate?: Date,
+    options?: { client?: PoolClient; logger?: ILogger },
+  ): Promise<CalendarEventEntity[]>;
+
   findOne(
-    entity: CalendarEventFindOneEntity,
+    calendarEventFindOneEntity: CalendarEventFindOneEntity,
     options?: { client?: PoolClient; logger?: ILogger },
   ): Promise<CalendarEventEntity | null>;
-
-  findMany(
-    filter: CalendarEventFindManyEntity,
-    options?: { client?: PoolClient; logger?: ILogger },
-  ): Promise<CalendarEventEntity[]>;
-
-  findByGroupId(groupId: UUID, options?: { client?: PoolClient; logger?: ILogger }): Promise<CalendarEventEntity[]>;
-
-  findForPeriod(
-    groupId: UUID,
-    period: {
-      startDate?: Date;
-      endDate?: Date;
-    },
-    options?: { client?: PoolClient; logger?: ILogger },
-  ): Promise<CalendarEventEntity[]>;
 
   patchOne(
     props: {

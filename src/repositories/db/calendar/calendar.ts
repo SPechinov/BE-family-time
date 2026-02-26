@@ -142,8 +142,10 @@ export class CalendarRepository implements ICalendarRepository {
 
   async findForPeriod(
     groupId: UUID,
-    startDate: Date,
-    endDate: Date,
+    period: {
+      startDate?: Date;
+      endDate?: Date;
+    },
     options?: { client?: PoolClient; logger?: ILogger },
   ): Promise<CalendarEventEntity[]> {
     const client = options?.client ?? this.#pool;
@@ -158,7 +160,7 @@ export class CalendarRepository implements ICalendarRepository {
       ORDER BY start_date ASC
     `;
 
-    const values = [groupId, startDate, endDate];
+    const values = [groupId, period.startDate ?? null, period.endDate ?? null];
 
     options?.logger?.debug({ query, values }, 'CalendarEvents repository: findForPeriod');
 
@@ -167,50 +169,55 @@ export class CalendarRepository implements ICalendarRepository {
   }
 
   async patchOne(
-    id: UUID,
-    patchData: CalendarEventPatchOneEntity,
+    props: {
+      calendarEventFindOneEntity: CalendarEventFindOneEntity;
+      calendarEventPatchOneEntity: CalendarEventPatchOneEntity;
+    },
     options?: { client?: PoolClient; logger?: ILogger },
   ): Promise<CalendarEventEntity> {
     const client = options?.client ?? this.#pool;
+
+    const findOneEntity = props.calendarEventFindOneEntity;
+    const patchOneEntity = props.calendarEventPatchOneEntity;
 
     const updates: string[] = [];
     const values: any[] = [];
     let paramIndex = 1;
 
-    if (patchData.title !== undefined) {
+    if (patchOneEntity.title !== undefined) {
       updates.push(`title = $${paramIndex++}`);
-      values.push(patchData.title);
+      values.push(patchOneEntity.title);
     }
-    if (patchData.description !== undefined) {
+    if (patchOneEntity.description !== undefined) {
       updates.push(`description = $${paramIndex++}`);
-      values.push(patchData.description);
+      values.push(patchOneEntity.description);
     }
-    if (patchData.eventType !== undefined) {
+    if (patchOneEntity.eventType !== undefined) {
       updates.push(`event_type = $${paramIndex++}`);
-      values.push(patchData.eventType);
+      values.push(patchOneEntity.eventType);
     }
-    if (patchData.iterationType !== undefined) {
+    if (patchOneEntity.iterationType !== undefined) {
       updates.push(`iteration_type = $${paramIndex++}`);
-      values.push(patchData.iterationType);
+      values.push(patchOneEntity.iterationType);
     }
-    if (patchData.startDate !== undefined) {
+    if (patchOneEntity.startDate !== undefined) {
       updates.push(`start_date = $${paramIndex++}`);
-      values.push(patchData.startDate);
+      values.push(patchOneEntity.startDate);
     }
-    if (patchData.endDate !== undefined) {
+    if (patchOneEntity.endDate !== undefined) {
       updates.push(`end_date = $${paramIndex++}`);
-      values.push(patchData.endDate);
+      values.push(patchOneEntity.endDate);
     }
-    if (patchData.recurrencePattern !== undefined) {
+    if (patchOneEntity.recurrencePattern !== undefined) {
       updates.push(`recurrence_pattern = $${paramIndex++}`);
-      values.push(patchData.recurrencePattern ? JSON.stringify(patchData.recurrencePattern) : null);
+      values.push(patchOneEntity.recurrencePattern ? JSON.stringify(patchOneEntity.recurrencePattern) : null);
     }
 
     if (updates.length === 0) {
       throw new Error('No fields to update');
     }
 
-    values.push(id);
+    values.push(findOneEntity.id);
 
     const query = `
       UPDATE group_calendar
@@ -231,11 +238,14 @@ export class CalendarRepository implements ICalendarRepository {
     return this.#buildCalendarEventEntity(row);
   }
 
-  async deleteOne(id: UUID, options?: { client?: PoolClient; logger?: ILogger }): Promise<void> {
+  async deleteOne(
+    calendarEventFindOneEntity: CalendarEventFindOneEntity,
+    options?: { client?: PoolClient; logger?: ILogger },
+  ): Promise<void> {
     const client = options?.client ?? this.#pool;
 
     const query = `DELETE FROM group_calendar WHERE id = $1`;
-    const values = [id];
+    const values = [calendarEventFindOneEntity.id];
 
     options?.logger?.debug({ query, values }, 'CalendarEvents repository: deleteOne');
 
