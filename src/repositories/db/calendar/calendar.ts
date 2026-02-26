@@ -4,7 +4,8 @@ import {
   CalendarEventEntity,
   CalendarEventCreateEntity,
   CalendarEventFindOneEntity,
-  CalendarEventPatchEntity,
+  CalendarEventPatchOneEntity,
+  CalendarEventFindManyEntity,
 } from '@/entities';
 import { ICalendarEventRow } from './types';
 import { UUID } from 'node:crypto';
@@ -24,9 +25,9 @@ export class CalendarEventsRepository implements ICalendarEventsRepository {
     const client = options?.client ?? this.#pool;
 
     const query = `
-      INSERT INTO calendar_events (
+      INSERT INTO group_calendar (
         group_id, creator_user_id, title, description, event_type,
-        start_date, end_date, is_all_day, recurrence_pattern
+        iteration_type, start_date, end_date, recurrence_pattern
       ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)
       RETURNING *
     `;
@@ -37,9 +38,9 @@ export class CalendarEventsRepository implements ICalendarEventsRepository {
       entity.title,
       entity.description ?? null,
       entity.eventType,
+      entity.iterationType,
       entity.startDate,
       entity.endDate,
-      entity.isAllDay,
       entity.recurrencePattern ? JSON.stringify(entity.recurrencePattern) : null,
     ];
 
@@ -60,7 +61,7 @@ export class CalendarEventsRepository implements ICalendarEventsRepository {
     const client = options?.client ?? this.#pool;
 
     const query = `
-      SELECT * FROM calendar_events
+      SELECT * FROM group_calendar
       WHERE id = $1
     `;
 
@@ -78,6 +79,47 @@ export class CalendarEventsRepository implements ICalendarEventsRepository {
     return this.#buildCalendarEventEntity(row);
   }
 
+  async findMany(
+    filter: CalendarEventFindManyEntity,
+    options?: { client?: PoolClient; logger?: ILogger },
+  ): Promise<CalendarEventEntity[]> {
+    const client = options?.client ?? this.#pool;
+
+    const conditions: string[] = [];
+    const values: any[] = [];
+    let paramIndex = 1;
+
+    if (filter.ids !== undefined) {
+      conditions.push(`id = ANY($${paramIndex++})`);
+      values.push(filter.ids);
+    }
+    if (filter.groupId !== undefined) {
+      conditions.push(`group_id = $${paramIndex++}`);
+      values.push(filter.groupId);
+    }
+    if (filter.creatorUserId !== undefined) {
+      conditions.push(`creator_user_id = $${paramIndex++}`);
+      values.push(filter.creatorUserId);
+    }
+    if (filter.eventType !== undefined) {
+      conditions.push(`event_type = $${paramIndex++}`);
+      values.push(filter.eventType);
+    }
+
+    const whereClause = conditions.length > 0 ? `WHERE ${conditions.join(' AND ')}` : '';
+
+    const query = `
+      SELECT * FROM group_calendar
+      ${whereClause}
+      ORDER BY start_date ASC
+    `;
+
+    options?.logger?.debug({ query, values }, 'CalendarEvents repository: findMany');
+
+    const result = await client.query<ICalendarEventRow>(query, values);
+    return result.rows.map((row) => this.#buildCalendarEventEntity(row));
+  }
+
   async findByGroupId(
     groupId: UUID,
     options?: { client?: PoolClient; logger?: ILogger },
@@ -85,7 +127,7 @@ export class CalendarEventsRepository implements ICalendarEventsRepository {
     const client = options?.client ?? this.#pool;
 
     const query = `
-      SELECT * FROM calendar_events
+      SELECT * FROM group_calendar
       WHERE group_id = $1
       ORDER BY start_date ASC
     `;
@@ -106,16 +148,12 @@ export class CalendarEventsRepository implements ICalendarEventsRepository {
   ): Promise<CalendarEventEntity[]> {
     const client = options?.client ?? this.#pool;
 
-    // Получаем все события группы, которые могут пересекаться с периодом
-    // Для recurring событий получаем базовые события (без исключений)
     const query = `
-      SELECT * FROM calendar_events
+      SELECT * FROM group_calendar
       WHERE group_id = $1
         AND (
-          -- One-time и yearly события в периоде
-          (event_type IN ('one-time', 'yearly') AND start_date <= $3 AND end_date >= $2)
-          -- Recurring события (weekly, monthly, work-schedule)
-          OR (event_type IN ('weekly', 'monthly', 'work-schedule'))
+          (iteration_type = 'oneTime' AND start_date <= $3 AND (end_date IS NULL OR end_date >= $2))
+          OR (iteration_type IN ('weekly', 'monthly', 'yearly'))
         )
       ORDER BY start_date ASC
     `;
@@ -128,34 +166,9 @@ export class CalendarEventsRepository implements ICalendarEventsRepository {
     return result.rows.map((row) => this.#buildCalendarEventEntity(row));
   }
 
-  async findExceptions(
-    groupId: UUID,
-    startDate: Date,
-    endDate: Date,
-    options?: { client?: PoolClient; logger?: ILogger },
-  ): Promise<CalendarEventEntity[]> {
-    const client = options?.client ?? this.#pool;
-
-    const query = `
-      SELECT * FROM calendar_events
-      WHERE group_id = $1
-        AND is_exception = true
-        AND exception_date >= $2
-        AND exception_date <= $3
-      ORDER BY exception_date ASC
-    `;
-
-    const values = [groupId, startDate, endDate];
-
-    options?.logger?.debug({ query, values }, 'CalendarEvents repository: findExceptions');
-
-    const result = await client.query<ICalendarEventRow>(query, values);
-    return result.rows.map((row) => this.#buildCalendarEventEntity(row));
-  }
-
   async patchOne(
     id: UUID,
-    patchData: CalendarEventPatchEntity,
+    patchData: CalendarEventPatchOneEntity,
     options?: { client?: PoolClient; logger?: ILogger },
   ): Promise<CalendarEventEntity> {
     const client = options?.client ?? this.#pool;
@@ -172,6 +185,14 @@ export class CalendarEventsRepository implements ICalendarEventsRepository {
       updates.push(`description = $${paramIndex++}`);
       values.push(patchData.description);
     }
+    if (patchData.eventType !== undefined) {
+      updates.push(`event_type = $${paramIndex++}`);
+      values.push(patchData.eventType);
+    }
+    if (patchData.iterationType !== undefined) {
+      updates.push(`iteration_type = $${paramIndex++}`);
+      values.push(patchData.iterationType);
+    }
     if (patchData.startDate !== undefined) {
       updates.push(`start_date = $${paramIndex++}`);
       values.push(patchData.startDate);
@@ -180,20 +201,19 @@ export class CalendarEventsRepository implements ICalendarEventsRepository {
       updates.push(`end_date = $${paramIndex++}`);
       values.push(patchData.endDate);
     }
-    if (patchData.isAllDay !== undefined) {
-      updates.push(`is_all_day = $${paramIndex++}`);
-      values.push(patchData.isAllDay);
+    if (patchData.recurrencePattern !== undefined) {
+      updates.push(`recurrence_pattern = $${paramIndex++}`);
+      values.push(patchData.recurrencePattern ? JSON.stringify(patchData.recurrencePattern) : null);
     }
 
     if (updates.length === 0) {
       throw new Error('No fields to update');
     }
 
-    updates.push(`updated_at = NOW()`);
     values.push(id);
 
     const query = `
-      UPDATE calendar_events
+      UPDATE group_calendar
       SET ${updates.join(', ')}
       WHERE id = $${paramIndex}
       RETURNING *
@@ -214,7 +234,7 @@ export class CalendarEventsRepository implements ICalendarEventsRepository {
   async deleteOne(id: UUID, options?: { client?: PoolClient; logger?: ILogger }): Promise<void> {
     const client = options?.client ?? this.#pool;
 
-    const query = `DELETE FROM calendar_events WHERE id = $1`;
+    const query = `DELETE FROM group_calendar WHERE id = $1`;
     const values = [id];
 
     options?.logger?.debug({ query, values }, 'CalendarEvents repository: deleteOne');
@@ -226,84 +246,6 @@ export class CalendarEventsRepository implements ICalendarEventsRepository {
     }
   }
 
-  async deleteSeries(parentEventId: UUID, options?: { client?: PoolClient; logger?: ILogger }): Promise<void> {
-    const client = options?.client ?? this.#pool;
-
-    // Удаляем все исключения и само родительское событие
-    const query = `
-      DELETE FROM calendar_events
-      WHERE id = $1 OR parent_event_id = $1
-    `;
-    const values = [parentEventId];
-
-    options?.logger?.debug({ query, values }, 'CalendarEvents repository: deleteSeries');
-
-    const result = await client.query(query, values);
-
-    if (result.rowCount === 0) {
-      throw new Error('Calendar event series not found');
-    }
-  }
-
-  async createException(
-    entity: {
-      parentEventId: UUID;
-      exceptionDate: Date;
-      title?: string;
-      description?: string;
-      startDate?: Date;
-      endDate?: Date;
-      isAllDay?: boolean;
-    },
-    options?: { client?: PoolClient; logger?: ILogger },
-  ): Promise<CalendarEventEntity> {
-    const client = options?.client ?? this.#pool;
-
-    // Получаем родительское событие для копирования основных полей
-    const parentResult = await client.query<ICalendarEventRow>('SELECT * FROM calendar_events WHERE id = $1', [
-      entity.parentEventId,
-    ]);
-
-    const parent = parentResult.rows?.[0];
-    if (!parent) {
-      throw new Error('Parent event not found');
-    }
-
-    const query = `
-      INSERT INTO calendar_events (
-        group_id, creator_user_id, title, description, event_type,
-        start_date, end_date, is_all_day, recurrence_pattern,
-        parent_event_id, is_exception, exception_date
-      ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, true, $11::date)
-      RETURNING *
-    `;
-
-    const values = [
-      parent.group_id,
-      parent.creator_user_id,
-      entity.title ?? parent.title,
-      entity.description ?? parent.description,
-      parent.event_type,
-      entity.startDate ?? entity.exceptionDate,
-      entity.endDate ?? entity.exceptionDate,
-      entity.isAllDay ?? parent.is_all_day,
-      null, // recurrence_pattern для исключения
-      entity.parentEventId,
-      entity.exceptionDate.toISOString().split('T')[0], // Конвертируем в DATE
-    ];
-
-    options?.logger?.debug({ query, values }, 'CalendarEvents repository: createException');
-
-    const result = await client.query<ICalendarEventRow>(query, values);
-    const row = result.rows?.[0];
-
-    if (!row) {
-      throw new Error('Calendar event exception not created');
-    }
-
-    return this.#buildCalendarEventEntity(row);
-  }
-
   #buildCalendarEventEntity(row: ICalendarEventRow): CalendarEventEntity {
     return new CalendarEventEntity({
       id: row.id,
@@ -312,15 +254,11 @@ export class CalendarEventsRepository implements ICalendarEventsRepository {
       title: row.title,
       description: row.description ?? undefined,
       eventType: row.event_type,
+      iterationType: row.iteration_type,
       startDate: row.start_date,
-      endDate: row.end_date,
-      isAllDay: row.is_all_day,
+      endDate: row.end_date ?? undefined,
       recurrencePattern: row.recurrence_pattern ?? undefined,
-      parentEventId: row.parent_event_id ?? undefined,
-      isException: row.is_exception,
-      exceptionDate: row.exception_date ?? undefined,
       createdAt: row.created_at,
-      updatedAt: row.updated_at,
     });
   }
 }
