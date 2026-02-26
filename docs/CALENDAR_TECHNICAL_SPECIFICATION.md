@@ -559,24 +559,24 @@ src/
 │   └── db/
 │       └── calendarEvents/
 │           ├── index.ts          # Экспорт
-│           ├── calendar.ts # Реализация репозитория
+│           ├── events.ts # Реализация репозитория
 │           └── types.ts          # Типы для строк БД (ICalendarEventRow)
 │
 ├── domains/
 │   ├── repositories/
 │   │   └── db/
-│   │       └── calendar.ts # Интерфейс ICalendarEventsRepository
+│   │       └── events.ts # Интерфейс ICalendarEventsRepository
 │   │
 │   └── services/
-│       └── calendar.ts     # Интерфейс ICalendarEventsService
+│       └── events.ts     # Интерфейс ICalendarEventsService
 │
 ├── services/
-│   └── calendar.ts         # Реализация сервиса (бизнес-логика)
+│   └── events.ts         # Реализация сервиса (бизнес-логика)
 │
 ├── useCases/
 │   └── calendarEvents/
 │       ├── index.ts              # Экспорт
-│       └── calendar.ts     # Реализация ICalendarEventsUseCases
+│       └── events.ts     # Реализация ICalendarEventsUseCases
 │
 └── api/rest/
     └── routes/
@@ -593,7 +593,7 @@ src/
 
 ### 3.2. Миграция БД
 
-**Файл:** `migrations/4_create_group_calendar_table.sql`
+**Файл:** `migrations/4_create_events_table.sql`
 
 ```sql
 -- Up Migration
@@ -1000,12 +1000,12 @@ logger.error({ error }, 'Failed to generate occurrences');
 
 | № | Этап | Описание | Статус |
 |---|-------|----------|--------|
-| 1 | Миграция БД | Создать `migrations/4_create_group_calendar_table.sql` | ⬜ |
+| 1 | Миграция БД | Создать `migrations/4_create_events_table.sql` | ⬜ |
 | 2 | Entities | `src/entities/events.ts` | ⬜ |
 | 3 | Repository (DB) | `src/repositories/db/calendarEvents/` | ⬜ |
-| 4 | Repository Interface | `src/domains/repositories/db/calendar.ts` | ⬜ |
-| 5 | Service Interface | `src/domains/services/calendar.ts` | ⬜ |
-| 6 | Service Implementation | `src/services/calendar.ts` | ⬜ |
+| 4 | Repository Interface | `src/domains/repositories/db/events.ts` | ⬜ |
+| 5 | Service Interface | `src/domains/services/events.ts` | ⬜ |
+| 6 | Service Implementation | `src/services/events.ts` | ⬜ |
 | 7 | Use Cases | `src/useCases/calendarEvents/` | ⬜ |
 | 8 | API Routes | `src/api/rest/routes/groups/calendar/` | ⬜ |
 | 9 | Integration Tests | Тесты API endpoints | ⬜ |

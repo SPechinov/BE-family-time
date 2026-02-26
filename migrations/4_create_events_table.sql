@@ -1,6 +1,5 @@
 -- Up Migration
-
-CREATE TABLE IF NOT EXISTS group_calendar
+CREATE TABLE IF NOT EXISTS events
 (
     id                 UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     group_id           UUID         NOT NULL REFERENCES groups (id) ON DELETE CASCADE,
@@ -31,14 +30,14 @@ CREATE TABLE IF NOT EXISTS group_calendar
 );
 
 -- Индексы
-CREATE INDEX idx_group_calendar_group_id ON group_calendar (group_id);
-CREATE INDEX idx_group_calendar_dates ON group_calendar (start_date, end_date);
-CREATE INDEX idx_group_calendar_event_type ON group_calendar (event_type);
-CREATE INDEX idx_group_calendar_iteration_type ON group_calendar (iteration_type);
+CREATE INDEX idx_events_group_id ON events (group_id);
+CREATE INDEX idx_events_dates ON events (start_date, end_date);
+CREATE INDEX idx_events_event_type ON events (event_type);
+CREATE INDEX idx_events_iteration_type ON events (iteration_type);
 
 -- Down Migration
-DROP INDEX IF EXISTS idx_group_calendar_group_id;
-DROP INDEX IF EXISTS idx_group_calendar_dates;
-DROP INDEX IF EXISTS idx_group_calendar_event_type;
-DROP INDEX IF EXISTS idx_group_calendar_iteration_type;
-DROP TABLE IF EXISTS group_calendar;
+DROP INDEX IF EXISTS idx_events_group_id;
+DROP INDEX IF EXISTS idx_events_dates;
+DROP INDEX IF EXISTS idx_events_event_type;
+DROP INDEX IF EXISTS idx_events_iteration_type;
+DROP TABLE IF EXISTS events;
