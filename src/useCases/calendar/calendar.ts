@@ -1,5 +1,5 @@
 import { ICalendarService, IGroupsUsersService } from '@/domains/services';
-import { DefaultProps } from '@/domains/useCases';
+import { DefaultProps, ICalendarUseCases } from '@/domains/useCases';
 import {
   CalendarEventCreateEntity,
   CalendarEventEntity,
@@ -13,7 +13,7 @@ import {
 } from '@/entities';
 import { ErrorCalendarEventNotExists, ErrorGroupNotExists, ILogger } from '@/pkg';
 
-export class CalendarUseCases {
+export class CalendarUseCases implements ICalendarUseCases {
   readonly #calendarService: ICalendarService;
   readonly #groupsUsersService: IGroupsUsersService;
 
