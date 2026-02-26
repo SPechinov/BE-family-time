@@ -1,4 +1,4 @@
-import { ICalendarEventsRepository } from '@/domains/repositories/db';
+import { ICalendarRepository } from '@/domains/repositories/db';
 import { CalendarEventEntity, CalendarEventCreateEntity, CalendarEventPatchEntity } from '@/entities';
 import { ICalendarEventsService } from '@/domains/services';
 import { PoolClient } from 'pg';
@@ -6,9 +6,9 @@ import { ILogger } from '@/pkg/logger';
 import { UUID } from 'node:crypto';
 
 export class CalendarEventsService implements ICalendarEventsService {
-  readonly #calendarEventsRepository: ICalendarEventsRepository;
+  readonly #calendarEventsRepository: ICalendarRepository;
 
-  constructor(props: { calendarEventsRepository: ICalendarEventsRepository }) {
+  constructor(props: { calendarEventsRepository: ICalendarRepository }) {
     this.#calendarEventsRepository = props.calendarEventsRepository;
   }
 

@@ -1,5 +1,5 @@
 import { Pool, PoolClient } from 'pg';
-import { ICalendarEventsRepository } from '@/domains/repositories/db';
+import { ICalendarRepository } from '@/domains/repositories/db';
 import {
   CalendarEventEntity,
   CalendarEventCreateEntity,
@@ -11,7 +11,7 @@ import { ICalendarEventRow } from './types';
 import { UUID } from 'node:crypto';
 import { ILogger } from '@/pkg/logger';
 
-export class CalendarEventsRepository implements ICalendarEventsRepository {
+export class CalendarRepository implements ICalendarRepository {
   readonly #pool: Pool;
 
   constructor(pool: Pool) {
