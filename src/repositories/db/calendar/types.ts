@@ -1,9 +1,6 @@
 import { UUID } from 'node:crypto';
-import { CalendarEventType, RecurrencePattern } from '@/entities';
+import { CalendarEventType, CalendarEventRecurrencePattern } from '@/entities';
 
-/**
- * Тип строки таблицы calendar_events
- */
 export interface ICalendarEventRow {
   id: UUID;
   group_id: UUID;
@@ -14,7 +11,7 @@ export interface ICalendarEventRow {
   start_date: Date;
   end_date: Date;
   is_all_day: boolean;
-  recurrence_pattern: RecurrencePattern | null;
+  recurrence_pattern: CalendarEventRecurrencePattern | null;
   parent_event_id: UUID | null;
   is_exception: boolean;
   exception_date: Date | null;

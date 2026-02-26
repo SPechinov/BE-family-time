@@ -559,24 +559,24 @@ src/
 │   └── db/
 │       └── calendarEvents/
 │           ├── index.ts          # Экспорт
-│           ├── calendarEvents.ts # Реализация репозитория
+│           ├── calendar.ts # Реализация репозитория
 │           └── types.ts          # Типы для строк БД (ICalendarEventRow)
 │
 ├── domains/
 │   ├── repositories/
 │   │   └── db/
-│   │       └── calendarEvents.ts # Интерфейс ICalendarEventsRepository
+│   │       └── calendar.ts # Интерфейс ICalendarEventsRepository
 │   │
 │   └── services/
-│       └── calendarEvents.ts     # Интерфейс ICalendarEventsService
+│       └── calendar.ts     # Интерфейс ICalendarEventsService
 │
 ├── services/
-│   └── calendarEvents.ts         # Реализация сервиса (бизнес-логика)
+│   └── calendar.ts         # Реализация сервиса (бизнес-логика)
 │
 ├── useCases/
 │   └── calendarEvents/
 │       ├── index.ts              # Экспорт
-│       └── calendarEvents.ts     # Реализация ICalendarEventsUseCases
+│       └── calendar.ts     # Реализация ICalendarEventsUseCases
 │
 └── api/rest/
     └── routes/
@@ -1003,9 +1003,9 @@ logger.error({ error }, 'Failed to generate occurrences');
 | 1 | Миграция БД | Создать `migrations/4_create_group_calendar_table.sql` | ⬜ |
 | 2 | Entities | `src/entities/calendarEvent.ts` | ⬜ |
 | 3 | Repository (DB) | `src/repositories/db/calendarEvents/` | ⬜ |
-| 4 | Repository Interface | `src/domains/repositories/db/calendarEvents.ts` | ⬜ |
-| 5 | Service Interface | `src/domains/services/calendarEvents.ts` | ⬜ |
-| 6 | Service Implementation | `src/services/calendarEvents.ts` | ⬜ |
+| 4 | Repository Interface | `src/domains/repositories/db/calendar.ts` | ⬜ |
+| 5 | Service Interface | `src/domains/services/calendar.ts` | ⬜ |
+| 6 | Service Implementation | `src/services/calendar.ts` | ⬜ |
 | 7 | Use Cases | `src/useCases/calendarEvents/` | ⬜ |
 | 8 | API Routes | `src/api/rest/routes/groups/calendar/` | ⬜ |
 | 9 | Integration Tests | Тесты API endpoints | ⬜ |
