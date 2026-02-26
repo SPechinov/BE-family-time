@@ -1,6 +1,6 @@
 import { UUID } from 'node:crypto';
-import { UserId } from '@/entities/user';
-import { GroupId } from '@/entities/group';
+import { UserId } from './user';
+import { GroupId } from './group';
 
 export class GroupsUsersEntity {
   readonly #userId: UserId;
