@@ -2,24 +2,29 @@ import { FastifyInstance } from 'fastify';
 import { IAuthMiddleware } from '@/api/rest/domains';
 import { ZodTypeProvider } from 'fastify-type-provider-zod';
 import { PREFIX, ROUTES } from './constants';
-import { IEventsUseCases } from '@/domains/useCases';
+import { ICalendarEventUseCases } from '@/domains/useCases';
 import { SCHEMAS } from './schemas';
-import { EventCreateEntity, CalendarEventPatchEntity, RecurrencePattern } from '@/entities';
+import {
+  CalendarEventCreateEntity,
+  CalendarEventEntity,
+  CalendarEventPatchEntity,
+  CalendarEventRecurrencePattern,
+} from '@/entities';
 import { UUID } from 'node:crypto';
 
 export class CalendarRoutesController {
   #fastify: FastifyInstance;
   #authMiddleware: IAuthMiddleware;
-  #calendarEventsUseCases: IEventsUseCases;
+  #calendarEventUseCases: ICalendarEventUseCases;
 
   constructor(props: {
     fastify: FastifyInstance;
     authMiddleware: IAuthMiddleware;
-    calendarEventsUseCases: IEventsUseCases;
+    calendarEventUseCases: ICalendarEventUseCases;
   }) {
     this.#fastify = props.fastify;
     this.#authMiddleware = props.authMiddleware;
-    this.#calendarEventsUseCases = props.calendarEventsUseCases;
+    this.#calendarEventUseCases = props.calendarEventUseCases;
   }
 
   register() {
@@ -35,7 +40,7 @@ export class CalendarRoutesController {
             schema: SCHEMAS.getList,
           },
           async (request, reply) => {
-            const events = await this.#calendarEventsUseCases.getEventsByGroupId({
+            const calendarEvents = await this.#calendarEventUseCases.getCalendarEventsByGroupId({
               userId: request.userId,
               groupId: request.params.groupId as UUID,
               startDate: new Date(request.query.startDate),
@@ -44,7 +49,7 @@ export class CalendarRoutesController {
               logger: request.log,
             });
 
-            reply.status(200).send(events.map((event) => this.#serializeEvent(event)));
+            reply.status(200).send(calendarEvents.map((event) => this.#serializeEvent(event)));
           },
         );
 
@@ -55,13 +60,14 @@ export class CalendarRoutesController {
             schema: SCHEMAS.get,
           },
           async (request, reply) => {
-            const event = await this.#calendarEventsUseCases.getEventById({
+            const calendarEvent = await this.#calendarEventUseCases.getCalendarEventById({
               userId: request.userId,
-              eventId: request.params.eventId as UUID,
+              groupId: request.params.groupId as UUID,
+              calendarEventId: request.params.eventId as UUID,
               logger: request.log,
             });
 
-            reply.status(200).send(this.#serializeEvent(event));
+            reply.status(200).send(this.#serializeEvent(calendarEvent));
           },
         );
 
@@ -76,10 +82,10 @@ export class CalendarRoutesController {
               ? this.#buildRecurrencePattern(request.body.recurrencePattern)
               : undefined;
 
-            const event = await this.#calendarEventsUseCases.createEvent({
+            const calendarEvent = await this.#calendarEventUseCases.createCalendarEvent({
               userId: request.userId,
               groupId: request.params.groupId as UUID,
-              eventCreateEntity: new EventCreateEntity({
+              calendarEventCreateEntity: new CalendarEventCreateEntity({
                 groupId: request.params.groupId as UUID,
                 creatorUserId: request.userId,
                 title: request.body.title,
@@ -87,13 +93,13 @@ export class CalendarRoutesController {
                 eventType: request.body.eventType,
                 startDate: new Date(request.body.startDate),
                 endDate: new Date(request.body.endDate),
-                isAllDay: request.body.isAllDay,
+                isAllDay: request.body.isAllDay ?? false,
                 recurrencePattern,
               }),
               logger: request.log,
             });
 
-            reply.status(201).send(this.#serializeEvent(event));
+            reply.status(201).send(this.#serializeEvent(calendarEvent));
           },
         );
 
@@ -107,19 +113,24 @@ export class CalendarRoutesController {
             const patchData: CalendarEventPatchEntity = new CalendarEventPatchEntity({
               title: request.body.title,
               description: request.body.description,
+              eventType: request.body.eventType,
               startDate: request.body.startDate ? new Date(request.body.startDate) : undefined,
               endDate: request.body.endDate ? new Date(request.body.endDate) : undefined,
               isAllDay: request.body.isAllDay,
+              recurrencePattern: request.body.recurrencePattern
+                ? this.#buildRecurrencePattern(request.body.recurrencePattern)
+                : null,
             });
 
-            const event = await this.#calendarEventsUseCases.updateCalendarEvent({
+            const calendarEvent = await this.#calendarEventUseCases.patchCalendarEvent({
               userId: request.userId,
-              eventId: request.params.eventId as UUID,
-              calendarEventPatchEntity: patchData,
+              groupId: request.params.groupId as UUID,
+              calendarEventId: request.params.eventId as UUID,
+              calendarEventPatchOneEntity: patchData,
               logger: request.log,
             });
 
-            reply.status(200).send(this.#serializeEvent(event));
+            reply.status(200).send(this.#serializeEvent(calendarEvent));
           },
         );
 
@@ -130,10 +141,10 @@ export class CalendarRoutesController {
             schema: SCHEMAS.delete,
           },
           async (request, reply) => {
-            await this.#calendarEventsUseCases.deleteEvent({
+            await this.#calendarEventUseCases.deleteCalendarEvent({
               userId: request.userId,
-              eventId: request.params.eventId as UUID,
-              deleteMode: request.query.deleteMode,
+              groupId: request.params.groupId as UUID,
+              calendarEventId: request.params.eventId as UUID,
               logger: request.log,
             });
 
@@ -147,27 +158,27 @@ export class CalendarRoutesController {
     );
   }
 
-  #serializeEvent(event: import('@/entities').EventEntity) {
+  #serializeEvent(calendarEvent: CalendarEventEntity) {
     return {
-      id: event.id,
-      groupId: event.groupId,
-      creatorUserId: event.creatorUserId,
-      title: event.title,
-      description: event.description,
-      eventType: event.eventType,
-      startDate: event.startDate.toISOString(),
-      endDate: event.endDate.toISOString(),
-      isAllDay: event.isAllDay,
-      recurrencePattern: event.recurrencePattern,
-      parentEventId: event.parentEventId ?? null,
-      isException: event.isException,
-      exceptionDate: event.exceptionDate ? event.exceptionDate.toISOString().split('T')[0] : null,
-      createdAt: event.createdAt.toISOString(),
-      updatedAt: event.updatedAt.toISOString(),
+      id: calendarEvent.id,
+      groupId: calendarEvent.groupId,
+      creatorUserId: calendarEvent.creatorUserId,
+      title: calendarEvent.title,
+      description: calendarEvent.description,
+      eventType: calendarEvent.eventType,
+      startDate: calendarEvent.startDate.toISOString(),
+      endDate: calendarEvent.endDate.toISOString(),
+      isAllDay: calendarEvent.isAllDay,
+      recurrencePattern: calendarEvent.recurrencePattern,
+      parentEventId: calendarEvent.parentEventId ?? null,
+      isException: calendarEvent.isException,
+      exceptionDate: calendarEvent.exceptionDate ? calendarEvent.exceptionDate.toISOString().split('T')[0] : null,
+      createdAt: calendarEvent.createdAt.toISOString(),
+      updatedAt: calendarEvent.updatedAt.toISOString(),
     };
   }
 
-  #buildRecurrencePattern(pattern: any): RecurrencePattern {
+  #buildRecurrencePattern(pattern: any): CalendarEventRecurrencePattern {
     switch (pattern.type) {
       case 'weekly':
         return { type: 'weekly', weekdays: pattern.weekdays };
@@ -178,10 +189,10 @@ export class CalendarRoutesController {
           type: 'work-schedule',
           shiftPattern: pattern.shiftPattern,
           startDate: pattern.startDate,
-          shiftDuration: pattern.shiftDuration || 1,
+          shiftDuration: pattern.shiftDuration,
         };
       default:
-        return undefined as any;
+        throw new Error(`Invalid recurrence pattern type: ${pattern.type}`);
     }
   }
 }

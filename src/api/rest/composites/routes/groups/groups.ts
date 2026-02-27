@@ -31,7 +31,7 @@ export class GroupsComposite {
     new CalendarRoutesController({
       fastify: this.#fastifyInstance,
       authMiddleware: dependencies.authMiddleware,
-      calendarEventsUseCases: dependencies.calendarEventsUseCases,
+      calendarEventUseCases: dependencies.calendarEventUseCases,
     }).register();
   }
 }
