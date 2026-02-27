@@ -1,19 +1,22 @@
-import { UUID } from 'node:crypto';
-import { GroupCreateEntity, GroupEntity, GroupPatchOneEntity } from '@/entities';
+import { GroupCreateEntity, GroupEntity, GroupId, GroupPatchOneEntity, UserId } from '@/entities';
 import { DefaultProps } from './types';
 
 export interface IGroupsUseCases {
-  findUserGroupsList(props: DefaultProps<{ userId: UUID }>): Promise<GroupEntity[]>;
-  createUserGroup(props: DefaultProps<{ userId: UUID; groupCreateEntity: GroupCreateEntity }>): Promise<GroupEntity>;
-  findUserGroup(props: DefaultProps<{ userId: UUID; groupId: UUID }>): Promise<GroupEntity>;
+  findUserGroupsList(props: DefaultProps<{ userId: UserId }>): Promise<GroupEntity[]>;
+  createUserGroup(props: DefaultProps<{ userId: UserId; groupCreateEntity: GroupCreateEntity }>): Promise<GroupEntity>;
+  findUserGroup(props: DefaultProps<{ userId: UserId; groupId: GroupId }>): Promise<GroupEntity>;
   patchUserGroup(
     props: DefaultProps<{
-      userId: UUID;
-      groupId: UUID;
+      userId: UserId;
+      groupId: GroupId;
       groupPatchOneEntity: GroupPatchOneEntity;
     }>,
   ): Promise<GroupEntity>;
-  inviteUserInGroup(props: DefaultProps<{ targetUserId: UUID; actorUserId: UUID; groupId: UUID }>): Promise<void>;
-  excludeUserFromGroup(props: DefaultProps<{ targetUserId: UUID; actorUserId: UUID; groupId: UUID }>): Promise<void>;
-  deleteUserGroup(props: DefaultProps<{ userId: UUID; groupId: UUID }>): Promise<void>;
+  inviteUserInGroup(
+    props: DefaultProps<{ targetUserId: UserId; actorUserId: UserId; groupId: GroupId }>,
+  ): Promise<void>;
+  excludeUserFromGroup(
+    props: DefaultProps<{ targetUserId: UserId; actorUserId: UserId; groupId: GroupId }>,
+  ): Promise<void>;
+  deleteUserGroup(props: DefaultProps<{ userId: UserId; groupId: GroupId }>): Promise<void>;
 }

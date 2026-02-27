@@ -5,7 +5,7 @@ import { CALENDAR_EVENT_SCHEMA, GLOBAL_SCHEMAS } from '../../schemas';
 const GET_LIST = {
   tags: ['Calendar events'],
   params: z.object({
-    groupId: z.uuidv4(),
+    groupId: GLOBAL_SCHEMAS.groupId,
   }),
   querystring: z.object({
     startDate: z.date().optional(),
