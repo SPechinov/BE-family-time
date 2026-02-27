@@ -1,4 +1,3 @@
-import { $brand } from 'zod';
 import { UUID } from 'node:crypto';
 export type GroupId = UUID & { readonly __brand: 'GroupId' };
 
