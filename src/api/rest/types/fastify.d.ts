@@ -1,9 +1,9 @@
 import 'fastify';
-import { UUID } from 'node:crypto';
+import { UserId } from '@/entities';
 
 declare module 'fastify' {
   interface FastifyRequest {
-    userId: UUID;
+    userId: UserId;
     startRequestTimestamp: number;
   }
 }
