@@ -19,11 +19,16 @@ export const GLOBAL_SCHEMAS = {
   calendarEventDescription: z.string().min(1).max(1000),
   calendarEventType: z.enum(['birthday', 'vacation', 'holiday']),
   calendarEventIterationType: z.enum(['oneTime', 'weekly', 'monthly', 'yearly']),
-  calendarEventRecurrencePattern: z.object({
-    type: z.enum(['weekly', 'monthly']),
-    dayOfWeek: z.number().min(0).max(6).optional(),
-    dayOfMonth: z.number().min(0).max(30).optional(),
-  }),
+  calendarEventRecurrencePattern: z.union([
+    z.object({
+      type: z.literal('weekly'),
+      dayOfWeek: z.number().min(0).max(6),
+    }),
+    z.object({
+      type: z.literal('monthly'),
+      dayOfMonth: z.number().min(0).max(30),
+    }),
+  ]),
 };
 
 export const SESSION_SCHEMA = z
