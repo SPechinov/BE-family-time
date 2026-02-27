@@ -20,7 +20,7 @@ const GET_LIST = {
 const GET = {
   tags: ['Calendar events'],
   params: z.object({
-    groupId: z.uuidv4(),
+    groupId: GLOBAL_SCHEMAS.groupId,
     calendarEventId: z.uuidv4(),
   }),
   response: createResponseSchema({
@@ -31,7 +31,7 @@ const GET = {
 const CREATE = {
   tags: ['Calendar events'],
   params: z.object({
-    groupId: z.uuidv4(),
+    groupId: GLOBAL_SCHEMAS.groupId,
   }),
   body: z.object({
     title: GLOBAL_SCHEMAS.calendarEventTitle,
@@ -50,8 +50,8 @@ const CREATE = {
 const PATCH = {
   tags: ['Calendar events'],
   params: z.object({
-    groupId: z.uuidv4(),
-    calendarEventId: z.uuidv4(),
+    groupId: GLOBAL_SCHEMAS.groupId,
+    calendarEventId: GLOBAL_SCHEMAS.calendarEventId,
   }),
   body: z.object({
     title: GLOBAL_SCHEMAS.calendarEventTitle,
@@ -65,8 +65,8 @@ const PATCH = {
 const DELETE = {
   tags: ['Calendar events'],
   params: z.object({
-    groupId: z.uuidv4(),
-    calendarEventId: z.uuidv4(),
+    groupId: GLOBAL_SCHEMAS.groupId,
+    calendarEventId: GLOBAL_SCHEMAS.calendarEventId,
   }),
   response: createResponseSchema({
     200: z.void(),

@@ -42,7 +42,7 @@ export class CalendarEventsRoutesController {
           async (request, reply) => {
             const calendarEvents = await this.#calendarEventsUseCases.getCalendarEventsByGroupId({
               userId: request.userId,
-              groupId: request.params.groupId as GroupId,
+              groupId: request.params.groupId,
               eventType: request.query.eventType,
               startDate: request.query.startDate,
               endDate: request.query.endDate,
@@ -61,8 +61,8 @@ export class CalendarEventsRoutesController {
           async (request, reply) => {
             const calendarEvent = await this.#calendarEventsUseCases.getCalendarEvent({
               userId: request.userId,
-              groupId: request.params.groupId as GroupId,
-              calendarEventId: request.params.calendarEventId as CalendarEventId,
+              groupId: request.params.groupId,
+              calendarEventId: request.params.calendarEventId,
               logger: request.log,
             });
 
@@ -77,7 +77,7 @@ export class CalendarEventsRoutesController {
           },
           async (request, reply) => {
             const userId = request.userId;
-            const groupId = request.params.groupId as GroupId;
+            const groupId = request.params.groupId;
 
             const calendarEvent = await this.#calendarEventsUseCases.createCalendarEvent({
               userId,
@@ -107,8 +107,8 @@ export class CalendarEventsRoutesController {
           async (request, reply) => {
             const calendarEvent = await this.#calendarEventsUseCases.patchCalendarEvent({
               userId: request.userId,
-              groupId: request.params.groupId as GroupId,
-              calendarEventId: request.params.calendarEventId as CalendarEventId,
+              groupId: request.params.groupId,
+              calendarEventId: request.params.calendarEventId,
               calendarEventPatchOneEntity: new CalendarEventPatchOneEntity({
                 title: request.body.title,
                 description: request.body.description,
@@ -127,9 +127,9 @@ export class CalendarEventsRoutesController {
           },
           async (request, reply) => {
             await this.#calendarEventsUseCases.deleteCalendarEvent({
-              userId: request.userId as UserId,
-              groupId: request.params.groupId as GroupId,
-              calendarEventId: request.params.calendarEventId as CalendarEventId,
+              userId: request.userId,
+              groupId: request.params.groupId,
+              calendarEventId: request.params.calendarEventId,
               logger: request.log,
             });
 
@@ -145,7 +145,7 @@ export class CalendarEventsRoutesController {
 
   #serializeCalendarEvent(calendarEvent: CalendarEventEntity) {
     return {
-      id: calendarEvent.id as string,
+      id: calendarEvent.id,
       title: calendarEvent.title,
       description: calendarEvent.description,
       type: calendarEvent.eventType,

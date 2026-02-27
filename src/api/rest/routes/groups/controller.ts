@@ -70,7 +70,7 @@ export class GroupsRoutesController {
           async (request, reply) => {
             const group = await this.#groupsUseCases.findUserGroup({
               userId: request.userId,
-              groupId: request.params.groupId as UUID,
+              groupId: request.params.groupId,
               logger: request.log,
             });
 
@@ -90,7 +90,7 @@ export class GroupsRoutesController {
           async (request, reply) => {
             const group = await this.#groupsUseCases.patchUserGroup({
               userId: request.userId,
-              groupId: request.params.groupId as UUID,
+              groupId: request.params.groupId,
               groupPatchOneEntity: new GroupPatchOneEntity({
                 name: request.body.name,
                 description: request.body.description,
@@ -112,9 +112,9 @@ export class GroupsRoutesController {
           },
           async (request, reply) => {
             await this.#groupsUseCases.inviteUserInGroup({
-              groupId: request.params.groupId as UUID,
+              groupId: request.params.groupId,
               actorUserId: request.userId,
-              targetUserId: request.body.targetUserId as UUID,
+              targetUserId: request.body.targetUserId,
               logger: request.log,
             });
             reply.status(200).send();
@@ -128,9 +128,9 @@ export class GroupsRoutesController {
           },
           async (request, reply) => {
             await this.#groupsUseCases.excludeUserFromGroup({
-              groupId: request.params.groupId as UUID,
+              groupId: request.params.groupId,
               actorUserId: request.userId,
-              targetUserId: request.body.targetUserId as UUID,
+              targetUserId: request.body.targetUserId,
               logger: request.log,
             });
             reply.status(200).send();
@@ -145,7 +145,7 @@ export class GroupsRoutesController {
           async (request, reply) => {
             await this.#groupsUseCases.deleteUserGroup({
               userId: request.userId,
-              groupId: request.params.groupId as UUID,
+              groupId: request.params.groupId,
               logger: request.log,
             });
             reply.status(200).send();

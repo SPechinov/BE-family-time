@@ -1,4 +1,5 @@
 import z from 'zod';
+import { CalendarEventId, GroupId, UserId } from '@/entities';
 
 export const GLOBAL_SCHEMAS = {
   firstName: z.string().min(2).max(40),
@@ -12,9 +13,9 @@ export const GLOBAL_SCHEMAS = {
   userAgent: z.string().min(1),
   groupName: z.string().min(1).max(50),
   groupDescription: z.string().max(1000),
-  groupId: z.uuidv4(),
-  userId: z.uuidv4(),
-  calendarEventId: z.uuidv4(),
+  groupId: z.uuidv4().brand<GroupId>(),
+  userId: z.uuidv4().brand<UserId>(),
+  calendarEventId: z.uuidv4().brand<CalendarEventId>(),
   calendarEventTitle: z.string().min(1).max(50),
   calendarEventDescription: z.string().min(1).max(1000),
   calendarEventType: z.enum(['birthday', 'vacation', 'holiday']),
@@ -41,7 +42,7 @@ export const SESSION_SCHEMA = z
 
 export const USER_SCHEMA = z
   .object({
-    id: z.uuidv4(),
+    id: GLOBAL_SCHEMAS.userId,
     email: GLOBAL_SCHEMAS.email.nullable(),
     phone: z.string().nullable(),
     firstName: GLOBAL_SCHEMAS.firstName.nullable(),
@@ -50,7 +51,7 @@ export const USER_SCHEMA = z
   .register(z.globalRegistry, { id: 'User' });
 
 export const GROUP_SCHEMA = z
-  .object({ id: z.uuidv4(), name: z.string(), description: z.string().optional() })
+  .object({ id: GLOBAL_SCHEMAS.groupId, name: z.string(), description: z.string().optional() })
   .register(z.globalRegistry, { id: 'Group' });
 
 export const CALENDAR_EVENT_SCHEMA = z
