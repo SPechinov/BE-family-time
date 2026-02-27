@@ -3,6 +3,8 @@ import { isDev } from '@/config';
 import { Pool } from 'pg';
 import { globalErrorHandler } from './utils';
 import { AuthComposite, GroupsComposite, MeComposite } from './composites';
+import { AuthMiddleware } from '@/api/rest/middlewares';
+import { JwtService } from '@/services';
 
 interface Props {
   redis: RedisClient;
@@ -18,9 +20,12 @@ export const newApiRest = async (props: Props) => {
 
   fastify.register(
     (instance) => {
-      new AuthComposite({ fastifyInstance: instance, redis: props.redis, postgres: props.postgres });
-      new MeComposite({ fastifyInstance: instance, postgres: props.postgres });
-      new GroupsComposite({ fastifyInstance: instance, postgres: props.postgres });
+      const jwtService = new JwtService();
+      const authMiddleware = new AuthMiddleware({ jwtService });
+
+      new AuthComposite({ fastifyInstance: instance, redis: props.redis, postgres: props.postgres, authMiddleware });
+      new MeComposite({ fastifyInstance: instance, postgres: props.postgres, authMiddleware });
+      new GroupsComposite({ fastifyInstance: instance, postgres: props.postgres, authMiddleware });
     },
     { prefix: '/api' },
   );

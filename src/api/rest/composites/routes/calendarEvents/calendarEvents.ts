@@ -1,10 +1,10 @@
 import { FastifyInstance } from 'fastify';
 import { Pool } from 'pg';
-import { MeRoutesController } from '../../../routes/me';
-import { createMeDependencies } from './utils';
+import { GroupsRoutesController } from '../../../routes/groups';
 import { IAuthMiddleware } from '../../../domains';
+import { createCalendarEventsDependencies } from './utils';
 
-export class MeComposite {
+export class CalendarEventsComposite {
   #fastifyInstance: FastifyInstance;
   #postgres: Pool;
   #authMiddleware: IAuthMiddleware;
@@ -18,12 +18,5 @@ export class MeComposite {
   }
 
   #register() {
-    const dependencies = createMeDependencies({ postgres: this.#postgres });
-
-    new MeRoutesController({
-      fastify: this.#fastifyInstance,
-      authMiddleware: this.#authMiddleware,
-      meUseCases: dependencies.meUseCases,
-    }).register();
   }
 }

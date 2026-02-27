@@ -1,37 +1,29 @@
 import { FastifyInstance } from 'fastify';
 import { Pool } from 'pg';
 import { GroupsRoutesController } from '../../../routes/groups';
-import { CalendarRoutesController } from '../../../routes/groups/calendar';
 import { createGroupsDependencies } from './utils';
+import { IAuthMiddleware } from '@/api/rest/domains';
 
 export class GroupsComposite {
   #fastifyInstance: FastifyInstance;
   #postgres: Pool;
+  #authMiddleware: IAuthMiddleware;
 
-  constructor(props: { fastifyInstance: FastifyInstance; postgres: Pool }) {
+  constructor(props: { fastifyInstance: FastifyInstance; postgres: Pool; authMiddleware: IAuthMiddleware }) {
     this.#fastifyInstance = props.fastifyInstance;
     this.#postgres = props.postgres;
+    this.#authMiddleware = props.authMiddleware;
 
     this.#register();
   }
 
   #register() {
-    const dependencies = createGroupsDependencies({ postgres: this.#postgres });
+    const { groupsUseCases } = createGroupsDependencies({ postgres: this.#postgres });
 
-    // Register groups routes first
-    const groupsController = new GroupsRoutesController({
+    new GroupsRoutesController({
       fastify: this.#fastifyInstance,
-      authMiddleware: dependencies.authMiddleware,
-      groupsUseCases: dependencies.groupsUseCases,
-    });
-    groupsController.register();
-
-    // Register calendar routes inside groups routes to inherit :groupId parameter
-    // Calendar routes use prefix /groups/:groupId/calendar
-    new CalendarRoutesController({
-      fastify: this.#fastifyInstance,
-      authMiddleware: dependencies.authMiddleware,
-      calendarEventUseCases: dependencies.calendarEventUseCases,
+      authMiddleware: this.#authMiddleware,
+      groupsUseCases: groupsUseCases,
     }).register();
   }
 }

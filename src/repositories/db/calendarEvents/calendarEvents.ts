@@ -1,5 +1,5 @@
 import { Pool, PoolClient } from 'pg';
-import { ICalendarEventRepository } from '@/domains/repositories/db';
+import { ICalendarEventsRepository } from '@/domains/repositories/db';
 import {
   CalendarEventEntity,
   CalendarEventCreateEntity,
@@ -11,7 +11,7 @@ import { ICalendarEventRow } from './types';
 import { UUID } from 'node:crypto';
 import { ILogger } from '@/pkg/logger';
 
-export class CalendarEventRepository implements ICalendarEventRepository {
+export class CalendarEventsRepository implements ICalendarEventsRepository {
   readonly #pool: Pool;
 
   constructor(pool: Pool) {
@@ -25,7 +25,7 @@ export class CalendarEventRepository implements ICalendarEventRepository {
     const client = options?.client ?? this.#pool;
 
     const query = `
-      INSERT INTO events (
+      INSERT INTO calendar_events (
         group_id, creator_user_id, title, description, event_type,
         start_date, end_date, is_all_day, recurrence_pattern,
         is_exception, exception_date
@@ -62,7 +62,7 @@ export class CalendarEventRepository implements ICalendarEventRepository {
     const client = options?.client ?? this.#pool;
 
     const query = `
-      SELECT * FROM events
+      SELECT * FROM calendar_events
       WHERE id = $1
     `;
 
@@ -110,7 +110,7 @@ export class CalendarEventRepository implements ICalendarEventRepository {
     const whereClause = conditions.length > 0 ? `WHERE ${conditions.join(' AND ')}` : '';
 
     const query = `
-      SELECT * FROM events
+      SELECT * FROM calendar_events
       ${whereClause}
       ORDER BY start_date ASC
     `;
@@ -128,7 +128,7 @@ export class CalendarEventRepository implements ICalendarEventRepository {
     const client = options?.client ?? this.#pool;
 
     const query = `
-      SELECT * FROM events
+      SELECT * FROM calendar_events
       WHERE group_id = $1
       ORDER BY start_date ASC
     `;
@@ -152,7 +152,7 @@ export class CalendarEventRepository implements ICalendarEventRepository {
     const client = options?.client ?? this.#pool;
 
     const query = `
-      SELECT * FROM events
+      SELECT * FROM calendar_events
       WHERE group_id = $1
         AND (
           (event_type = 'one-time' AND start_date <= $3 AND (end_date IS NULL OR end_date >= $2))
@@ -221,7 +221,7 @@ export class CalendarEventRepository implements ICalendarEventRepository {
     values.push(findOneEntity.id);
 
     const query = `
-      UPDATE events
+      UPDATE calendar_events
       SET ${updates.join(', ')}, updated_at = NOW()
       WHERE id = $${paramIndex}
       RETURNING *
@@ -245,7 +245,7 @@ export class CalendarEventRepository implements ICalendarEventRepository {
   ): Promise<void> {
     const client = options?.client ?? this.#pool;
 
-    const query = `DELETE FROM events WHERE id = $1`;
+    const query = `DELETE FROM calendar_events WHERE id = $1`;
     const values = [calendarEventFindOneEntity.id];
 
     options?.logger?.debug({ query, values }, 'CalendarEvent repository: deleteOne');

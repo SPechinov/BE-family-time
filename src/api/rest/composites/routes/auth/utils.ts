@@ -5,7 +5,6 @@ import { RefreshTokensStore, OtpCodesStore } from '@/repositories/stores';
 import { RateLimiterService, JwtService } from '@/services';
 import { CONFIG } from '@/config';
 
-import { AuthMiddleware } from '../../../middlewares';
 import { createUsersService } from '../../utils';
 
 interface Props {
@@ -38,7 +37,7 @@ export const createDependencies = ({ redis, postgres }: Props) => {
   });
 
   const authUseCases = new AuthUseCases({
-    usersService: createUsersService(postgres),
+    usersService: createUsersService({ postgres }),
     registrationOtpCodesStore,
     forgotPasswordOtpCodesStore,
     rateLimiter,
@@ -47,7 +46,6 @@ export const createDependencies = ({ redis, postgres }: Props) => {
   });
 
   return {
-    authMiddleware: new AuthMiddleware({ jwtService }),
     authUseCases,
   };
 };

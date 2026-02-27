@@ -1,45 +1,18 @@
 import { Pool } from 'pg';
-import { JwtService } from '@/services/jwt';
-import { AuthMiddleware } from '@/api/rest/middlewares';
-import { GroupsRepository, GroupsUsersRepository, CalendarEventRepository } from '@/repositories/db';
-import { GroupsService, GroupsUsersService, CalendarEventService } from '@/services';
-import { CalendarEventUseCases, GroupsUseCases } from '@/useCases';
-import { createUsersService } from '@/api/rest/composites/utils';
+
+import { GroupsUseCases } from '@/useCases';
+
+import { createUsersService, createGroupsUsersService } from '../../utils';
 import { DbTransactionService } from '@/pkg/dbTransaction';
+import { createGroupsService } from '@/api/rest/composites/utils/createGroupsService';
 
-interface CreateGroupsDependenciesProps {
-  postgres: Pool;
-}
-
-export const createGroupsDependencies = (props: CreateGroupsDependenciesProps) => {
-  const jwtService = new JwtService();
-  const authMiddleware = new AuthMiddleware({ jwtService });
-  const groupsRepository = new GroupsRepository(props.postgres);
-  const groupsUsersRepository = new GroupsUsersRepository(props.postgres);
-
-  const usersService = createUsersService(props.postgres);
-  const groupsService = new GroupsService({ groupsRepository });
-  const groupsUsersService = new GroupsUsersService({ groupsUsersRepository });
-  const dbTransactionService = new DbTransactionService(props.postgres);
-
-  const groupsUseCases = new GroupsUseCases({
-    groupsService,
-    groupsUsersService,
-    usersService,
-    transactionService: dbTransactionService,
-  });
-
-  const calendarEventRepository = new CalendarEventRepository(props.postgres);
-  const calendarEventService = new CalendarEventService({ calendarEventRepository });
-  const calendarEventUseCases = new CalendarEventUseCases({
-    calendarEventService,
-    groupsUsersService,
-  });
-
+export const createGroupsDependencies = (props: { postgres: Pool }) => {
   return {
-    jwtService,
-    authMiddleware,
-    groupsUseCases,
-    calendarEventUseCases,
+    groupsUseCases: new GroupsUseCases({
+      groupsService: createGroupsService({ postgres: props.postgres }),
+      usersService: createUsersService({ postgres: props.postgres }),
+      groupsUsersService: createGroupsUsersService({ postgres: props.postgres }),
+      transactionService: new DbTransactionService(props.postgres),
+    }),
   };
 };

@@ -1,1 +1,1 @@
-export { CalendarEventService } from './calendarEvents';
+export { CalendarEventsService } from './calendarEvents';

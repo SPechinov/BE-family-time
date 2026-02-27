@@ -2,7 +2,7 @@ import { FastifyInstance } from 'fastify';
 import { IAuthMiddleware } from '@/api/rest/domains';
 import { ZodTypeProvider } from 'fastify-type-provider-zod';
 import { PREFIX, ROUTES } from './constants';
-import { ICalendarEventUseCases } from '@/domains/useCases';
+import { ICalendarEventsUseCases } from '@/domains/useCases';
 import { SCHEMAS } from './schemas';
 import {
   CalendarEventCreateEntity,
@@ -15,12 +15,12 @@ import { UUID } from 'node:crypto';
 export class CalendarRoutesController {
   #fastify: FastifyInstance;
   #authMiddleware: IAuthMiddleware;
-  #calendarEventUseCases: ICalendarEventUseCases;
+  #calendarEventUseCases: ICalendarEventsUseCases;
 
   constructor(props: {
     fastify: FastifyInstance;
     authMiddleware: IAuthMiddleware;
-    calendarEventUseCases: ICalendarEventUseCases;
+    calendarEventUseCases: ICalendarEventsUseCases;
   }) {
     this.#fastify = props.fastify;
     this.#authMiddleware = props.authMiddleware;

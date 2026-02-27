@@ -9,7 +9,7 @@ import {
   UserId,
 } from '@/entities';
 
-export interface ICalendarEventUseCases {
+export interface ICalendarEventsUseCases {
   createCalendarEvent({
     userId,
     groupId,

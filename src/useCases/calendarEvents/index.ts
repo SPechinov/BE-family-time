@@ -1,1 +1,1 @@
-export { CalendarEventUseCases } from './calendarEvents';
+export { CalendarEventsUseCases } from './calendarEvents';

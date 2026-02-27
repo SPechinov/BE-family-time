@@ -1,5 +1,5 @@
-import { ICalendarEventService, IGroupsUsersService } from '@/domains/services';
-import { DefaultProps, ICalendarEventUseCases } from '@/domains/useCases';
+import { ICalendarEventsService, IGroupsUsersService } from '@/domains/services';
+import { DefaultProps, ICalendarEventsUseCases } from '@/domains/useCases';
 import {
   CalendarEventCreateEntity,
   CalendarEventEntity,
@@ -13,12 +13,12 @@ import {
 } from '@/entities';
 import { ErrorEventNotExists, ErrorGroupNotExists, ILogger } from '@/pkg';
 
-export class CalendarEventUseCases implements ICalendarEventUseCases {
-  readonly #calendarEventService: ICalendarEventService;
+export class CalendarEventsUseCases implements ICalendarEventsUseCases {
+  readonly #calendarEventsService: ICalendarEventsService;
   readonly #groupsUsersService: IGroupsUsersService;
 
-  constructor(props: { calendarEventService: ICalendarEventService; groupsUsersService: IGroupsUsersService }) {
-    this.#calendarEventService = props.calendarEventService;
+  constructor(props: { calendarEventsService: ICalendarEventsService; groupsUsersService: IGroupsUsersService }) {
+    this.#calendarEventsService = props.calendarEventsService;
     this.#groupsUsersService = props.groupsUsersService;
   }
 
@@ -34,7 +34,7 @@ export class CalendarEventUseCases implements ICalendarEventUseCases {
   }>): Promise<CalendarEventEntity> {
     const options = { logger };
     await this.#checkUserInGroupOrThrow(userId, groupId, options);
-    return await this.#calendarEventService.createOne(calendarEventCreateEntity, options);
+    return await this.#calendarEventsService.createOne(calendarEventCreateEntity, options);
   }
 
   async getCalendarEventsByGroupId({
@@ -53,7 +53,7 @@ export class CalendarEventUseCases implements ICalendarEventUseCases {
     const options = { logger };
     await this.#checkUserInGroupOrThrow(userId, groupId, options);
 
-    return this.#calendarEventService.getCalendarEventsByGroupId(groupId, startDate, endDate, options);
+    return this.#calendarEventsService.getCalendarEventsByGroupId(groupId, startDate, endDate, options);
   }
 
   async getCalendarEventById({
@@ -69,7 +69,7 @@ export class CalendarEventUseCases implements ICalendarEventUseCases {
     const options = { logger };
     await this.#checkUserInGroupOrThrow(userId, groupId, options);
 
-    const calendarEvent = await this.#calendarEventService.findOne(
+    const calendarEvent = await this.#calendarEventsService.findOne(
       new CalendarEventFindOneEntity({ id: calendarEventId }),
       options,
     );
@@ -97,13 +97,13 @@ export class CalendarEventUseCases implements ICalendarEventUseCases {
     await this.#checkUserInGroupOrThrow(userId, groupId, options);
     const calendarEventFindOneEntity = new CalendarEventFindOneEntity({ id: calendarEventId });
 
-    const calendarEvent = await this.#calendarEventService.findOne(calendarEventFindOneEntity, options);
+    const calendarEvent = await this.#calendarEventsService.findOne(calendarEventFindOneEntity, options);
 
     if (!calendarEvent) {
       throw new ErrorEventNotExists();
     }
 
-    return await this.#calendarEventService.patchOne(
+    return await this.#calendarEventsService.patchOne(
       {
         calendarEventFindOneEntity: calendarEventFindOneEntity,
         calendarEventPatchOneEntity: calendarEventPatchOneEntity,
@@ -126,13 +126,13 @@ export class CalendarEventUseCases implements ICalendarEventUseCases {
     await this.#checkUserInGroupOrThrow(userId, groupId, options);
     const calendarEventFindOneEntity = new CalendarEventFindOneEntity({ id: calendarEventId });
 
-    const calendarEvent = await this.#calendarEventService.findOne(calendarEventFindOneEntity, options);
+    const calendarEvent = await this.#calendarEventsService.findOne(calendarEventFindOneEntity, options);
 
     if (!calendarEvent) {
       throw new ErrorEventNotExists();
     }
 
-    await this.#calendarEventService.deleteOne(calendarEventFindOneEntity, options);
+    await this.#calendarEventsService.deleteOne(calendarEventFindOneEntity, options);
   }
 
   async #checkUserInGroupOrThrow(userId: UserId, groupId: GroupId, options?: { logger: ILogger }): Promise<void> {

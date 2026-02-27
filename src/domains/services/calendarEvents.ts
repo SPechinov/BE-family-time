@@ -8,7 +8,7 @@ import {
 import { PoolClient } from 'pg';
 import { ILogger } from '@/pkg';
 
-export interface ICalendarEventService {
+export interface ICalendarEventsService {
   createOne(
     entity: CalendarEventCreateEntity,
     options?: { client?: PoolClient; logger?: ILogger },

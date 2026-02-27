@@ -9,7 +9,7 @@ import { PoolClient } from 'pg';
 import { ILogger } from '@/pkg/logger';
 import { UUID } from 'node:crypto';
 
-export interface ICalendarEventRepository {
+export interface ICalendarEventsRepository {
   createOne(
     entity: CalendarEventCreateEntity,
     options?: { client?: PoolClient; logger?: ILogger },
