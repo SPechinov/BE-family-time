@@ -1,8 +1,8 @@
 import { FastifyInstance } from 'fastify';
 import { Pool } from 'pg';
-import { GroupsRoutesController } from '../../../routes/groups';
 import { IAuthMiddleware } from '../../../domains';
 import { createCalendarEventsDependencies } from './utils';
+import { CalendarEventsRoutesController } from '../../../routes/calendarEvents/controller';
 
 export class CalendarEventsComposite {
   #fastifyInstance: FastifyInstance;
@@ -18,5 +18,12 @@ export class CalendarEventsComposite {
   }
 
   #register() {
+    const { calendarEventsUseCases } = createCalendarEventsDependencies({ postgres: this.#postgres });
+
+    new CalendarEventsRoutesController({
+      fastify: this.#fastifyInstance,
+      authMiddleware: this.#authMiddleware,
+      calendarEventsUseCases,
+    }).register();
   }
 }

@@ -12,7 +12,7 @@ import {
   GroupId,
 } from '@/entities';
 
-export class CalendarRoutesController {
+export class CalendarEventsRoutesController {
   #fastify: FastifyInstance;
   #authMiddleware: IAuthMiddleware;
   #calendarEventsUseCases: ICalendarEventsUseCases;
@@ -20,11 +20,11 @@ export class CalendarRoutesController {
   constructor(props: {
     fastify: FastifyInstance;
     authMiddleware: IAuthMiddleware;
-    calendarEventUseCases: ICalendarEventsUseCases;
+    calendarEventsUseCases: ICalendarEventsUseCases;
   }) {
     this.#fastify = props.fastify;
     this.#authMiddleware = props.authMiddleware;
-    this.#calendarEventsUseCases = props.calendarEventUseCases;
+    this.#calendarEventsUseCases = props.calendarEventsUseCases;
   }
 
   register() {
