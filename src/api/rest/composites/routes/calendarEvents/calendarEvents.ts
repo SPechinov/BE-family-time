@@ -2,7 +2,7 @@ import { FastifyInstance } from 'fastify';
 import { Pool } from 'pg';
 import { IAuthMiddleware } from '../../../domains';
 import { createCalendarEventsDependencies } from './utils';
-import { CalendarEventsRoutesController } from '../../../routes/calendarEvents/controller';
+import { CalendarEventsRoutesController } from '../../../routes/calendarEvents';
 
 export class CalendarEventsComposite {
   #fastifyInstance: FastifyInstance;
