@@ -1,8 +1,8 @@
-import { $brand } from 'zod';
 import { UserId } from './user';
 import { GroupId } from './group';
+import { UUID } from 'node:crypto';
 
-export type CalendarEventId = string & $brand<'CalendarEventId'>;
+export type CalendarEventId = UUID & { readonly __brand: 'CalendarEventId' };
 export type CalendarEventType = 'birthday' | 'vacation' | 'holiday';
 export type CalendarEventIterationType = 'oneTime' | 'weekly' | 'monthly' | 'yearly';
 

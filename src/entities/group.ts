@@ -1,5 +1,6 @@
 import { $brand } from 'zod';
-export type GroupId = string & $brand<'GroupId'>;
+import { UUID } from 'node:crypto';
+export type GroupId = UUID & { readonly __brand: 'GroupId' };
 
 export class GroupEntity {
   readonly #id: GroupId;
