@@ -13,7 +13,6 @@ import {
   UserId,
 } from '@/entities';
 import { ErrorCalendarEventNotExists, ErrorGroupNotExists, ILogger } from '@/pkg';
-import { UUID } from 'node:crypto';
 
 export class CalendarEventsUseCases implements ICalendarEventsUseCases {
   readonly #usersService: IUsersService;

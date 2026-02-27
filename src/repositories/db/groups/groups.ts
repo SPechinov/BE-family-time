@@ -6,9 +6,9 @@ import {
   GroupEntity,
   GroupFindOneEntity,
   GroupPatchOneEntity,
+  GroupId,
 } from '@/entities';
 import { IGroupRowData } from './types';
-import { UUID } from 'node:crypto';
 import { ILogger } from '@/pkg/logger';
 
 export class GroupsRepository implements IGroupsRepository {
@@ -146,7 +146,7 @@ export class GroupsRepository implements IGroupsRepository {
 
   #buildGroupsConditions(findEntity: GroupFindOneEntity | GroupFindManyEntity | undefined) {
     const conditions: string[] = [];
-    const values: (string | number | boolean | UUID[])[] = [];
+    const values: (string | number | boolean | GroupId[])[] = [];
     let valueIndex = 1;
 
     if (!findEntity) {

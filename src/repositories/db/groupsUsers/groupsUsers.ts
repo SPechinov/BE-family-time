@@ -6,9 +6,10 @@ import {
   GroupsUsersFindOneEntity,
   GroupsUsersDeleteOneEntity,
   GroupsUsersFindManyEntity,
+  UserId,
+  GroupId,
 } from '@/entities';
 import { IGroupsUsersRowData } from './types';
-import { UUID } from 'node:crypto';
 import { ILogger } from '@/pkg/logger';
 
 export class GroupsUsersRepository implements IGroupsUsersRepository {
@@ -125,7 +126,7 @@ export class GroupsUsersRepository implements IGroupsUsersRepository {
 
   #buildConditions({ userId, groupId, isOwner }: GroupsUsersFindManyEntity) {
     const conditions: string[] = [];
-    const values: (UUID | boolean)[] = [];
+    const values: (UserId | GroupId | boolean)[] = [];
     let valueIndex = 1;
 
     if (groupId !== undefined) {

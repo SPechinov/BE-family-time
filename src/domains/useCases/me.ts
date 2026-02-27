@@ -1,7 +1,6 @@
-import { UserPlainEntity } from '@/entities';
+import { UserPlainEntity, UserId } from '@/entities';
 import { DefaultProps } from './types';
-import { UUID } from 'node:crypto';
 
 export interface IMeUseCases {
-  getMe(props: DefaultProps<{ userId: UUID }>): Promise<UserPlainEntity>;
+  getMe(props: DefaultProps<{ userId: UserId }>): Promise<UserPlainEntity>;
 }

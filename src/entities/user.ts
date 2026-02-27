@@ -1,6 +1,5 @@
-import { UUID } from 'node:crypto';
-
-export type UserId = UUID & { readonly __brand: 'UserId' };
+import { $brand } from 'zod';
+export type UserId = string & $brand<'UserId'>;
 
 export class UserPersonalInfoPlainEntity {
   readonly #firstName?: string | null;

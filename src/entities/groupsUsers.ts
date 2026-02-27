@@ -1,4 +1,3 @@
-import { UUID } from 'node:crypto';
 import { UserId } from './user';
 import { GroupId } from './group';
 
@@ -33,11 +32,11 @@ export class GroupsUsersEntity {
 }
 
 export class GroupsUsersCreateEntity {
-  readonly #userId: UUID;
-  readonly #groupId: UUID;
+  readonly #userId: UserId;
+  readonly #groupId: GroupId;
   readonly #isOwner: boolean;
 
-  constructor(props: { userId: UUID; groupId: UUID; isOwner: boolean }) {
+  constructor(props: { userId: UserId; groupId: GroupId; isOwner: boolean }) {
     this.#userId = props.userId;
     this.#groupId = props.groupId;
     this.#isOwner = props.isOwner;
@@ -57,11 +56,11 @@ export class GroupsUsersCreateEntity {
 }
 
 export class GroupsUsersFindOneEntity {
-  readonly #userId?: UUID;
-  readonly #groupId?: UUID;
+  readonly #userId?: UserId;
+  readonly #groupId?: GroupId;
   readonly #isOwner?: boolean;
 
-  constructor(props: { userId?: UUID; groupId?: UUID; isOwner?: boolean }) {
+  constructor(props: { userId?: UserId; groupId?: GroupId; isOwner?: boolean }) {
     this.#userId = props.userId;
     this.#groupId = props.groupId;
     this.#isOwner = props.isOwner;
@@ -81,11 +80,11 @@ export class GroupsUsersFindOneEntity {
 }
 
 export class GroupsUsersFindManyEntity {
-  readonly #userId?: UUID;
-  readonly #groupId?: UUID;
+  readonly #userId?: UserId;
+  readonly #groupId?: GroupId;
   readonly #isOwner?: boolean;
 
-  constructor(props: { userId?: UUID; groupId?: UUID; isOwner?: boolean }) {
+  constructor(props: { userId?: UserId; groupId?: GroupId; isOwner?: boolean }) {
     this.#userId = props.userId;
     this.#groupId = props.groupId;
     this.#isOwner = props.isOwner;

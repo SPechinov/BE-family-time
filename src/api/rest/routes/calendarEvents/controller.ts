@@ -4,14 +4,7 @@ import { ICalendarEventsUseCases } from '@/domains/useCases';
 import { IAuthMiddleware } from '../../domains';
 import { PREFIX, ROUTES } from './constants';
 import { SCHEMAS } from './schemas';
-import {
-  CalendarEventCreateEntity,
-  CalendarEventEntity,
-  CalendarEventId,
-  CalendarEventPatchOneEntity,
-  GroupId,
-  UserId,
-} from '@/entities';
+import { CalendarEventCreateEntity, CalendarEventEntity, CalendarEventPatchOneEntity } from '@/entities';
 
 export class CalendarEventsRoutesController {
   #fastify: FastifyInstance;

@@ -102,11 +102,14 @@ describe('Calendar API Integration Tests', () => {
 
     // Create a group for calendar tests
     const groupData = createGroupFixture();
-    await request.post(API_PREFIX).set({
-      ...DEFAULT_HEADERS,
-      Authorization: `Bearer ${owner1.authToken}`,
-    }).send(groupData);
-    
+    await request
+      .post(API_PREFIX)
+      .set({
+        ...DEFAULT_HEADERS,
+        Authorization: `Bearer ${owner1.authToken}`,
+      })
+      .send(groupData);
+
     const groupResult = await postgres.query('SELECT id FROM groups WHERE name = $1', [groupData.name]);
     groupId = groupResult.rows[0].id;
   });
@@ -658,12 +661,12 @@ describe('Calendar API Integration Tests', () => {
 
       expect(response.status).toBe(200);
       expect(Array.isArray(response.body)).toBe(true);
-      
+
       // Check that filtered response only contains weekly events
       response.body.forEach((e: any) => {
         expect(e.eventType).toBe('weekly');
       });
-      
+
       // Should have weekly events
       const weeklyEvents = response.body.filter((e: any) => e.title === 'Weekly Event');
       expect(weeklyEvents.length).toBeGreaterThan(0);
@@ -767,12 +770,10 @@ describe('Calendar API Integration Tests', () => {
     });
 
     it('should return existing event', async () => {
-      const response = await request
-        .get(`${API_PREFIX}/${groupId}/calendar/events/${createdEventId}`)
-        .set({
-          ...DEFAULT_HEADERS,
-          Authorization: `Bearer ${owner1.authToken}`,
-        });
+      const response = await request.get(`${API_PREFIX}/${groupId}/calendar/events/${createdEventId}`).set({
+        ...DEFAULT_HEADERS,
+        Authorization: `Bearer ${owner1.authToken}`,
+      });
 
       expect(response.status).toBe(200);
       expect(response.body).toHaveProperty('id', createdEventId);
@@ -782,23 +783,19 @@ describe('Calendar API Integration Tests', () => {
     it('should return 404 for non-existent event', async () => {
       const fakeEventId = '00000000-0000-0000-0000-000000000000';
 
-      const response = await request
-        .get(`${API_PREFIX}/${groupId}/calendar/events/${fakeEventId}`)
-        .set({
-          ...DEFAULT_HEADERS,
-          Authorization: `Bearer ${owner1.authToken}`,
-        });
+      const response = await request.get(`${API_PREFIX}/${groupId}/calendar/events/${fakeEventId}`).set({
+        ...DEFAULT_HEADERS,
+        Authorization: `Bearer ${owner1.authToken}`,
+      });
 
       expect(response.status).toBe(404);
     });
 
     it('should reject for non-group member', async () => {
-      const response = await request
-        .get(`${API_PREFIX}/${groupId}/calendar/events/${createdEventId}`)
-        .set({
-          ...DEFAULT_HEADERS,
-          Authorization: `Bearer ${owner2.authToken}`,
-        });
+      const response = await request.get(`${API_PREFIX}/${groupId}/calendar/events/${createdEventId}`).set({
+        ...DEFAULT_HEADERS,
+        Authorization: `Bearer ${owner2.authToken}`,
+      });
 
       expect(response.status).toBe(400);
     });
@@ -1052,12 +1049,10 @@ describe('Calendar API Integration Tests', () => {
 
       const eventId = createResponse.body.id;
 
-      const response = await request
-        .get(`${API_PREFIX}/${groupId}/calendar/events/${eventId}`)
-        .set({
-          ...DEFAULT_HEADERS,
-          Authorization: `Bearer ${owner1.authToken}`,
-        });
+      const response = await request.get(`${API_PREFIX}/${groupId}/calendar/events/${eventId}`).set({
+        ...DEFAULT_HEADERS,
+        Authorization: `Bearer ${owner1.authToken}`,
+      });
 
       expect(response.status).toBe(200);
       // Ensure no sensitive fields are exposed
@@ -1134,12 +1129,10 @@ describe('Calendar API Integration Tests', () => {
       const eventId = createResponse.body.id;
 
       // owner2 tries to access (should fail)
-      const response = await request
-        .get(`${API_PREFIX}/${groupId}/calendar/events/${eventId}`)
-        .set({
-          ...DEFAULT_HEADERS,
-          Authorization: `Bearer ${owner2.authToken}`,
-        });
+      const response = await request.get(`${API_PREFIX}/${groupId}/calendar/events/${eventId}`).set({
+        ...DEFAULT_HEADERS,
+        Authorization: `Bearer ${owner2.authToken}`,
+      });
 
       expect(response.status).toBe(400);
     });

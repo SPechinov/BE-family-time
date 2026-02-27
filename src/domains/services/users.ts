@@ -4,10 +4,10 @@ import {
   UserEntity,
   UserPatchOnePlainEntity,
   UserPlainEntity,
+  UserId,
 } from '@/entities';
 import { ILogger } from '@/pkg/logger';
 import { PoolClient } from 'pg';
-import { UUID } from 'node:crypto';
 
 export interface IUsersService {
   createOne(
@@ -18,7 +18,7 @@ export interface IUsersService {
     userFindOnePlainEntity: UserFindOnePlainEntity,
     options?: { client?: PoolClient; logger?: ILogger },
   ): Promise<UserEntity | null>;
-  findOneByUserIdOrThrow(userId: UUID, options?: { client?: PoolClient; logger?: ILogger }): Promise<UserEntity>;
+  findOneByUserIdOrThrow(userId: UserId, options?: { client?: PoolClient; logger?: ILogger }): Promise<UserEntity>;
   patchOne(
     props: {
       userFindOnePlainEntity: UserFindOnePlainEntity;

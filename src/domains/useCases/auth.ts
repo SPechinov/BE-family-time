@@ -1,7 +1,7 @@
 import { UserContactsPlainEntity, UserCreatePlainEntity, UserEntity, UserPasswordPlainEntity } from '@/entities';
 import { JwtPayload } from 'jsonwebtoken';
 import { DefaultProps } from './types';
-import { UUID } from 'node:crypto';
+import { UserId } from '@/entities';
 
 export interface IAuthUseCases {
   login(
@@ -33,12 +33,12 @@ export interface IAuthUseCases {
   ): Promise<UserEntity>;
 
   getAllSessionsPayloads(
-    props: DefaultProps<{ userId: UUID }>,
+    props: DefaultProps<{ userId: UserId }>,
   ): Promise<{ payload: JwtPayload | string | null; jwt: string }[]>;
 
-  logoutAllSessions(props: DefaultProps<{ userId: UUID }>): Promise<void>;
+  logoutAllSessions(props: DefaultProps<{ userId: UserId }>): Promise<void>;
 
-  logoutSession(props: DefaultProps<{ userId: UUID; refreshToken: string }>): Promise<void>;
+  logoutSession(props: DefaultProps<{ userId: UserId; refreshToken: string }>): Promise<void>;
 
   refreshTokens(
     props: DefaultProps<{

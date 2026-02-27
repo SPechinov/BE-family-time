@@ -21,7 +21,7 @@ const GET = {
   tags: ['Calendar events'],
   params: z.object({
     groupId: GLOBAL_SCHEMAS.groupId,
-    calendarEventId: z.uuidv4(),
+    calendarEventId: GLOBAL_SCHEMAS.calendarEventId,
   }),
   response: createResponseSchema({
     200: CALENDAR_EVENT_SCHEMA,

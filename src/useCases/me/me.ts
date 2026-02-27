@@ -2,7 +2,6 @@ import { DefaultProps, IMeUseCases } from '@/domains/useCases';
 import { UserPlainEntity, UserFindOnePlainEntity, UserId } from '@/entities';
 import { IUsersService } from '@/domains/services';
 import { ErrorUserNotExists } from '@/pkg';
-import { UUID } from 'node:crypto';
 
 export class MeUseCases implements IMeUseCases {
   #usersService: IUsersService;

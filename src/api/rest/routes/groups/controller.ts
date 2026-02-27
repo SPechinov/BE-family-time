@@ -5,7 +5,6 @@ import { PREFIX, ROUTES } from './constants';
 import { IGroupsUseCases } from '@/domains/useCases';
 import { SCHEMAS } from './schemas';
 import { GroupCreateEntity, GroupPatchOneEntity } from '@/entities';
-import { UUID } from 'node:crypto';
 
 export class GroupsRoutesController {
   #fastify: FastifyInstance;

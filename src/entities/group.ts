@@ -1,6 +1,5 @@
-import { UUID } from 'node:crypto';
-
-export type GroupId = UUID & { readonly __brand: 'GroupId' };
+import { $brand } from 'zod';
+export type GroupId = string & $brand<'GroupId'>;
 
 export class GroupEntity {
   readonly #id: GroupId;
@@ -50,9 +49,9 @@ export class GroupCreateEntity {
 }
 
 export class GroupFindOneEntity {
-  readonly #id?: UUID;
+  readonly #id?: GroupId;
 
-  constructor(props: { id?: UUID }) {
+  constructor(props: { id?: GroupId }) {
     this.#id = props.id;
   }
 
@@ -62,10 +61,10 @@ export class GroupFindOneEntity {
 }
 
 export class GroupFindManyEntity {
-  readonly #ids?: UUID[];
+  readonly #ids?: GroupId[];
   readonly #name?: string;
 
-  constructor(props: { ids?: UUID[]; name?: string }) {
+  constructor(props: { ids?: GroupId[]; name?: string }) {
     this.#ids = props.ids;
     this.#name = props.name;
   }

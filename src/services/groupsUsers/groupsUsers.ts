@@ -5,11 +5,12 @@ import {
   GroupsUsersFindOneEntity,
   GroupsUsersFindManyEntity,
   GroupsUsersDeleteOneEntity,
+  UserId,
+  GroupId,
 } from '@/entities';
 import { IGroupsUsersService } from '@/domains/services';
 import { PoolClient } from 'pg';
 import { ILogger } from '@/pkg/logger';
-import { UUID } from 'node:crypto';
 
 export class GroupsUsersService implements IGroupsUsersService {
   readonly #groupsUsersRepository: IGroupsUsersRepository;
@@ -53,16 +54,22 @@ export class GroupsUsersService implements IGroupsUsersService {
     return this.#groupsUsersRepository.deleteOne(groupsUsersDeleteOneEntity, options);
   }
 
-  async findUserGroups(userId: UUID, options: { client?: PoolClient; logger: ILogger }): Promise<GroupsUsersEntity[]> {
+  async findUserGroups(
+    userId: UserId,
+    options: { client?: PoolClient; logger: ILogger },
+  ): Promise<GroupsUsersEntity[]> {
     return this.findMany(new GroupsUsersFindManyEntity({ userId }), options);
   }
 
-  async findGroupUsers(groupId: UUID, options: { client?: PoolClient; logger: ILogger }): Promise<GroupsUsersEntity[]> {
+  async findGroupUsers(
+    groupId: GroupId,
+    options: { client?: PoolClient; logger: ILogger },
+  ): Promise<GroupsUsersEntity[]> {
     return this.findMany(new GroupsUsersFindManyEntity({ groupId }), options);
   }
 
   async findGroupOwners(
-    groupId: UUID,
+    groupId: GroupId,
     options: { client?: PoolClient; logger: ILogger },
   ): Promise<GroupsUsersEntity[]> {
     return this.findMany(new GroupsUsersFindManyEntity({ groupId, isOwner: true }), options);
