@@ -227,13 +227,19 @@ export class CalendarEventPatchOneEntity {
 
 export class CalendarEventFindOneEntity {
   readonly #id?: CalendarEventId;
+  readonly #groupId?: GroupId;
 
-  constructor(props: { id?: CalendarEventId }) {
+  constructor(props: { id?: CalendarEventId; groupId?: GroupId }) {
     this.#id = props.id;
+    this.#groupId = props.groupId;
   }
 
   get id() {
     return this.#id;
+  }
+
+  get groupId() {
+    return this.#groupId;
   }
 }
 

@@ -87,7 +87,7 @@ export class CalendarEventsUseCases implements ICalendarEventsUseCases {
     await this.#usersService.findOneByUserIdOrThrow(userId, options);
     await this.#checkUserInGroupOrThrow(userId, groupId, options);
 
-    return this.#findOneCalendarEventOrThrow(new CalendarEventFindOneEntity({ id: calendarEventId }), options);
+    return this.#findOneCalendarEventOrThrow(new CalendarEventFindOneEntity({ id: calendarEventId, groupId }), options);
   }
 
   async patchCalendarEvent({
@@ -106,7 +106,7 @@ export class CalendarEventsUseCases implements ICalendarEventsUseCases {
     await this.#usersService.findOneByUserIdOrThrow(userId, options);
     await this.#checkUserInGroupOrThrow(userId, groupId, options);
 
-    const calendarEventFindOneEntity = new CalendarEventFindOneEntity({ id: calendarEventId });
+    const calendarEventFindOneEntity = new CalendarEventFindOneEntity({ id: calendarEventId, groupId });
 
     await this.#findOneCalendarEventOrThrow(calendarEventFindOneEntity, options);
     return await this.#calendarEventsService.patchOne(
@@ -132,7 +132,7 @@ export class CalendarEventsUseCases implements ICalendarEventsUseCases {
     await this.#usersService.findOneByUserIdOrThrow(userId, options);
     await this.#checkUserInGroupOrThrow(userId, groupId, options);
 
-    const calendarEventFindOneEntity = new CalendarEventFindOneEntity({ id: calendarEventId });
+    const calendarEventFindOneEntity = new CalendarEventFindOneEntity({ id: calendarEventId, groupId });
     await this.#findOneCalendarEventOrThrow(calendarEventFindOneEntity, options);
     await this.#calendarEventsService.deleteOne(calendarEventFindOneEntity, options);
   }

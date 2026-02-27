@@ -59,12 +59,18 @@ export class CalendarEventsRepository implements ICalendarEventsRepository {
   ): Promise<CalendarEventEntity | null> {
     const client = options?.client ?? this.#pool;
 
+    const hasGroupId = entity.groupId !== undefined;
+
     const query = `
       SELECT * FROM calendar_events
       WHERE id = $1
+      ${hasGroupId ? 'AND group_id = $2' : ''}
     `;
 
-    const values = [entity.id];
+    const values: any[] = [entity.id];
+    if (hasGroupId) {
+      values.push(entity.groupId);
+    }
 
     options?.logger?.debug({ query, values }, 'CalendarEvents repository: findOne');
 

@@ -22,8 +22,8 @@ CREATE TABLE IF NOT EXISTS calendar_events
         ),
 
     CONSTRAINT check_recurrence_pattern CHECK (
-        (event_type IN ('oneTime', 'yearly') AND recurrence_pattern IS NULL) OR
-        (event_type IN ('weekly', 'monthly') AND recurrence_pattern IS NOT NULL)
+        (iteration_type IN ('oneTime', 'yearly') AND recurrence_pattern IS NULL) OR
+        (iteration_type IN ('weekly', 'monthly') AND recurrence_pattern IS NOT NULL)
         ),
 
     CONSTRAINT check_dates CHECK (end_date >= start_date)
