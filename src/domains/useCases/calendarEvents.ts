@@ -1,46 +1,55 @@
-import { UUID } from 'node:crypto';
-import { CalendarEventEntity, CalendarEventCreateEntity, CalendarEventPatchOneEntity, GroupId } from '@/entities';
+import {
+  CalendarEventEntity,
+  CalendarEventCreateEntity,
+  CalendarEventPatchOneEntity,
+  GroupId,
+  CalendarEventType,
+  CalendarEventId,
+  UserId,
+} from '@/entities';
 import { DefaultProps } from './types';
 
 export interface ICalendarEventsUseCases {
   createCalendarEvent(
     props: DefaultProps<{
-      userId: UUID;
-      groupId: UUID;
+      userId: UserId;
+      groupId: GroupId;
       calendarEventCreateEntity: CalendarEventCreateEntity;
     }>,
   ): Promise<CalendarEventEntity>;
 
   getCalendarEventsByGroupId(
     props: DefaultProps<{
-      userId: UUID;
-      groupId: UUID;
+      userId: UserId;
+      groupId: GroupId;
       startDate: Date;
       endDate: Date;
-      eventType?: import('@/entities').CalendarEventType;
+      eventType?: CalendarEventType;
     }>,
   ): Promise<CalendarEventEntity[]>;
 
-  getCalendarEventById(
+  getCalendarEvent(
     props: DefaultProps<{
-      userId: UUID;
-      eventId: UUID;
+      userId: UserId;
+      groupId: GroupId;
+      calendarEventId: CalendarEventId;
     }>,
   ): Promise<CalendarEventEntity>;
 
   patchCalendarEvent(
     props: DefaultProps<{
-      userId: UUID;
+      userId: UserId;
       groupId: GroupId;
-      eventId: UUID;
-      calendarEventPatchEntity: CalendarEventPatchOneEntity;
+      calendarEventId: CalendarEventId;
+      calendarEventPatchOneEntity: CalendarEventPatchOneEntity;
     }>,
   ): Promise<CalendarEventEntity>;
 
   deleteCalendarEvent(
     props: DefaultProps<{
-      userId: UUID;
-      eventId: UUID;
+      userId: UserId;
+      groupId: GroupId;
+      calendarEventId: CalendarEventId;
     }>,
   ): Promise<void>;
 }
