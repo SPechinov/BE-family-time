@@ -1,1 +1,1 @@
-export { CalendarRoutesController } from './controller';
+export { CalendarEventsRoutesController } from './controller';
