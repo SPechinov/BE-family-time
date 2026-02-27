@@ -1,6 +1,6 @@
 import { UUID } from 'node:crypto';
 
-export type GroupId = UUID;
+export type GroupId = UUID & { readonly __brand: 'GroupId' };
 
 export class GroupEntity {
   readonly #id: GroupId;
@@ -8,7 +8,7 @@ export class GroupEntity {
   readonly #description?: string;
   readonly #createdAt: Date;
 
-  constructor(props: { id: UUID; name: string; description?: string; createdAt: Date }) {
+  constructor(props: { id: GroupId; name: string; description?: string; createdAt: Date }) {
     this.#id = props.id;
     this.#name = props.name;
     this.#description = props.description;

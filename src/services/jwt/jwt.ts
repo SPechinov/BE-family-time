@@ -2,6 +2,7 @@ import jwt from 'jsonwebtoken';
 import { CONFIG } from '@/config';
 import { IJwtService } from '@/domains/services';
 import { UUID } from 'node:crypto';
+import { UserId } from '@/entities';
 
 export class JwtService implements IJwtService {
   #accessTokenSecret = CONFIG.jwt.accessTokenSecret;
@@ -55,7 +56,7 @@ export class JwtService implements IJwtService {
 
   #verifyToken(token: string, secret: string) {
     try {
-      return jwt.verify(token, secret) as { userId: UUID };
+      return jwt.verify(token, secret) as { userId: UserId };
     } catch {
       return null;
     }

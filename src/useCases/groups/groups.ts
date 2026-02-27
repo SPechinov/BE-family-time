@@ -3,11 +3,13 @@ import {
   GroupEntity,
   GroupFindManyEntity,
   GroupFindOneEntity,
+  GroupId,
   GroupPatchOneEntity,
   GroupsUsersCreateEntity,
   GroupsUsersDeleteOneEntity,
   GroupsUsersFindManyEntity,
   GroupsUsersFindOneEntity,
+  UserId,
 } from '@/entities';
 import {
   ErrorGroupHasUsers,
@@ -148,7 +150,7 @@ export class GroupsUseCases implements IGroupsUseCases {
     actorUserId,
     targetUserId,
     logger,
-  }: DefaultProps<{ targetUserId: UUID; actorUserId: UUID; groupId: UUID }>): Promise<void> {
+  }: DefaultProps<{ targetUserId: UserId; actorUserId: UserId; groupId: GroupId }>): Promise<void> {
     await Promise.all([
       this.#usersService.findOneByUserIdOrThrow(actorUserId, { logger }),
       this.#usersService.findOneByUserIdOrThrow(targetUserId, { logger }),

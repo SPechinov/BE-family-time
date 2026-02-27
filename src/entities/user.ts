@@ -1,6 +1,6 @@
 import { UUID } from 'node:crypto';
 
-export type UserId = UUID;
+export type UserId = UUID & { readonly __brand: 'UserId' };
 
 export class UserPersonalInfoPlainEntity {
   readonly #firstName?: string | null;

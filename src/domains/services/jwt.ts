@@ -1,13 +1,13 @@
-import { UUID } from 'node:crypto';
+import { UserId } from '@/entities';
 
 export interface IJwtService {
-  generateAccessToken(payload: { userId: UUID }): string;
+  generateAccessToken(payload: { userId: UserId }): string;
 
-  generateRefreshToken(payload: { userId: UUID }): string;
+  generateRefreshToken(payload: { userId: UserId }): string;
 
-  verifyAccessToken(token: string): { userId: UUID } | null;
+  verifyAccessToken(token: string): { userId: UserId } | null;
 
-  verifyRefreshToken(token: string): { userId: UUID } | null;
+  verifyRefreshToken(token: string): { userId: UserId } | null;
 
   parseToken(token: string): Record<string, unknown> | string | null;
 }

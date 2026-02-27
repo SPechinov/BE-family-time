@@ -1,7 +1,7 @@
-import { UUID } from 'node:crypto';
+import { UserId } from '@/entities';
 
 export interface IUserRowData {
-  id: UUID;
+  id: UserId;
   encryption_salt: string;
   first_name_encrypted?: Buffer | null;
   last_name_encrypted?: Buffer | null;

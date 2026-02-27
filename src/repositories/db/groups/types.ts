@@ -1,7 +1,7 @@
-import { UUID } from 'node:crypto';
+import { GroupId } from '@/entities';
 
 export interface IGroupRowData {
-  id: UUID;
+  id: GroupId;
   name: string;
   description: string | null;
   created_at: Date;

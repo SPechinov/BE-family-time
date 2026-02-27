@@ -2,7 +2,7 @@ import { UUID } from 'node:crypto';
 import { UserId } from './user';
 import { GroupId } from './group';
 
-export type CalendarEventId = UUID;
+export type CalendarEventId = UUID & { readonly __brand: 'CalendarEventId' };
 export type CalendarEventType = 'birthday' | 'vacation' | 'holiday';
 export type CalendarEventIterationType = 'oneTime' | 'weekly' | 'monthly' | 'yearly';
 

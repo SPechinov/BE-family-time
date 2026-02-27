@@ -1,10 +1,16 @@
-import { UUID } from 'node:crypto';
-import { CalendarEventType, CalendarEventIterationType, CalendarEventRecurrencePattern } from '@/entities';
+import {
+  CalendarEventType,
+  CalendarEventIterationType,
+  CalendarEventRecurrencePattern,
+  CalendarEventId,
+  GroupId,
+  UserId,
+} from '@/entities';
 
 export interface ICalendarEventRow {
-  id: UUID;
-  group_id: UUID;
-  creator_user_id: UUID;
+  id: CalendarEventId;
+  group_id: GroupId;
+  creator_user_id: UserId;
   title: string;
   description: string | null;
   event_type: CalendarEventType;

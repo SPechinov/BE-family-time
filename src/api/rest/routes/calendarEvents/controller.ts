@@ -10,6 +10,7 @@ import {
   CalendarEventId,
   CalendarEventPatchOneEntity,
   GroupId,
+  UserId,
 } from '@/entities';
 
 export class CalendarEventsRoutesController {
@@ -126,7 +127,7 @@ export class CalendarEventsRoutesController {
           },
           async (request, reply) => {
             await this.#calendarEventsUseCases.deleteCalendarEvent({
-              userId: request.userId,
+              userId: request.userId as UserId,
               groupId: request.params.groupId as GroupId,
               calendarEventId: request.params.calendarEventId as CalendarEventId,
               logger: request.log,

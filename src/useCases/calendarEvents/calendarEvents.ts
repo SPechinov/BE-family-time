@@ -80,7 +80,7 @@ export class CalendarEventsUseCases implements ICalendarEventsUseCases {
     calendarEventId,
     logger,
   }: DefaultProps<{
-    userId: UUID;
+    userId: UserId;
     groupId: GroupId;
     calendarEventId: CalendarEventId;
   }>): Promise<CalendarEventEntity> {
