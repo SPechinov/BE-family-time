@@ -109,12 +109,11 @@ export class CalendarEventsRepository implements ICalendarEventsRepository {
       const endDate = filter.period.endDate ?? null;
       conditions.push(`
         (
-          (iteration_type = 'oneTime' AND start_date <= $${paramIndex + 1} AND (end_date IS NULL OR end_date >= $${paramIndex}))
+          (iteration_type = 'oneTime' AND start_date <= $${paramIndex++} AND (end_date IS NULL OR end_date >= $${paramIndex++}))
           OR (iteration_type IN ('weekly', 'monthly', 'yearly'))
         )
       `);
       values.push(endDate, startDate);
-      paramIndex += 2;
     }
 
     const whereClause = conditions.length > 0 ? `WHERE ${conditions.join(' AND ')}` : '';

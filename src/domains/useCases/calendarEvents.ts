@@ -22,8 +22,8 @@ export interface ICalendarEventsUseCases {
     props: DefaultProps<{
       userId: UserId;
       groupId: GroupId;
-      startDate: Date;
-      endDate: Date;
+      startDate?: Date;
+      endDate?: Date;
       eventType?: CalendarEventType;
     }>,
   ): Promise<CalendarEventEntity[]>;

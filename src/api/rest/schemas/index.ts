@@ -14,6 +14,16 @@ export const GLOBAL_SCHEMAS = {
   groupDescription: z.string().max(1000),
   groupId: z.uuidv4(),
   userId: z.uuidv4(),
+  calendarEventId: z.uuidv4(),
+  calendarEventTitle: z.string().min(1).max(50),
+  calendarEventDescription: z.string().min(1).max(1000),
+  calendarEventType: z.enum(['birthday', 'vacation', 'holiday']),
+  calendarEventIterationType: z.enum(['oneTime', 'weekly', 'monthly', 'yearly']),
+  calendarEventRecurrencePattern: z.object({
+    type: z.enum(['weekly', 'monthly']),
+    dayOfWeek: z.number().min(0).max(6).optional(),
+    dayOfMonth: z.number().min(0).max(30).optional(),
+  }),
 };
 
 export const SESSION_SCHEMA = z
@@ -37,3 +47,16 @@ export const USER_SCHEMA = z
 export const GROUP_SCHEMA = z
   .object({ id: z.uuidv4(), name: z.string(), description: z.string().optional() })
   .register(z.globalRegistry, { id: 'Group' });
+
+export const CALENDAR_EVENT_SCHEMA = z
+  .object({
+    id: GLOBAL_SCHEMAS.calendarEventId,
+    title: GLOBAL_SCHEMAS.calendarEventTitle,
+    description: GLOBAL_SCHEMAS.calendarEventDescription.optional(),
+    type: GLOBAL_SCHEMAS.calendarEventType,
+    iterationType: GLOBAL_SCHEMAS.calendarEventIterationType,
+    startDate: z.date(),
+    endDate: z.date().optional(),
+    recurrencePattern: GLOBAL_SCHEMAS.calendarEventRecurrencePattern.optional(),
+  })
+  .register(z.globalRegistry, { id: 'CalendarEvent' });

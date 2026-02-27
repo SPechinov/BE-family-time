@@ -4,7 +4,6 @@ import {
   CalendarEventFindManyEntity,
   CalendarEventFindOneEntity,
   CalendarEventPatchOneEntity,
-  GroupId,
 } from '@/entities';
 import { PoolClient } from 'pg';
 import { ILogger } from '@/pkg';
@@ -14,8 +13,8 @@ import { ICalendarEventsRepository } from '@/domains/repositories/db';
 export class CalendarEventsService implements ICalendarEventsService {
   readonly #calendarEventsRepository: ICalendarEventsRepository;
 
-  constructor(props: { calendarRepository: ICalendarEventsRepository }) {
-    this.#calendarEventsRepository = props.calendarRepository;
+  constructor(props: { calendarEventsRepository: ICalendarEventsRepository }) {
+    this.#calendarEventsRepository = props.calendarEventsRepository;
   }
 
   createOne(

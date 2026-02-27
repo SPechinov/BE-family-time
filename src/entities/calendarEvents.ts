@@ -3,7 +3,7 @@ import { UserId } from './user';
 import { GroupId } from './group';
 
 export type CalendarEventId = UUID;
-export type CalendarEventType = 'birthday' | 'vacation' | 'monthly' | 'holiday';
+export type CalendarEventType = 'birthday' | 'vacation' | 'holiday';
 export type CalendarEventIterationType = 'oneTime' | 'weekly' | 'monthly' | 'yearly';
 
 export type CalendarEventRecurrencePattern =
