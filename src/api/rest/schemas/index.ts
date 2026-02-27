@@ -1,23 +1,24 @@
 import z from 'zod';
 import { CalendarEventId, GroupId, UserId } from '@/entities';
+import { isXss } from '@/api/rest/schemas/utils';
 
 export const GLOBAL_SCHEMAS = {
-  firstName: z.string().min(2).max(40),
+  firstName: z.string().min(2).max(40).refine(isXss, { message: 'Invalid characters in firstName' }),
   password: z.string().min(8).max(100),
-  email: z.email().max(254),
+  email: z.email().max(254).refine(isXss, { message: 'Invalid characters in email' }),
   otpCode: (length: number) =>
     z
       .string()
       .length(length)
       .refine((v) => !isNaN(Number(v)), { message: 'Invalid number' }),
   userAgent: z.string().min(1),
-  groupName: z.string().min(1).max(50),
-  groupDescription: z.string().max(1000),
+  groupName: z.string().min(1).max(50).refine(isXss, { message: 'Invalid characters in groupName' }),
+  groupDescription: z.string().max(1000).refine(isXss, { message: 'Invalid characters in groupDescription' }),
   groupId: z.uuidv4().transform((val) => val as GroupId),
   userId: z.uuidv4().transform((val) => val as UserId),
   calendarEventId: z.uuidv4().transform((val) => val as CalendarEventId),
-  calendarEventTitle: z.string().min(1).max(50),
-  calendarEventDescription: z.string().min(1).max(1000),
+  calendarEventTitle: z.string().min(1).max(50).refine(isXss, { message: 'Invalid characters in title' }),
+  calendarEventDescription: z.string().min(1).max(1000).refine(isXss, { message: 'Invalid characters in description' }),
   calendarEventType: z.enum(['birthday', 'vacation', 'holiday']),
   calendarEventIterationType: z.enum(['oneTime', 'weekly', 'monthly', 'yearly']),
   calendarEventRecurrencePattern: z.union([

@@ -6,7 +6,9 @@ import {
   CalendarEventFindManyEntity,
   CalendarEventFindOneEntity,
   CalendarEventId,
+  CalendarEventIterationType,
   CalendarEventPatchOneEntity,
+  CalendarEventRecurrencePattern,
   CalendarEventType,
   GroupId,
   GroupsUsersFindOneEntity,
@@ -39,6 +41,19 @@ export class CalendarEventsUseCases implements ICalendarEventsUseCases {
     groupId: GroupId;
     calendarEventCreateEntity: CalendarEventCreateEntity;
   }>): Promise<CalendarEventEntity> {
+    try {
+      this.#validateRecurrencePatternOrThrow(
+        calendarEventCreateEntity.iterationType,
+        calendarEventCreateEntity.recurrencePattern,
+      );
+      this.#validateDateRangeOrThrow(calendarEventCreateEntity.startDate, calendarEventCreateEntity.endDate);
+    } catch (error: unknown) {
+      if (error instanceof Error) {
+        logger.error(error.message);
+      }
+      throw error;
+    }
+
     const options = { logger };
     await this.#usersService.findOneByUserIdOrThrow(userId, options);
     await this.#checkUserInGroupOrThrow(userId, groupId, options);
@@ -103,6 +118,24 @@ export class CalendarEventsUseCases implements ICalendarEventsUseCases {
     calendarEventPatchOneEntity: CalendarEventPatchOneEntity;
   }>): Promise<CalendarEventEntity> {
     const options = { logger };
+    try {
+      if (calendarEventPatchOneEntity.iterationType) {
+        this.#validateRecurrencePatternOrThrow(
+          calendarEventPatchOneEntity.iterationType,
+          calendarEventPatchOneEntity.recurrencePattern,
+        );
+      }
+
+      if (calendarEventPatchOneEntity.startDate && calendarEventPatchOneEntity.endDate) {
+        this.#validateDateRangeOrThrow(calendarEventPatchOneEntity.startDate, calendarEventPatchOneEntity.endDate);
+      }
+    } catch (error: unknown) {
+      if (error instanceof Error) {
+        logger.error(error.message);
+      }
+      throw error;
+    }
+
     await this.#usersService.findOneByUserIdOrThrow(userId, options);
     await this.#checkUserInGroupOrThrow(userId, groupId, options);
 
@@ -161,6 +194,46 @@ export class CalendarEventsUseCases implements ICalendarEventsUseCases {
 
     if (!groupUser) {
       throw new ErrorGroupNotExists();
+    }
+  }
+
+  #validateRecurrencePatternOrThrow(
+    iterationType: CalendarEventIterationType,
+    recurrencePattern?: CalendarEventRecurrencePattern | null,
+  ): void {
+    if (iterationType === 'oneTime' || iterationType === 'yearly') {
+      if (recurrencePattern) {
+        throw new Error(`recurrencePattern must not be set for iterationType '${iterationType}'`);
+      }
+      return;
+    }
+
+    if (!recurrencePattern) {
+      throw new Error(`recurrencePattern is required for iterationType '${iterationType}'`);
+    }
+
+    if (iterationType === 'weekly') {
+      if (recurrencePattern.type !== 'weekly') {
+        throw new Error(`recurrencePattern.type must be 'weekly' for iterationType 'weekly'`);
+      }
+      if (recurrencePattern.dayOfWeek < 0 || recurrencePattern.dayOfWeek > 6) {
+        throw new Error('recurrencePattern.dayOfWeek must be between 0 and 6');
+      }
+    }
+
+    if (iterationType === 'monthly') {
+      if (recurrencePattern.type !== 'monthly') {
+        throw new Error(`recurrencePattern.type must be 'monthly' for iterationType 'monthly'`);
+      }
+      if (recurrencePattern.dayOfMonth < 1 || recurrencePattern.dayOfMonth > 31) {
+        throw new Error('recurrencePattern.dayOfMonth must be between 1 and 31');
+      }
+    }
+  }
+
+  #validateDateRangeOrThrow(startDate: Date, endDate?: Date | null): void {
+    if (endDate !== null && endDate !== undefined && endDate < startDate) {
+      throw new Error('endDate must be greater than or equal to startDate');
     }
   }
 }

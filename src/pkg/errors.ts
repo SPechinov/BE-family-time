@@ -19,6 +19,7 @@ const CODES = {
   userIsGroupOwner: 'userIsGroupOwner',
   groupHasUsers: 'groupHasUsers',
   calendarEventNotExists: 'calendarEventNotExists',
+  validation: 'validation',
 };
 
 export abstract class BusinessError extends Error {
@@ -174,5 +175,13 @@ export class ErrorCalendarEventNotExists extends BusinessError {
   statusCode = 404;
   constructor() {
     super(CODES.calendarEventNotExists);
+  }
+}
+
+export class ErrorValidation extends BusinessError {
+  statusCode = 400;
+
+  constructor() {
+    super(CODES.validation);
   }
 }
