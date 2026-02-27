@@ -8,7 +8,6 @@ import {
   CalendarEventFindManyEntity,
 } from '@/entities';
 import { ICalendarEventRow } from './types';
-import { UUID } from 'node:crypto';
 import { ILogger } from '@/pkg/logger';
 
 export class CalendarEventsRepository implements ICalendarEventsRepository {
@@ -105,6 +104,18 @@ export class CalendarEventsRepository implements ICalendarEventsRepository {
       conditions.push(`event_type = $${paramIndex++}`);
       values.push(filter.eventType);
     }
+    if (filter.period !== undefined) {
+      const startDate = filter.period.startDate ?? null;
+      const endDate = filter.period.endDate ?? null;
+      conditions.push(`
+        (
+          (iteration_type = 'oneTime' AND start_date <= $${paramIndex + 1} AND (end_date IS NULL OR end_date >= $${paramIndex}))
+          OR (iteration_type IN ('weekly', 'monthly', 'yearly'))
+        )
+      `);
+      values.push(endDate, startDate);
+      paramIndex += 2;
+    }
 
     const whereClause = conditions.length > 0 ? `WHERE ${conditions.join(' AND ')}` : '';
 
@@ -115,34 +126,6 @@ export class CalendarEventsRepository implements ICalendarEventsRepository {
     `;
 
     options?.logger?.debug({ query, values }, 'CalendarEvents repository: findMany');
-
-    const result = await client.query<ICalendarEventRow>(query, values);
-    return result.rows.map((row) => this.#buildCalendarEventEntity(row));
-  }
-
-  async findForPeriod(
-    groupId: UUID,
-    period: {
-      startDate?: Date;
-      endDate?: Date;
-    },
-    options?: { client?: PoolClient; logger?: ILogger },
-  ): Promise<CalendarEventEntity[]> {
-    const client = options?.client ?? this.#pool;
-
-    const query = `
-      SELECT * FROM calendar_events
-      WHERE group_id = $1
-        AND (
-        (iteration_type = 'oneTime' AND start_date <= $3 AND (end_date IS NULL OR end_date >= $2))
-          OR (iteration_type IN ('weekly', 'monthly', 'yearly'))
-        )
-      ORDER BY start_date ASC
-    `;
-
-    const values = [groupId, period.startDate ?? null, period.endDate ?? null];
-
-    options?.logger?.debug({ query, values }, 'CalendarEvents repository: findForPeriod');
 
     const result = await client.query<ICalendarEventRow>(query, values);
     return result.rows.map((row) => this.#buildCalendarEventEntity(row));
