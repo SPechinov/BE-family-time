@@ -2,7 +2,7 @@ import {
   CalendarEventCreateEntity,
   CalendarEventEntity,
   CalendarEventFindOneEntity,
-  CalendarEventPatchEntity,
+  CalendarEventPatchOneEntity,
   GroupId,
 } from '@/entities';
 import { PoolClient } from 'pg';
@@ -14,7 +14,7 @@ export interface ICalendarEventsService {
     options?: { client?: PoolClient; logger?: ILogger },
   ): Promise<CalendarEventEntity>;
 
-  getCalendarEventsByGroupId(
+  getEventsByGroupId(
     groupId: GroupId,
     startDate?: Date,
     endDate?: Date,
@@ -29,7 +29,7 @@ export interface ICalendarEventsService {
   patchOne(
     props: {
       calendarEventFindOneEntity: CalendarEventFindOneEntity;
-      calendarEventPatchOneEntity: CalendarEventPatchEntity;
+      calendarEventPatchOneEntity: CalendarEventPatchOneEntity;
     },
     options?: { client?: PoolClient; logger?: ILogger },
   ): Promise<CalendarEventEntity>;

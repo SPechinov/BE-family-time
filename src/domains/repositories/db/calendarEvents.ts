@@ -2,7 +2,7 @@ import {
   CalendarEventEntity,
   CalendarEventCreateEntity,
   CalendarEventFindOneEntity,
-  CalendarEventPatchEntity,
+  CalendarEventPatchOneEntity,
   CalendarEventFindManyEntity,
 } from '@/entities';
 import { PoolClient } from 'pg';
@@ -39,7 +39,7 @@ export interface ICalendarEventsRepository {
   patchOne(
     props: {
       calendarEventFindOneEntity: CalendarEventFindOneEntity;
-      calendarEventPatchOneEntity: CalendarEventPatchEntity;
+      calendarEventPatchOneEntity: CalendarEventPatchOneEntity;
     },
     options?: { client?: PoolClient; logger?: ILogger },
   ): Promise<CalendarEventEntity>;

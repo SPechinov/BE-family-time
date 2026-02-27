@@ -3,47 +3,38 @@ import { UserId } from './user';
 import { GroupId } from './group';
 
 export type CalendarEventId = UUID;
-export type CalendarEventType = 'one-time' | 'yearly' | 'weekly' | 'monthly' | 'work-schedule';
+export type CalendarEventType = 'birthday' | 'vacation' | 'monthly' | 'holiday';
 export type CalendarEventIterationType = 'oneTime' | 'weekly' | 'monthly' | 'yearly';
 
 export type CalendarEventRecurrencePattern =
-  | { type: 'weekly'; weekdays: number[] }
-  | { type: 'monthly'; dayOfMonth: number }
-  | { type: 'work-schedule'; shiftPattern: number[]; startDate: string; shiftDuration?: number };
+  | { type: 'weekly'; dayOfWeek: number }
+  | { type: 'monthly'; dayOfMonth: number };
 
 export class CalendarEventEntity {
   readonly #id: CalendarEventId;
   readonly #groupId: GroupId;
-  readonly #creatorUserId: UserId;
+  readonly #creatorUserId?: UserId;
   readonly #title: string;
   readonly #description?: string;
   readonly #eventType: CalendarEventType;
+  readonly #iterationType: CalendarEventIterationType;
   readonly #startDate: Date;
-  readonly #endDate: Date;
-  readonly #isAllDay: boolean;
+  readonly #endDate?: Date;
   readonly #recurrencePattern?: CalendarEventRecurrencePattern;
-  readonly #parentEventId?: CalendarEventId;
-  readonly #isException: boolean;
-  readonly #exceptionDate?: Date;
   readonly #createdAt: Date;
-  readonly #updatedAt: Date;
 
   constructor(props: {
     id: CalendarEventId;
     groupId: GroupId;
-    creatorUserId: UserId;
+    creatorUserId?: UserId;
     title: string;
     description?: string;
     eventType: CalendarEventType;
+    iterationType: CalendarEventIterationType;
     startDate: Date;
-    endDate: Date;
-    isAllDay: boolean;
+    endDate?: Date;
     recurrencePattern?: CalendarEventRecurrencePattern;
-    parentEventId?: CalendarEventId;
-    isException: boolean;
-    exceptionDate?: Date;
     createdAt: Date;
-    updatedAt: Date;
   }) {
     this.#id = props.id;
     this.#groupId = props.groupId;
@@ -51,15 +42,11 @@ export class CalendarEventEntity {
     this.#title = props.title;
     this.#description = props.description;
     this.#eventType = props.eventType;
+    this.#iterationType = props.iterationType;
     this.#startDate = props.startDate;
     this.#endDate = props.endDate;
-    this.#isAllDay = props.isAllDay;
     this.#recurrencePattern = props.recurrencePattern;
-    this.#parentEventId = props.parentEventId;
-    this.#isException = props.isException;
-    this.#exceptionDate = props.exceptionDate;
     this.#createdAt = props.createdAt;
-    this.#updatedAt = props.updatedAt;
   }
 
   get id() {
@@ -86,6 +73,10 @@ export class CalendarEventEntity {
     return this.#eventType;
   }
 
+  get iterationType() {
+    return this.#iterationType;
+  }
+
   get startDate() {
     return this.#startDate;
   }
@@ -94,32 +85,12 @@ export class CalendarEventEntity {
     return this.#endDate;
   }
 
-  get isAllDay() {
-    return this.#isAllDay;
-  }
-
   get recurrencePattern() {
     return this.#recurrencePattern;
   }
 
-  get parentEventId() {
-    return this.#parentEventId;
-  }
-
-  get isException() {
-    return this.#isException;
-  }
-
-  get exceptionDate() {
-    return this.#exceptionDate;
-  }
-
   get createdAt(): Date {
     return this.#createdAt;
-  }
-
-  get updatedAt(): Date {
-    return this.#updatedAt;
   }
 }
 
@@ -129,9 +100,9 @@ export class CalendarEventCreateEntity {
   readonly #title: string;
   readonly #description?: string;
   readonly #eventType: CalendarEventType;
+  readonly #iterationType: CalendarEventIterationType;
   readonly #startDate: Date;
-  readonly #endDate: Date;
-  readonly #isAllDay: boolean;
+  readonly #endDate?: Date;
   readonly #recurrencePattern?: CalendarEventRecurrencePattern;
 
   constructor(props: {
@@ -140,9 +111,9 @@ export class CalendarEventCreateEntity {
     title: string;
     description?: string;
     eventType: CalendarEventType;
+    iterationType: CalendarEventIterationType;
     startDate: Date;
-    endDate: Date;
-    isAllDay: boolean;
+    endDate?: Date;
     recurrencePattern?: CalendarEventRecurrencePattern;
   }) {
     this.#groupId = props.groupId;
@@ -150,9 +121,9 @@ export class CalendarEventCreateEntity {
     this.#title = props.title;
     this.#description = props.description;
     this.#eventType = props.eventType;
+    this.#iterationType = props.iterationType;
     this.#startDate = props.startDate;
     this.#endDate = props.endDate;
-    this.#isAllDay = props.isAllDay;
     this.#recurrencePattern = props.recurrencePattern;
   }
 
@@ -176,6 +147,10 @@ export class CalendarEventCreateEntity {
     return this.#eventType;
   }
 
+  get iterationType() {
+    return this.#iterationType;
+  }
+
   get startDate() {
     return this.#startDate;
   }
@@ -184,39 +159,35 @@ export class CalendarEventCreateEntity {
     return this.#endDate;
   }
 
-  get isAllDay() {
-    return this.#isAllDay;
-  }
-
   get recurrencePattern() {
     return this.#recurrencePattern;
   }
 }
 
-export class CalendarEventPatchEntity {
+export class CalendarEventPatchOneEntity {
   readonly #title?: string;
   readonly #description?: string | null;
   readonly #eventType?: CalendarEventType;
+  readonly #iterationType?: CalendarEventIterationType;
   readonly #startDate?: Date;
-  readonly #endDate?: Date;
-  readonly #isAllDay?: boolean;
+  readonly #endDate?: Date | null;
   readonly #recurrencePattern?: CalendarEventRecurrencePattern | null;
 
   constructor(props: {
     title?: string;
     description?: string | null;
     eventType?: CalendarEventType;
+    iterationType?: CalendarEventIterationType;
     startDate?: Date;
-    endDate?: Date;
-    isAllDay?: boolean;
+    endDate?: Date | null;
     recurrencePattern?: CalendarEventRecurrencePattern | null;
   }) {
     this.#title = props.title;
     this.#description = props.description;
     this.#eventType = props.eventType;
+    this.#iterationType = props.iterationType;
     this.#startDate = props.startDate;
     this.#endDate = props.endDate;
-    this.#isAllDay = props.isAllDay;
     this.#recurrencePattern = props.recurrencePattern;
   }
 
@@ -232,16 +203,16 @@ export class CalendarEventPatchEntity {
     return this.#eventType;
   }
 
+  get iterationType() {
+    return this.#iterationType;
+  }
+
   get startDate() {
     return this.#startDate;
   }
 
   get endDate() {
     return this.#endDate;
-  }
-
-  get isAllDay() {
-    return this.#isAllDay;
   }
 
   get recurrencePattern() {
@@ -295,6 +266,3 @@ export class CalendarEventFindManyEntity {
     return this.#eventType;
   }
 }
-
-// Type alias for backward compatibility with controller imports
-export type RecurrencePattern = CalendarEventRecurrencePattern;
