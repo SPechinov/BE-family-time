@@ -1,5 +1,5 @@
 import { UUID } from 'node:crypto';
-import { CalendarEventEntity, CalendarEventCreateEntity, CalendarEventPatchOneEntity } from '@/entities';
+import { CalendarEventEntity, CalendarEventCreateEntity, CalendarEventPatchOneEntity, GroupId } from '@/entities';
 import { DefaultProps } from './types';
 
 export interface ICalendarEventsUseCases {
@@ -28,9 +28,10 @@ export interface ICalendarEventsUseCases {
     }>,
   ): Promise<CalendarEventEntity>;
 
-  updateCalendarEvent(
+  patchCalendarEvent(
     props: DefaultProps<{
       userId: UUID;
+      groupId: GroupId;
       eventId: UUID;
       calendarEventPatchEntity: CalendarEventPatchOneEntity;
     }>,
@@ -40,7 +41,6 @@ export interface ICalendarEventsUseCases {
     props: DefaultProps<{
       userId: UUID;
       eventId: UUID;
-      deleteMode: 'single' | 'all';
     }>,
   ): Promise<void>;
 }

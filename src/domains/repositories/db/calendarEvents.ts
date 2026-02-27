@@ -7,7 +7,6 @@ import {
 } from '@/entities';
 import { PoolClient } from 'pg';
 import { ILogger } from '@/pkg/logger';
-import { UUID } from 'node:crypto';
 
 export interface ICalendarEventsRepository {
   createOne(
@@ -22,17 +21,6 @@ export interface ICalendarEventsRepository {
 
   findMany(
     filter: CalendarEventFindManyEntity,
-    options?: { client?: PoolClient; logger?: ILogger },
-  ): Promise<CalendarEventEntity[]>;
-
-  findByGroupId(groupId: UUID, options?: { client?: PoolClient; logger?: ILogger }): Promise<CalendarEventEntity[]>;
-
-  findForPeriod(
-    groupId: UUID,
-    period: {
-      startDate?: Date;
-      endDate?: Date;
-    },
     options?: { client?: PoolClient; logger?: ILogger },
   ): Promise<CalendarEventEntity[]>;
 

@@ -120,26 +120,6 @@ export class CalendarEventsRepository implements ICalendarEventsRepository {
     return result.rows.map((row) => this.#buildCalendarEventEntity(row));
   }
 
-  async findByGroupId(
-    groupId: UUID,
-    options?: { client?: PoolClient; logger?: ILogger },
-  ): Promise<CalendarEventEntity[]> {
-    const client = options?.client ?? this.#pool;
-
-    const query = `
-      SELECT * FROM calendar_events
-      WHERE group_id = $1
-      ORDER BY start_date ASC
-    `;
-
-    const values = [groupId];
-
-    options?.logger?.debug({ query, values }, 'CalendarEvents repository: findByGroupId');
-
-    const result = await client.query<ICalendarEventRow>(query, values);
-    return result.rows.map((row) => this.#buildCalendarEventEntity(row));
-  }
-
   async findForPeriod(
     groupId: UUID,
     period: {

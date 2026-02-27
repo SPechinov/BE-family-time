@@ -10,6 +10,11 @@ export type CalendarEventRecurrencePattern =
   | { type: 'weekly'; dayOfWeek: number }
   | { type: 'monthly'; dayOfMonth: number };
 
+interface Period {
+  startDate?: Date;
+  endDate?: Date;
+}
+
 export class CalendarEventEntity {
   readonly #id: CalendarEventId;
   readonly #groupId: GroupId;
@@ -237,17 +242,20 @@ export class CalendarEventFindManyEntity {
   readonly #groupId?: GroupId;
   readonly #creatorUserId?: UserId;
   readonly #eventType?: CalendarEventType;
+  readonly #period?: Period;
 
   constructor(props: {
     ids?: CalendarEventId[];
     groupId?: GroupId;
     creatorUserId?: UserId;
     eventType?: CalendarEventType;
+    period?: Period;
   }) {
     this.#ids = props.ids;
     this.#groupId = props.groupId;
     this.#creatorUserId = props.creatorUserId;
     this.#eventType = props.eventType;
+    this.#period = props.period;
   }
 
   get ids() {
@@ -264,5 +272,9 @@ export class CalendarEventFindManyEntity {
 
   get eventType() {
     return this.#eventType;
+  }
+
+  get period() {
+    return this.#period;
   }
 }

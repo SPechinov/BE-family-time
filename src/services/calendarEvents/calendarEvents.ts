@@ -1,6 +1,7 @@
 import {
   CalendarEventCreateEntity,
   CalendarEventEntity,
+  CalendarEventFindManyEntity,
   CalendarEventFindOneEntity,
   CalendarEventPatchOneEntity,
   GroupId,
@@ -24,20 +25,18 @@ export class CalendarEventsService implements ICalendarEventsService {
     return this.#calendarEventsRepository.createOne(entity, options);
   }
 
-  getEventsByGroupId(
-    groupId: GroupId,
-    startDate?: Date,
-    endDate?: Date,
-    options?: { client?: PoolClient; logger?: ILogger },
-  ): Promise<CalendarEventEntity[]> {
-    return this.#calendarEventsRepository.findForPeriod(groupId, { startDate, endDate }, options);
-  }
-
   findOne(
     calendarEventFindOneEntity: CalendarEventFindOneEntity,
     options?: { client?: PoolClient; logger?: ILogger },
   ): Promise<CalendarEventEntity | null> {
     return this.#calendarEventsRepository.findOne(calendarEventFindOneEntity, options);
+  }
+
+  findMany(
+    entity: CalendarEventFindManyEntity,
+    options?: { client?: PoolClient; logger?: ILogger },
+  ): Promise<CalendarEventEntity[]> {
+    return this.#calendarEventsRepository.findMany(entity, options);
   }
 
   patchOne(
