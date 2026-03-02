@@ -236,7 +236,7 @@ export class CalendarEventsRepository implements ICalendarEventsRepository {
       startDate: row.start_date,
       endDate: row.end_date ?? undefined,
       recurrencePattern: row.recurrence_pattern ?? undefined,
-      createdAt: row.created_at,
+      createdAt: row.created_at instanceof Date ? row.created_at : new Date(row.created_at),
     });
   }
 }

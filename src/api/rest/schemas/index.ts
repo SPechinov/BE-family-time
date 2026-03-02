@@ -62,8 +62,8 @@ export const CALENDAR_EVENT_SCHEMA = z
     description: GLOBAL_SCHEMAS.calendarEventDescription.optional(),
     type: GLOBAL_SCHEMAS.calendarEventType.optional(),
     iterationType: GLOBAL_SCHEMAS.calendarEventIterationType,
-    startDate: z.date(),
-    endDate: z.date().optional(),
+    startDate: z.coerce.date(),
+    endDate: z.coerce.date().optional(),
     recurrencePattern: GLOBAL_SCHEMAS.calendarEventRecurrencePattern.optional(),
   })
   .register(z.globalRegistry, { id: 'CalendarEvent' });

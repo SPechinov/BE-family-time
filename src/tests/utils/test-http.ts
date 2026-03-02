@@ -56,7 +56,13 @@ export const extractCookie = (
 export const extractAuthToken = (response: {
   headers: Record<string, string | string[] | undefined>;
 }): string | null => {
-  const authHeader = response.headers.authorization;
+  // Try different cases for authorization header
+  const authHeader =
+    response.headers.authorization ||
+    response.headers.Authorization ||
+    response.headers['authorization'] ||
+    response.headers['Authorization'];
+    
   if (Array.isArray(authHeader)) {
     return authHeader[0] ?? null;
   }

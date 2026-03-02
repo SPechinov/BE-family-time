@@ -10,6 +10,8 @@ export default {
     '^@/(.*)$': '<rootDir>/src/$1',
     '^(\\.{1,2}/.*)\\.js$': '$1',
     '^nanoid$': '<rootDir>/src/tests/mocks/nanoid.ts',
+    '^dompurify$': '<rootDir>/src/tests/mocks/dompurify.ts',
+    '^jsdom$': '<rootDir>/src/tests/mocks/jsdom.ts',
   },
   transform: {
     '^.+\\.tsx?$': [
@@ -30,4 +32,5 @@ export default {
   // Increased timeout for testcontainers startup (containers can take 30-60s to start)
   testTimeout: 120000,
   maxWorkers: 1,
+  clearMocks: true,
 };

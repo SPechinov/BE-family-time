@@ -143,10 +143,9 @@ export class CalendarEventsRoutesController {
       description: calendarEvent.description,
       type: calendarEvent.eventType ?? undefined,
       iterationType: calendarEvent.iterationType,
-      startDate: calendarEvent.startDate,
-      endDate: calendarEvent.endDate,
+      startDate: calendarEvent.startDate.toISOString(),
+      endDate: calendarEvent.endDate?.toISOString(),
       recurrencePattern: calendarEvent.recurrencePattern,
-      createdAt: calendarEvent.createdAt.toISOString(),
     };
   }
 }
