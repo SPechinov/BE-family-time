@@ -1,17 +1,17 @@
 /**
- * Mock for jsdom to avoid ES module issues in tests
+ * Mock for JSDOM to avoid ES module issues in tests
  */
 
-// Mock JSDOM class
 export class JSDOM {
-  window = {
-    document: {
-      documentElement: {},
-    },
-    navigator: {},
-  };
-
-  constructor() {}
+  window: any;
+  constructor() {
+    this.window = {
+      document: {
+        documentElement: {},
+      },
+      navigator: {},
+    };
+  }
 }
 
 export default JSDOM;
