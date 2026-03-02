@@ -6,7 +6,7 @@
 import { describe, it, expect, beforeAll, afterAll } from '@jest/globals';
 import { Pool } from 'pg';
 import { createTestAgent, DEFAULT_HEADERS, extractAuthToken, createAuthHeaders } from '../utils/test-http';
-import { createUserFixture, createGroupFixture, TestUserData } from '../fixtures/user.fixture';
+import { createUserFixture, createGroupFixture } from '../fixtures/user.fixture';
 import { setupTestEnvironment, teardownTestEnvironment } from '../utils/test-setup.js';
 
 // Initialize test context
