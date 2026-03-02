@@ -1,9 +1,14 @@
 /**
- * Mock for DOMPurify to avoid jsdom dependency issues in tests
+ * Mock for DOMPurify - must be a function that returns the API
  */
 
-export default {
+const mockDOMPurify = {
   sanitize: (val: string) => val,
   addHook: () => {},
   isSupported: true,
 };
+
+// Export as default function that returns the mock API
+export default function createDOMPurify() {
+  return mockDOMPurify;
+}

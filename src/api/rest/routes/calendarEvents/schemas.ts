@@ -53,10 +53,12 @@ const PATCH = {
     groupId: GLOBAL_SCHEMAS.groupId,
     calendarEventId: GLOBAL_SCHEMAS.calendarEventId,
   }),
-  body: z.object({
-    title: GLOBAL_SCHEMAS.calendarEventTitle,
-    description: GLOBAL_SCHEMAS.calendarEventDescription.optional(),
-  }),
+  body: z
+    .object({
+      title: GLOBAL_SCHEMAS.calendarEventTitle.nullable().optional(),
+      description: GLOBAL_SCHEMAS.calendarEventDescription.nullable().optional(),
+    })
+    .refine((data) => Object.keys(data).length > 0, { message: 'At least one field must be provided' }),
   response: createResponseSchema({
     200: CALENDAR_EVENT_SCHEMA,
   }),

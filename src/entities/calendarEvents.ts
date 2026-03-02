@@ -170,7 +170,7 @@ export class CalendarEventCreateEntity {
 }
 
 export class CalendarEventPatchOneEntity {
-  readonly #title?: string;
+  readonly #title?: string | null;
   readonly #description?: string | null;
   readonly #eventType?: CalendarEventType;
   readonly #iterationType?: CalendarEventIterationType;
@@ -179,7 +179,7 @@ export class CalendarEventPatchOneEntity {
   readonly #recurrencePattern?: CalendarEventRecurrencePattern | null;
 
   constructor(props: {
-    title?: string;
+    title?: string | null;
     description?: string | null;
     eventType?: CalendarEventType;
     iterationType?: CalendarEventIterationType;

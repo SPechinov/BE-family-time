@@ -65,6 +65,7 @@ export class CalendarEventsUseCases implements ICalendarEventsUseCases {
     groupId,
     startDate,
     endDate,
+    eventType,
     logger,
   }: DefaultProps<{
     userId: UserId;
@@ -80,6 +81,7 @@ export class CalendarEventsUseCases implements ICalendarEventsUseCases {
     return this.#calendarEventsService.findMany(
       new CalendarEventFindManyEntity({
         groupId,
+        eventType,
         period: {
           startDate,
           endDate,

@@ -115,11 +115,11 @@ export class CalendarEventsRepository implements ICalendarEventsRepository {
       const endDate = filter.period.endDate ?? null;
       conditions.push(`
         (
-          (iteration_type = 'oneTime' AND start_date <= $${paramIndex++} AND (end_date IS NULL OR end_date >= $${paramIndex++}))
+          (iteration_type = 'oneTime' AND start_date >= $${paramIndex++} AND start_date <= $${paramIndex++} AND (end_date IS NULL OR end_date >= $${paramIndex++}))
           OR (iteration_type IN ('weekly', 'monthly', 'yearly'))
         )
       `);
-      values.push(endDate, startDate);
+      values.push(startDate, endDate, startDate);
     }
 
     const whereClause = conditions.length > 0 ? `WHERE ${conditions.join(' AND ')}` : '';
@@ -231,7 +231,7 @@ export class CalendarEventsRepository implements ICalendarEventsRepository {
       creatorUserId: row.creator_user_id,
       title: row.title,
       description: row.description ?? undefined,
-      eventType: row.event_type,
+      eventType: row.event_type ?? undefined,
       iterationType: row.iteration_type,
       startDate: row.start_date,
       endDate: row.end_date ?? undefined,
