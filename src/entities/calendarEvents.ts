@@ -21,7 +21,7 @@ export class CalendarEventEntity {
   readonly #creatorUserId?: UserId;
   readonly #title: string;
   readonly #description?: string;
-  readonly #eventType: CalendarEventType;
+  readonly #eventType?: CalendarEventType;
   readonly #iterationType: CalendarEventIterationType;
   readonly #startDate: Date;
   readonly #endDate?: Date;
@@ -34,7 +34,7 @@ export class CalendarEventEntity {
     creatorUserId?: UserId;
     title: string;
     description?: string;
-    eventType: CalendarEventType;
+    eventType?: CalendarEventType;
     iterationType: CalendarEventIterationType;
     startDate: Date;
     endDate?: Date;
@@ -104,7 +104,7 @@ export class CalendarEventCreateEntity {
   readonly #creatorUserId: UserId;
   readonly #title: string;
   readonly #description?: string;
-  readonly #eventType: CalendarEventType;
+  readonly #eventType?: CalendarEventType;
   readonly #iterationType: CalendarEventIterationType;
   readonly #startDate: Date;
   readonly #endDate?: Date;
@@ -115,7 +115,7 @@ export class CalendarEventCreateEntity {
     creatorUserId: UserId;
     title: string;
     description?: string;
-    eventType: CalendarEventType;
+    eventType?: CalendarEventType;
     iterationType: CalendarEventIterationType;
     startDate: Date;
     endDate?: Date;

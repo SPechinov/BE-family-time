@@ -141,7 +141,7 @@ export class CalendarEventsRoutesController {
       id: calendarEvent.id,
       title: calendarEvent.title,
       description: calendarEvent.description,
-      type: calendarEvent.eventType,
+      type: calendarEvent.eventType ?? undefined,
       iterationType: calendarEvent.iterationType,
       startDate: calendarEvent.startDate,
       endDate: calendarEvent.endDate,
