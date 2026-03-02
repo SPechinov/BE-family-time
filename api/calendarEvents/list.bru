@@ -1,0 +1,30 @@
+meta {
+  name: list
+  type: http
+  seq: 1
+}
+
+get {
+  url: {{url}}/groups/:groupId/calendar-events
+  body: json
+  auth: bearer
+}
+
+params:query {
+  startDate: 2026-01-01T00:00:00.000Z
+  endDate: 2026-12-31T23:59:59.999Z
+  eventType: birthday
+}
+
+params:path {
+  groupId: 3c0a6eeb-1a21-417e-9d2f-ebc1d47b594e
+}
+
+auth:bearer {
+  token: {{authToken}}
+}
+
+settings {
+  encodeUrl: true
+  timeout: 0
+}

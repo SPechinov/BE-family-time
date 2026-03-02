@@ -1,0 +1,13 @@
+meta {
+  name: calendarEvents
+}
+
+auth {
+  mode: inherit
+}
+
+script:post-response {
+  if (res.status === 401) {
+    bru.runRequest('auth/refreshTokens.bru')
+  }
+}

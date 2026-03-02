@@ -37,8 +37,8 @@ export class CalendarEventsRoutesController {
               userId: request.userId,
               groupId: request.params.groupId,
               eventType: request.query.eventType,
-              startDate: request.query.startDate,
-              endDate: request.query.endDate,
+              startDate: request.query.startDate ? new Date(request.query.startDate) : undefined,
+              endDate: request.query.endDate ? new Date(request.query.endDate) : undefined,
               logger: request.log,
             });
 
@@ -83,8 +83,8 @@ export class CalendarEventsRoutesController {
                 eventType: request.body.eventType,
                 iterationType: request.body.iterationType,
                 recurrencePattern: request.body.recurrencePattern,
-                startDate: request.body.startDate,
-                endDate: request.body.endDate,
+                startDate: new Date(request.body.startDate),
+                endDate: request.body.endDate ? new Date(request.body.endDate) : undefined,
               }),
               logger: request.log,
             });

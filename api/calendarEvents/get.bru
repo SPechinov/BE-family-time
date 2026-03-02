@@ -1,0 +1,25 @@
+meta {
+  name: get
+  type: http
+  seq: 3
+}
+
+get {
+  url: {{url}}/groups/:groupId/calendar-events/:calendarEventId
+  body: formUrlEncoded
+  auth: bearer
+}
+
+params:path {
+  groupId: 3c0a6eeb-1a21-417e-9d2f-ebc1d47b594e
+  calendarEventId: 5fdf8612-a24b-4cc8-b845-737fd56b95ec
+}
+
+auth:bearer {
+  token: {{authToken}}
+}
+
+settings {
+  encodeUrl: true
+  timeout: 0
+}

@@ -1,0 +1,25 @@
+meta {
+  name: delete
+  type: http
+  seq: 5
+}
+
+delete {
+  url: {{url}}/groups/:groupId/calendar-events/:calendarEventId
+  body: formUrlEncoded
+  auth: bearer
+}
+
+params:path {
+  groupId: 3c0a6eeb-1a21-417e-9d2f-ebc1d47b594e
+  calendarEventId: 630c1f93-29e3-4c70-b033-c69388c090b9
+}
+
+auth:bearer {
+  token: {{authToken}}
+}
+
+settings {
+  encodeUrl: true
+  timeout: 0
+}

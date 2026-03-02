@@ -8,8 +8,8 @@ const GET_LIST = {
     groupId: GLOBAL_SCHEMAS.groupId,
   }),
   querystring: z.object({
-    startDate: z.date().optional(),
-    endDate: z.date().optional(),
+    startDate: z.coerce.date().optional(),
+    endDate: z.coerce.date().optional(),
     eventType: GLOBAL_SCHEMAS.calendarEventType.optional(),
   }),
   response: createResponseSchema({
@@ -36,11 +36,11 @@ const CREATE = {
   body: z.object({
     title: GLOBAL_SCHEMAS.calendarEventTitle,
     description: GLOBAL_SCHEMAS.calendarEventDescription.optional(),
-    eventType: GLOBAL_SCHEMAS.calendarEventType,
+    eventType: GLOBAL_SCHEMAS.calendarEventType.optional(),
     iterationType: GLOBAL_SCHEMAS.calendarEventIterationType,
     recurrencePattern: GLOBAL_SCHEMAS.calendarEventRecurrencePattern.optional(),
-    startDate: z.date(),
-    endDate: z.date().optional(),
+    startDate: z.coerce.date(),
+    endDate: z.coerce.date().optional(),
   }),
   response: createResponseSchema({
     201: CALENDAR_EVENT_SCHEMA,

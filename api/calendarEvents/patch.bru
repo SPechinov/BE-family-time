@@ -1,0 +1,32 @@
+meta {
+  name: patch
+  type: http
+  seq: 4
+}
+
+patch {
+  url: {{url}}/groups/:groupId/calendar-events/:calendarEventId
+  body: json
+  auth: bearer
+}
+
+params:path {
+  groupId: 3c0a6eeb-1a21-417e-9d2f-ebc1d47b594e
+  calendarEventId: 0ec9ef72-a1bd-492a-a172-2b17723a5c32
+}
+
+auth:bearer {
+  token: {{authToken}}
+}
+
+body:json {
+  {
+    "title": "Обновлённый день рождения",
+    "description": "Исправленное описание"
+  }
+}
+
+settings {
+  encodeUrl: true
+  timeout: 0
+}

@@ -1,0 +1,42 @@
+meta {
+  name: create
+  type: http
+  seq: 2
+}
+
+post {
+  url: {{url}}/groups/:groupId/calendar-events
+  body: formUrlEncoded
+  auth: bearer
+}
+
+params:path {
+  groupId: 3c0a6eeb-1a21-417e-9d2f-ebc1d47b594e
+}
+
+auth:bearer {
+  token: {{authToken}}
+}
+
+body:json {
+  {
+    "title": "День рождения",
+    "description": "Празднование дня рождения",
+    "eventType": "birthday",
+    "iterationType": "yearly",
+    "startDate": "2026-06-15T00:00:00.000Z"
+  }
+}
+
+body:form-urlencoded {
+  title: День рождения
+  description: Празднование дня рождения
+  eventType: birthday
+  iterationType: yearly
+  startDate: 2026-06-15T00:00:00.000Z
+}
+
+settings {
+  encodeUrl: true
+  timeout: 0
+}
