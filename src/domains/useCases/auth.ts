@@ -1,7 +1,5 @@
 import { UserContactsPlainEntity, UserCreatePlainEntity, UserEntity, UserPasswordPlainEntity } from '@/entities';
-import { JwtPayload } from 'jsonwebtoken';
 import { DefaultProps } from './types';
-import { UserId } from '@/entities';
 
 export interface IAuthUseCases {
   login(
@@ -10,7 +8,7 @@ export interface IAuthUseCases {
       userPasswordPlainEntity: UserPasswordPlainEntity;
       jwtPayload?: Record<string, string>;
     }>,
-  ): Promise<{ accessToken: string; refreshToken: string }>;
+  ): Promise<{ user: UserEntity }>;
 
   registrationStart(
     props: DefaultProps<{ userContactsPlainEntity: UserContactsPlainEntity }>,
@@ -31,19 +29,4 @@ export interface IAuthUseCases {
       otpCode: string;
     }>,
   ): Promise<UserEntity>;
-
-  getAllSessionsPayloads(
-    props: DefaultProps<{ userId: UserId }>,
-  ): Promise<{ payload: JwtPayload | string | null; jwt: string }[]>;
-
-  logoutAllSessions(props: DefaultProps<{ userId: UserId }>): Promise<void>;
-
-  logoutSession(props: DefaultProps<{ userId: UserId; refreshToken: string }>): Promise<void>;
-
-  refreshTokens(
-    props: DefaultProps<{
-      refreshToken: string;
-      jwtPayload?: Record<string, string>;
-    }>,
-  ): Promise<{ accessToken: string; refreshToken: string }>;
 }

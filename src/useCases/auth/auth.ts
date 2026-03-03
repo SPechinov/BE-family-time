@@ -1,5 +1,5 @@
 import { CONFIG } from '@/config';
-import { IJwtService, IRateLimiterService, IUsersService } from '@/domains/services';
+import { IRateLimiterService, IUsersService } from '@/domains/services';
 import { DefaultProps, IAuthUseCases } from '@/domains/useCases';
 import { IOtpCodesStore } from '@/domains/repositories/stores';
 import {
@@ -18,18 +18,12 @@ import {
   generateNumericCode,
   ErrorDoubleRegistration,
   ErrorInvalidLoginOrPassword,
-  ErrorUnauthorized,
 } from '@/pkg';
-import { IRefreshTokensStore } from '@/domains/repositories/stores';
-import { JwtPayload } from 'jsonwebtoken';
-import { UserId } from '@/entities';
 
 export class AuthUseCases implements IAuthUseCases {
   readonly #userService: IUsersService;
   readonly #registrationOtpCodesStore: IOtpCodesStore;
   readonly #forgotPasswordOtpCodesStore: IOtpCodesStore;
-  readonly #refreshTokensStore: IRefreshTokensStore;
-  readonly #jwtService: IJwtService;
   readonly #rateLimiter: IRateLimiterService;
   readonly #pendRegistrationEndRequests = new Set<string>();
 
@@ -38,15 +32,11 @@ export class AuthUseCases implements IAuthUseCases {
     registrationOtpCodesStore: IOtpCodesStore;
     forgotPasswordOtpCodesStore: IOtpCodesStore;
     rateLimiter: IRateLimiterService;
-    refreshTokensStore: IRefreshTokensStore;
-    jwtService: IJwtService;
   }) {
     this.#userService = props.usersService;
     this.#registrationOtpCodesStore = props.registrationOtpCodesStore;
     this.#forgotPasswordOtpCodesStore = props.forgotPasswordOtpCodesStore;
-    this.#refreshTokensStore = props.refreshTokensStore;
     this.#rateLimiter = props.rateLimiter;
-    this.#jwtService = props.jwtService;
   }
 
   async login(
@@ -55,7 +45,7 @@ export class AuthUseCases implements IAuthUseCases {
       userPasswordPlainEntity: UserPasswordPlainEntity;
       jwtPayload?: Record<string, string>;
     }>,
-  ): Promise<{ accessToken: string; refreshToken: string }> {
+  ): Promise<{ user: UserEntity }> {
     const contact = this.#getContactOrThrow(props.userContactsPlainEntity);
 
     await this.#rateLimiter.checkLimitOrThrow({ key: contact });
@@ -75,17 +65,7 @@ export class AuthUseCases implements IAuthUseCases {
     );
     if (!verified) throw new ErrorInvalidLoginOrPassword();
 
-    const jwtPayload = { userId: user.id, ...(props.jwtPayload ?? {}) };
-    const accessToken = this.#jwtService.generateAccessToken(jwtPayload);
-    const refreshToken = this.#jwtService.generateRefreshToken(jwtPayload);
-
-    await this.#refreshTokensStore.save({
-      userId: user.id,
-      refreshToken,
-      expiresAt: new Date(Date.now() + CONFIG.jwt.refreshTokenExpiry),
-    });
-
-    return { accessToken, refreshToken };
+    return { user };
   }
 
   async registrationStart(
@@ -188,70 +168,6 @@ export class AuthUseCases implements IAuthUseCases {
     props.logger.debug({ contact }, 'code compare success, password updated');
 
     return user;
-  }
-
-  async getAllSessionsPayloads(
-    props: DefaultProps<{
-      userId: UserId;
-    }>,
-  ): Promise<{ payload: JwtPayload | string | null; jwt: string }[]> {
-    const jwts = await this.#refreshTokensStore.getAllByUserId({ userId: props.userId });
-    return jwts.map((jwt) => ({
-      jwt,
-      payload: this.#jwtService.parseToken(jwt),
-    }));
-  }
-
-  async logoutAllSessions(props: DefaultProps<{ userId: UserId }>): Promise<void> {
-    await this.#refreshTokensStore.deleteAll({ userId: props.userId });
-  }
-
-  async logoutSession(props: DefaultProps<{ userId: UserId; refreshToken: string }>): Promise<void> {
-    await this.#refreshTokensStore.delete({ userId: props.userId, refreshToken: props.refreshToken });
-  }
-
-  async refreshTokens(
-    props: DefaultProps<{
-      refreshToken: string;
-      jwtPayload?: Record<string, string>;
-    }>,
-  ): Promise<{ accessToken: string; refreshToken: string }> {
-    const oldJwtPayload = this.#jwtService.verifyRefreshToken(props.refreshToken);
-    if (!oldJwtPayload?.userId) {
-      props.logger.warn({ jwtRefreshToken: props.refreshToken }, 'refresh token invalid payload');
-      throw new ErrorUnauthorized();
-    }
-
-    const hasJwtInStore = await this.#refreshTokensStore.hasInStore({
-      userId: oldJwtPayload.userId,
-      refreshToken: props.refreshToken,
-    });
-    if (!hasJwtInStore) {
-      props.logger.warn({ jwtRefreshToken: props.refreshToken }, 'refresh token has not in store');
-      throw new ErrorUnauthorized();
-    }
-
-    const user = await this.#userService.findOne(new UserFindOnePlainEntity({ id: oldJwtPayload.userId }), {
-      logger: props.logger,
-    });
-    if (!user) {
-      props.logger.warn('user does not exist');
-      throw new ErrorUserNotExists();
-    }
-
-    const jwtPayload = { userId: user.id, ...(props.jwtPayload ?? {}) };
-    const accessToken = this.#jwtService.generateAccessToken(jwtPayload);
-    const refreshToken = this.#jwtService.generateRefreshToken(jwtPayload);
-
-    await this.#refreshTokensStore.save({
-      userId: user.id,
-      refreshToken,
-      expiresAt: new Date(Date.now() + CONFIG.jwt.refreshTokenExpiry),
-    });
-
-    this.#refreshTokensStore.delete({ userId: user.id, refreshToken: props.refreshToken }).then(() => {});
-
-    return { accessToken, refreshToken };
   }
 
   #compareOtpCodes(storeOtpCode: string | null | undefined, userOtpCode: string | null | undefined) {
