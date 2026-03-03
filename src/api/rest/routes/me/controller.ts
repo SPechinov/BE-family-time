@@ -1,5 +1,4 @@
 import { FastifyInstance } from 'fastify';
-import { IAuthMiddleware } from '@/api/rest/domains';
 import { IMeUseCases } from '@/domains/useCases';
 import { ZodTypeProvider } from 'fastify-type-provider-zod';
 import { PREFIX, ROUTES } from './constants';
@@ -7,12 +6,10 @@ import { SCHEMAS } from './schemas';
 
 export class MeRoutesController {
   #fastify: FastifyInstance;
-  #authMiddleware: IAuthMiddleware;
   #meUseCases: IMeUseCases;
 
-  constructor(props: { fastify: FastifyInstance; authMiddleware: IAuthMiddleware; meUseCases: IMeUseCases }) {
+  constructor(props: { fastify: FastifyInstance; meUseCases: IMeUseCases }) {
     this.#fastify = props.fastify;
-    this.#authMiddleware = props.authMiddleware;
     this.#meUseCases = props.meUseCases;
   }
 
@@ -24,7 +21,6 @@ export class MeRoutesController {
         router.get(
           ROUTES.getMe,
           {
-            preHandler: [this.#authMiddleware.authenticate],
             schema: SCHEMAS.getMe,
           },
           async (request, reply) => {

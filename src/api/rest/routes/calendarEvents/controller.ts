@@ -1,23 +1,16 @@
 import { FastifyInstance } from 'fastify';
 import { ZodTypeProvider } from 'fastify-type-provider-zod';
 import { ICalendarEventsUseCases } from '@/domains/useCases';
-import { IAuthMiddleware } from '../../domains';
 import { PREFIX, ROUTES } from './constants';
 import { SCHEMAS } from './schemas';
 import { CalendarEventCreateEntity, CalendarEventEntity, CalendarEventPatchOneEntity } from '@/entities';
 
 export class CalendarEventsRoutesController {
   #fastify: FastifyInstance;
-  #authMiddleware: IAuthMiddleware;
   #calendarEventsUseCases: ICalendarEventsUseCases;
 
-  constructor(props: {
-    fastify: FastifyInstance;
-    authMiddleware: IAuthMiddleware;
-    calendarEventsUseCases: ICalendarEventsUseCases;
-  }) {
+  constructor(props: { fastify: FastifyInstance; calendarEventsUseCases: ICalendarEventsUseCases }) {
     this.#fastify = props.fastify;
-    this.#authMiddleware = props.authMiddleware;
     this.#calendarEventsUseCases = props.calendarEventsUseCases;
   }
 
@@ -25,7 +18,6 @@ export class CalendarEventsRoutesController {
     this.#fastify.register(
       (instance) => {
         const router = instance.withTypeProvider<ZodTypeProvider>();
-        router.addHook('preHandler', this.#authMiddleware.authenticate);
 
         router.get(
           ROUTES.getList,

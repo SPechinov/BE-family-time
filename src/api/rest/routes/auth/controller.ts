@@ -10,19 +10,16 @@ import {
 } from '@/entities';
 import { isDev } from '@/config';
 import { COOKIE_NAME, HEADER_NAME, REFRESH_TOKEN_COOKIE_CONFIG } from '../../constants';
-import { ErrorInvalidUserAgent, ErrorUnauthorized, ErrorUserNotExists } from '@/pkg';
-import { IAuthMiddleware } from '@/api/rest/domains';
+import { ErrorInvalidUserAgent, ErrorUserNotExists } from '@/pkg';
 import { PREFIX, ROUTES } from './constants';
 
 export class AuthRoutesController {
   #fastify: FastifyInstance;
   #useCases: IAuthUseCases;
-  #authMiddleware: IAuthMiddleware;
 
-  constructor(props: { fastify: FastifyInstance; useCases: IAuthUseCases; authMiddleware: IAuthMiddleware }) {
+  constructor(props: { fastify: FastifyInstance; useCases: IAuthUseCases }) {
     this.#fastify = props.fastify;
     this.#useCases = props.useCases;
-    this.#authMiddleware = props.authMiddleware;
   }
 
   register() {
@@ -38,7 +35,7 @@ export class AuthRoutesController {
           async (request, reply) => {
             const userAgent = this.#getUserAgentOrThrow(request);
 
-            const tokens = await this.#useCases.login({
+            const user = await this.#useCases.login({
               logger: request.log,
               userContactsPlainEntity: new UserContactsPlainEntity({
                 email: request.body.email,
@@ -46,8 +43,6 @@ export class AuthRoutesController {
               userPasswordPlainEntity: new UserPasswordPlainEntity(request.body.password),
               jwtPayload: { userAgent },
             });
-            this.#setAccessToken(reply, tokens.accessToken);
-            this.#setRefreshToken(reply, tokens.refreshToken);
             reply.status(200).send();
           },
         );
@@ -143,49 +138,19 @@ export class AuthRoutesController {
         router.get(
           ROUTES.getAllSessions,
           {
-            preHandler: [this.#authMiddleware.authenticate],
             schema: AUTH_SCHEMAS.getAllSession,
           },
           async (request, reply) => {
-            const sessionsPayloads = await this.#useCases.getAllSessionsPayloads({
-              logger: request.log,
-              userId: request.userId,
-            });
-            const currentJwt = this.#getRefreshToken(request);
-
-            const sessions = sessionsPayloads.reduce<
-              { expiresAt: number; userAgent: string | null; isCurrent: boolean }[]
-            >((acc, session) => {
-              if (
-                typeof session.payload === 'object' &&
-                session.payload !== null &&
-                typeof session.payload.exp === 'number'
-              ) {
-                acc.push({
-                  isCurrent: session.jwt === currentJwt,
-                  expiresAt: session.payload.exp,
-                  userAgent: typeof session.payload.userAgent === 'string' ? session.payload.userAgent : null,
-                });
-              }
-              return acc;
-            }, []);
-
-            reply.status(200).send({ sessions });
+            reply.status(200).send({ sessions: [] });
           },
         );
 
         router.post(
           ROUTES.logoutAllSessions,
           {
-            preHandler: [this.#authMiddleware.authenticate],
             schema: AUTH_SCHEMAS.logoutAllSession,
           },
           async (request, reply) => {
-            await this.#useCases.logoutAllSessions({
-              logger: request.log,
-              userId: request.userId,
-            });
-            this.#removeRefreshToken(reply);
             reply.status(200).send();
           },
         );
@@ -193,22 +158,9 @@ export class AuthRoutesController {
         router.post(
           ROUTES.logoutSession,
           {
-            preHandler: [this.#authMiddleware.authenticate],
             schema: AUTH_SCHEMAS.logoutSession,
           },
           async (request, reply) => {
-            const refreshToken = this.#getRefreshToken(request);
-            if (!refreshToken) {
-              reply.status(200).send();
-              return;
-            }
-
-            await this.#useCases.logoutSession({
-              logger: request.log,
-              userId: request.userId,
-              refreshToken,
-            });
-            this.#removeRefreshToken(reply);
             reply.status(200).send();
           },
         );
@@ -219,19 +171,6 @@ export class AuthRoutesController {
             schema: AUTH_SCHEMAS.refreshTokens,
           },
           async (request, reply) => {
-            const refreshToken = this.#getRefreshToken(request);
-            if (!refreshToken) throw new ErrorUnauthorized();
-
-            const userAgent = this.#getUserAgentOrThrow(request);
-            const tokens = await this.#useCases.refreshTokens({
-              refreshToken,
-              logger: request.log,
-              jwtPayload: { userAgent },
-            });
-
-            this.#setAccessToken(reply, tokens.accessToken);
-            this.#setRefreshToken(reply, tokens.refreshToken);
-
             reply.status(200).send();
           },
         );

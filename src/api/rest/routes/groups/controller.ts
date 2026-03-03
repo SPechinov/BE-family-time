@@ -1,5 +1,4 @@
 import { FastifyInstance } from 'fastify';
-import { IAuthMiddleware } from '@/api/rest/domains';
 import { ZodTypeProvider } from 'fastify-type-provider-zod';
 import { PREFIX, ROUTES } from './constants';
 import { IGroupsUseCases } from '@/domains/useCases';
@@ -8,12 +7,10 @@ import { GroupCreateEntity, GroupPatchOneEntity } from '@/entities';
 
 export class GroupsRoutesController {
   #fastify: FastifyInstance;
-  #authMiddleware: IAuthMiddleware;
   #groupsUseCases: IGroupsUseCases;
 
-  constructor(props: { fastify: FastifyInstance; authMiddleware: IAuthMiddleware; groupsUseCases: IGroupsUseCases }) {
+  constructor(props: { fastify: FastifyInstance; groupsUseCases: IGroupsUseCases }) {
     this.#fastify = props.fastify;
-    this.#authMiddleware = props.authMiddleware;
     this.#groupsUseCases = props.groupsUseCases;
   }
 
@@ -21,7 +18,6 @@ export class GroupsRoutesController {
     this.#fastify.register(
       (instance) => {
         const router = instance.withTypeProvider<ZodTypeProvider>();
-        router.addHook('preHandler', this.#authMiddleware.authenticate);
 
         router.get(
           ROUTES.getList,

@@ -1,8 +1,8 @@
 import { Pool } from 'pg';
 import { RedisClient, TIMES } from '@/pkg';
 import { AuthUseCases } from '@/useCases';
-import { RefreshTokensStore, OtpCodesStore } from '@/repositories/stores';
-import { RateLimiterService, JwtService } from '@/services';
+import { OtpCodesStore } from '@/repositories/stores';
+import { RateLimiterService } from '@/services';
 import { CONFIG } from '@/config';
 
 import { createUsersService } from '../../utils';
@@ -13,8 +13,6 @@ interface Props {
 }
 
 export const createDependencies = ({ redis, postgres }: Props) => {
-  const jwtService = new JwtService();
-
   const registrationOtpCodesStore = new OtpCodesStore({
     redis,
     prefix: 'auth-registration-otp',
@@ -41,8 +39,6 @@ export const createDependencies = ({ redis, postgres }: Props) => {
     registrationOtpCodesStore,
     forgotPasswordOtpCodesStore,
     rateLimiter,
-    refreshTokensStore: new RefreshTokensStore({ redis }),
-    jwtService,
   });
 
   return {

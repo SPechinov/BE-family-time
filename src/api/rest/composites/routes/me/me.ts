@@ -2,17 +2,14 @@ import { FastifyInstance } from 'fastify';
 import { Pool } from 'pg';
 import { MeRoutesController } from '../../../routes/me';
 import { createMeDependencies } from './utils';
-import { IAuthMiddleware } from '../../../domains';
 
 export class MeComposite {
   #fastifyInstance: FastifyInstance;
   #postgres: Pool;
-  #authMiddleware: IAuthMiddleware;
 
-  constructor(props: { fastifyInstance: FastifyInstance; postgres: Pool; authMiddleware: IAuthMiddleware }) {
+  constructor(props: { fastifyInstance: FastifyInstance; postgres: Pool }) {
     this.#fastifyInstance = props.fastifyInstance;
     this.#postgres = props.postgres;
-    this.#authMiddleware = props.authMiddleware;
 
     this.#register();
   }
@@ -22,7 +19,6 @@ export class MeComposite {
 
     new MeRoutesController({
       fastify: this.#fastifyInstance,
-      authMiddleware: this.#authMiddleware,
       meUseCases: dependencies.meUseCases,
     }).register();
   }

@@ -1,18 +1,15 @@
 import { FastifyInstance } from 'fastify';
 import { Pool } from 'pg';
-import { IAuthMiddleware } from '../../../domains';
 import { createCalendarEventsDependencies } from './utils';
 import { CalendarEventsRoutesController } from '../../../routes/calendarEvents';
 
 export class CalendarEventsComposite {
   #fastifyInstance: FastifyInstance;
   #postgres: Pool;
-  #authMiddleware: IAuthMiddleware;
 
-  constructor(props: { fastifyInstance: FastifyInstance; postgres: Pool; authMiddleware: IAuthMiddleware }) {
+  constructor(props: { fastifyInstance: FastifyInstance; postgres: Pool }) {
     this.#fastifyInstance = props.fastifyInstance;
     this.#postgres = props.postgres;
-    this.#authMiddleware = props.authMiddleware;
 
     this.#register();
   }
@@ -22,7 +19,6 @@ export class CalendarEventsComposite {
 
     new CalendarEventsRoutesController({
       fastify: this.#fastifyInstance,
-      authMiddleware: this.#authMiddleware,
       calendarEventsUseCases,
     }).register();
   }
