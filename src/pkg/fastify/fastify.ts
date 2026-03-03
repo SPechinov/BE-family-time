@@ -1,14 +1,16 @@
 import Fastify, { FastifyError, FastifyReply, FastifyRequest } from 'fastify';
+import fastifyJwt from '@fastify/jwt';
 import formBody from '@fastify/formbody';
 import { serializerCompiler, validatorCompiler } from 'fastify-type-provider-zod';
 import fastifySwagger, { FastifyDynamicSwaggerOptions } from '@fastify/swagger';
 import fastifySwaggerUi from '@fastify/swagger-ui';
 import cookie from '@fastify/cookie';
-import { CONFIG, isDev } from '@/config';
+import { isDev } from '@/config';
 import { ILogger } from '@/pkg/logger';
 import { onPreHandler, onRequest, onResponse, onSend } from '@/api/rest/hooks';
 import { nanoid } from 'nanoid';
 import { wrappedJsonSchemaTransform, wrappedJsonSchemaTransformObject } from '@/pkg/fastify/utils';
+import { CookieConfig, JwtConfig } from '@/pkg/fastify/constants';
 
 const OPEN_API_CONFIG: FastifyDynamicSwaggerOptions['openapi'] = {
   info: {
@@ -38,9 +40,9 @@ export const newFastify = (props: {
   });
 
   fastify.register(formBody);
-  fastify.register(cookie, {
-    secret: CONFIG.cookie.secret,
-  });
+  fastify.register(cookie, CookieConfig);
+
+  fastify.register(fastifyJwt, JwtConfig);
 
   fastify.setValidatorCompiler(validatorCompiler);
   fastify.setSerializerCompiler(serializerCompiler);

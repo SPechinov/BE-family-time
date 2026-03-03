@@ -21,6 +21,7 @@ export class MeRoutesController {
         router.get(
           ROUTES.getMe,
           {
+            preHandler: [instance.authenticate],
             schema: SCHEMAS.getMe,
           },
           async (request, reply) => {

@@ -26,11 +26,16 @@ const ConfigSchema = z.object({
     cryptoCredentials: z.string().min(1),
   }),
   jwt: z.object({
-    accessTokenSecret: z.string().min(1),
-    refreshTokenSecret: z.string().min(1),
-    accessTokenExpiry: z.number(),
-    refreshTokenExpiry: z.number(),
+    secret: z.string().min(32),
     issuer: z.string().min(1),
+    access: z.object({
+      cookieName: z.string().min(7),
+      expiry: z.number(),
+    }),
+    refresh: z.object({
+      cookieName: z.string().min(7),
+      expiry: z.number(),
+    }),
   }),
   cookie: z.object({
     secret: z.string().min(1),

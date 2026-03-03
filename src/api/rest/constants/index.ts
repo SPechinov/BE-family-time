@@ -1,4 +1,4 @@
-import { isProd } from '@/config';
+import { CONFIG, isProd } from '@/config';
 import { CookieSerializeOptions } from '@fastify/cookie';
 
 export const HEADER_NAME = Object.freeze({
@@ -6,14 +6,10 @@ export const HEADER_NAME = Object.freeze({
   authorization: 'Authorization',
 } as const);
 
-export const COOKIE_NAME = Object.freeze({
-  refreshToken: 'refreshToken',
-} as const);
-
 export const REFRESH_TOKEN_COOKIE_CONFIG: CookieSerializeOptions = Object.freeze({
   httpOnly: true,
   secure: isProd(),
   sameSite: 'strict',
-  maxAge: 30 * 24 * 60 * 60,
+  maxAge: CONFIG.jwt.refresh.expiry / 1000,
   path: '/',
 });

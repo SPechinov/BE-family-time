@@ -1,7 +1,7 @@
 import { ILogger, newFastify, RedisClient } from '@/pkg';
 import { isDev } from '@/config';
 import { Pool } from 'pg';
-import { globalErrorHandler } from './utils';
+import { globalErrorHandler, authenticate } from './utils';
 import { AuthComposite, GroupsComposite, MeComposite, CalendarEventsComposite } from './composites';
 
 interface Props {
@@ -15,6 +15,8 @@ export const newApiRest = async (props: Props) => {
     errorHandler: globalErrorHandler,
     logger: props.logger,
   });
+
+  fastify.decorate('authenticate', authenticate);
 
   fastify.register(
     (instance) => {

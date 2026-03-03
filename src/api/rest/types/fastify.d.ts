@@ -6,4 +6,8 @@ declare module 'fastify' {
     userId: UserId;
     startRequestTimestamp: number;
   }
+
+  interface FastifyInstance {
+    authenticate(request: FastifyRequest, reply: FastifyReply): Promise<void>;
+  }
 }
