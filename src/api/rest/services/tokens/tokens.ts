@@ -109,4 +109,20 @@ export class TokensService implements ITokensService {
   hasAccessTokenInBlackList(accessToken: string) {
     return this.#accessTokensBlackList.has(accessToken);
   }
+
+  async isTokenRecentlyDeleted(options: { userId: UserId; refreshToken: string }): Promise<boolean> {
+    return this.#refreshTokensStore.isTokenRecentlyDeleted(options);
+  }
+
+  async invalidateAllSessionsAndBlacklist(options: { userId: UserId; accessToken?: string }): Promise<void> {
+    const { userId, accessToken } = options;
+
+    // Delete all user sessions
+    await this.#refreshTokensStore.deleteAllSessions({ userId });
+
+    // Blacklist the provided access token if present
+    if (accessToken) {
+      this.#accessTokensBlackList.add(accessToken);
+    }
+  }
 }

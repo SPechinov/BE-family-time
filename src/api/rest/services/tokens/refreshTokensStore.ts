@@ -2,6 +2,7 @@ import { createHash, UUID } from 'node:crypto';
 import { CONFIG } from '@/config';
 import { RedisClient } from '@/pkg';
 import { UserId } from '@/entities';
+import { RecentlyDeletedTokensStore } from './recentlyDeletedTokensStore';
 
 export interface SessionData {
   id: UserId;
@@ -16,12 +17,14 @@ export interface SessionWithToken extends SessionData {
 
 export class RefreshTokensStore {
   #redis: RedisClient;
+  #recentlyDeletedStore: RecentlyDeletedTokensStore;
   #SESSION_KEY_PREFIX = 'session';
   #SESSIONS_SET_PREFIX = 'sessions';
   #REFRESH_TOKEN_EXPIRY = CONFIG.jwt.refresh.expiry;
 
   constructor(props: { redis: RedisClient }) {
     this.#redis = props.redis;
+    this.#recentlyDeletedStore = new RecentlyDeletedTokensStore({ redis: props.redis });
   }
 
   /**
@@ -73,12 +76,15 @@ export class RefreshTokensStore {
   }
 
   /**
-   * Delete a specific session
+   * Delete a specific session and track it for reuse detection
    */
   async deleteSession(options: { userId: UserId; refreshToken: string }): Promise<void> {
     const { userId, refreshToken } = options;
     const sessionKey = this.#buildSessionKey(userId, refreshToken);
     const sessionsSetKey = this.#buildSessionsSetKey(userId);
+
+    // Track the deleted token for reuse detection
+    await this.#recentlyDeletedStore.addDeletedToken({ userId, refreshToken });
 
     await this.#redis.multi().del(sessionKey).sRem(sessionsSetKey, sessionKey).exec();
   }
@@ -149,6 +155,14 @@ export class RefreshTokensStore {
    */
   async getCurrentSession(options: { userId: UserId; refreshToken: string }): Promise<SessionData | null> {
     return this.getSession(options);
+  }
+
+  /**
+   * Check if a refresh token was recently deleted (for reuse detection)
+   * @returns true if the token was found in the recently deleted store
+   */
+  async isTokenRecentlyDeleted(options: { userId: UserId; refreshToken: string }): Promise<boolean> {
+    return this.#recentlyDeletedStore.isRecentlyDeleted(options);
   }
 
   /**

@@ -20,6 +20,7 @@ const CODES = {
   groupHasUsers: 'groupHasUsers',
   calendarEventNotExists: 'calendarEventNotExists',
   validation: 'validation',
+  tokenReuseDetected: 'tokenReuseDetected',
 };
 
 export abstract class BusinessError extends Error {
@@ -183,5 +184,12 @@ export class ErrorValidation extends BusinessError {
 
   constructor() {
     super(CODES.validation);
+  }
+}
+
+export class ErrorTokenReuseDetected extends BusinessError {
+  statusCode = 401;
+  constructor() {
+    super(CODES.tokenReuseDetected);
   }
 }

@@ -594,5 +594,289 @@ describe('Auth API Integration Tests', () => {
 
       expect(initialResponse.status).toBe(200);
     });
+
+    describe('Token Reuse Detection', () => {
+      it('should detect token reuse after logout and invalidate all sessions', async () => {
+        // Register and login to get tokens
+        const user = createUserFixture();
+
+        const startResponse = await request
+          .post(`${API_PREFIX}/registration-start`)
+          .set(DEFAULT_HEADERS)
+          .send({ email: user.email });
+
+        const otpCode = startResponse.headers['x-dev-otp-code'];
+
+        await request.post(`${API_PREFIX}/registration-end`).set(DEFAULT_HEADERS).send({
+          email: user.email,
+          otpCode,
+          firstName: user.firstName,
+          password: user.password,
+        });
+
+        const loginResponse = await request.post(`${API_PREFIX}/login`).set(DEFAULT_HEADERS).send({
+          email: user.email,
+          password: user.password,
+        });
+
+        const authToken = extractAuthToken(loginResponse);
+        const refreshToken = extractCookie(loginResponse, 'refreshToken');
+
+        if (!authToken || !refreshToken) {
+          throw new Error('Failed to get tokens from login response');
+        }
+
+        // Logout the current session (this marks the token as recently deleted)
+        const logoutResponse = await request
+          .post(`${API_PREFIX}/logout-session`)
+          .set({
+            ...DEFAULT_HEADERS,
+            Authorization: `Bearer ${authToken}`,
+            Cookie: `refreshToken=${refreshToken}`,
+          })
+          .send({});
+
+        expect(logoutResponse.status).toBe(200);
+
+        // Try to reuse the logged-out refresh token
+        const reuseResponse = await request
+          .post(`${API_PREFIX}/refresh-tokens`)
+          .set({
+            ...DEFAULT_HEADERS,
+            Cookie: `refreshToken=${refreshToken}`,
+          })
+          .send({});
+
+        // Should detect token reuse and return 401
+        expect(reuseResponse.status).toBe(401);
+        expect(reuseResponse.body).toHaveProperty('code', 'tokenReuseDetected');
+      });
+
+      it('should detect token reuse after refresh and invalidate all sessions', async () => {
+        // Register and login to get tokens
+        const user = createUserFixture();
+
+        const startResponse = await request
+          .post(`${API_PREFIX}/registration-start`)
+          .set(DEFAULT_HEADERS)
+          .send({ email: user.email });
+
+        const otpCode = startResponse.headers['x-dev-otp-code'];
+
+        const registrationResponse = await request.post(`${API_PREFIX}/registration-end`).set(DEFAULT_HEADERS).send({
+          email: user.email,
+          otpCode,
+          firstName: user.firstName,
+          password: user.password,
+        });
+
+        expect(registrationResponse.status).toBe(201);
+
+        const loginResponse = await request.post(`${API_PREFIX}/login`).set(DEFAULT_HEADERS).send({
+          email: user.email,
+          password: user.password,
+        });
+
+        expect(loginResponse.status).toBe(200);
+
+        const authToken = extractAuthToken(loginResponse);
+        const refreshToken = extractCookie(loginResponse, 'refreshToken');
+
+        if (!authToken || !refreshToken) {
+          throw new Error('Failed to get tokens from login response');
+        }
+
+        // Refresh tokens (this marks the old token as recently deleted)
+        const refreshResponse = await request
+          .post(`${API_PREFIX}/refresh-tokens`)
+          .set({
+            ...DEFAULT_HEADERS,
+            Cookie: `refreshToken=${refreshToken}`,
+          })
+          .send({});
+
+        expect(refreshResponse.status).toBe(200);
+
+        const newRefreshToken = extractCookie(refreshResponse, 'refreshToken');
+
+        if (!newRefreshToken) {
+          throw new Error('Failed to get new refresh token');
+        }
+
+        // Try to reuse the old refresh token
+        const reuseResponse = await request
+          .post(`${API_PREFIX}/refresh-tokens`)
+          .set({
+            ...DEFAULT_HEADERS,
+            Cookie: `refreshToken=${refreshToken}`,
+          })
+          .send({});
+
+        // Should detect token reuse and return 401
+        expect(reuseResponse.status).toBe(401);
+        expect(reuseResponse.body).toHaveProperty('code', 'tokenReuseDetected');
+
+        // Verify that all sessions are invalidated (new token should also not work)
+        const newTokenReuseResponse = await request
+          .post(`${API_PREFIX}/refresh-tokens`)
+          .set({
+            ...DEFAULT_HEADERS,
+            Cookie: `refreshToken=${newRefreshToken}`,
+          })
+          .send({});
+
+        // New token should also fail because all sessions were invalidated
+        expect(newTokenReuseResponse.status).toBe(401);
+      });
+
+      it('should allow normal token refresh without false positives', async () => {
+        // Register and login to get tokens
+        const user = createUserFixture();
+
+        const startResponse = await request
+          .post(`${API_PREFIX}/registration-start`)
+          .set(DEFAULT_HEADERS)
+          .send({ email: user.email });
+
+        const otpCode = startResponse.headers['x-dev-otp-code'];
+
+        await request.post(`${API_PREFIX}/registration-end`).set(DEFAULT_HEADERS).send({
+          email: user.email,
+          otpCode,
+          firstName: user.firstName,
+          password: user.password,
+        });
+
+        const loginResponse = await request.post(`${API_PREFIX}/login`).set(DEFAULT_HEADERS).send({
+          email: user.email,
+          password: user.password,
+        });
+
+        const refreshToken = extractCookie(loginResponse, 'refreshToken');
+
+        if (!refreshToken) {
+          throw new Error('Failed to get refresh token from login response');
+        }
+
+        // First refresh should work normally
+        const refreshResponse1 = await request
+          .post(`${API_PREFIX}/refresh-tokens`)
+          .set({
+            ...DEFAULT_HEADERS,
+            Cookie: `refreshToken=${refreshToken}`,
+          })
+          .send({});
+
+        expect(refreshResponse1.status).toBe(200);
+
+        const newRefreshToken1 = extractCookie(refreshResponse1, 'refreshToken');
+
+        if (!newRefreshToken1) {
+          throw new Error('Failed to get new refresh token');
+        }
+
+        // Second refresh with the new token should also work
+        const refreshResponse2 = await request
+          .post(`${API_PREFIX}/refresh-tokens`)
+          .set({
+            ...DEFAULT_HEADERS,
+            Cookie: `refreshToken=${newRefreshToken1}`,
+          })
+          .send({});
+
+        expect(refreshResponse2.status).toBe(200);
+
+        const newRefreshToken2 = extractCookie(refreshResponse2, 'refreshToken');
+
+        if (!newRefreshToken2) {
+          throw new Error('Failed to get new refresh token');
+        }
+
+        // Third refresh with the newest token should also work
+        const refreshResponse3 = await request
+          .post(`${API_PREFIX}/refresh-tokens`)
+          .set({
+            ...DEFAULT_HEADERS,
+            Cookie: `refreshToken=${newRefreshToken2}`,
+          })
+          .send({});
+
+        expect(refreshResponse3.status).toBe(200);
+      });
+
+      it('should invalidate all sessions when token reuse is detected', async () => {
+        // Register and login to get tokens
+        const user = createUserFixture();
+
+        const startResponse = await request
+          .post(`${API_PREFIX}/registration-start`)
+          .set(DEFAULT_HEADERS)
+          .send({ email: user.email });
+
+        const otpCode = startResponse.headers['x-dev-otp-code'];
+
+        await request.post(`${API_PREFIX}/registration-end`).set(DEFAULT_HEADERS).send({
+          email: user.email,
+          otpCode,
+          firstName: user.firstName,
+          password: user.password,
+        });
+
+        const loginResponse = await request.post(`${API_PREFIX}/login`).set(DEFAULT_HEADERS).send({
+          email: user.email,
+          password: user.password,
+        });
+
+        const authToken = extractAuthToken(loginResponse);
+        const refreshToken = extractCookie(loginResponse, 'refreshToken');
+
+        if (!authToken || !refreshToken) {
+          throw new Error('Failed to get tokens from login response');
+        }
+
+        // Logout to mark token as recently deleted
+        await request
+          .post(`${API_PREFIX}/logout-session`)
+          .set({
+            ...DEFAULT_HEADERS,
+            Authorization: `Bearer ${authToken}`,
+            Cookie: `refreshToken=${refreshToken}`,
+          })
+          .send({});
+
+        // Try to reuse the token - this should trigger session invalidation
+        const reuseResponse = await request
+          .post(`${API_PREFIX}/refresh-tokens`)
+          .set({
+            ...DEFAULT_HEADERS,
+            Cookie: `refreshToken=${refreshToken}`,
+          })
+          .send({});
+
+        expect(reuseResponse.status).toBe(401);
+        expect(reuseResponse.body).toHaveProperty('code', 'tokenReuseDetected');
+
+        // Login again to get new tokens
+        const newLoginResponse = await request.post(`${API_PREFIX}/login`).set(DEFAULT_HEADERS).send({
+          email: user.email,
+          password: user.password,
+        });
+
+        const newAuthToken = extractAuthToken(newLoginResponse);
+
+        if (!newAuthToken) {
+          throw new Error('Failed to get auth token from login response');
+        }
+
+        // Get all sessions - should only have one session (the new login)
+        const sessionsResponse = await request.get(`${API_PREFIX}/get-all-sessions`).set({
+          ...DEFAULT_HEADERS,
+          Authorization: `Bearer ${newAuthToken}`,
+        });
+
+        expect(sessionsResponse.status).toBe(200);
+        expect(sessionsResponse.body.sessions).toHaveLength(1);
+      });
+    });
   });
 });

@@ -10,7 +10,7 @@ import {
 } from '@/entities';
 import { isDev } from '@/config';
 import { HEADER_NAME } from '../../constants';
-import { ErrorUnauthorized, ErrorUserNotExists } from '@/pkg';
+import { ErrorTokenReuseDetected, ErrorUnauthorized, ErrorUserNotExists } from '@/pkg';
 import { PREFIX, ROUTES } from './constants';
 import { ITokensService } from '../../domains';
 
@@ -237,10 +237,38 @@ export class AuthRoutesController {
           async (request, reply) => {
             const refreshToken = this.#tokenService.getRefreshToken(request);
             if (!refreshToken) {
-              throw new Error('Unauthorized');
+              throw new ErrorUnauthorized();
             }
 
-            const payload = this.#tokenService.verifyRefreshToken(refreshToken);
+            let payload;
+            try {
+              payload = this.#tokenService.verifyRefreshToken(refreshToken);
+            } catch (error) {
+              request.log.warn({ error }, 'Invalid refresh token');
+              throw new ErrorUnauthorized();
+            }
+
+            // Security check: detect if this token was previously deleted (token reuse attack)
+            const isRecentlyDeleted = await this.#tokenService.isTokenRecentlyDeleted({
+              userId: payload.id,
+              refreshToken,
+            });
+
+            if (isRecentlyDeleted) {
+              request.log.warn(
+                { userId: payload.id, userAgent: request.headers['user-agent'] },
+                'Token reuse detected - possible token theft attack. Invalidating all sessions.',
+              );
+
+              // Invalidate all sessions and blacklist current access token
+              const accessToken = this.#tokenService.getAccessToken(request);
+              await this.#tokenService.invalidateAllSessionsAndBlacklist({
+                userId: payload.id,
+                accessToken: accessToken || undefined,
+              });
+
+              throw new ErrorTokenReuseDetected();
+            }
 
             const session = await this.#tokenService.getSession({
               userId: payload.id,
@@ -249,7 +277,7 @@ export class AuthRoutesController {
 
             if (!session) {
               request.log.warn({ userId: payload.id }, 'Session not found in Redis');
-              throw new Error('Unauthorized');
+              throw new ErrorUnauthorized();
             }
 
             const tokens = this.#tokenService.generateTokens({
