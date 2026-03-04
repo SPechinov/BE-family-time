@@ -25,14 +25,14 @@ export class TokenService implements ITokenService {
 
   #generateAccessToken(options: { userId: UserId; userAgent: string; request: FastifyRequest }): string {
     return this.#fastify.jwt.sign(
-      { id: options.userId, userAgent: options.userAgent },
+      { id: options.userId, userAgent: options.userAgent, createdAt: Date.now() },
       { expiresIn: CONFIG.jwt.access.expiry / 1000 },
     );
   }
 
   #generateRefreshToken(options: { userId: UserId; userAgent: string; request: FastifyRequest }): string {
     return this.#fastify.jwt.sign(
-      { id: options.userId, userAgent: options.userAgent },
+      { id: options.userId, userAgent: options.userAgent, createdAt: Date.now() },
       { expiresIn: CONFIG.jwt.refresh.expiry / 1000 },
     );
   }
