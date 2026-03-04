@@ -1,26 +1,28 @@
-import { FastifyInstance, FastifyReply, FastifyRequest } from 'fastify';
+import { FastifyInstance } from 'fastify';
 import { ZodTypeProvider } from 'fastify-type-provider-zod';
 import { AUTH_SCHEMAS } from './schemas';
 import { IAuthUseCases } from '@/domains/useCases';
 import {
   UserContactsPlainEntity,
   UserCreatePlainEntity,
-  UserId,
   UserPasswordPlainEntity,
   UserPersonalInfoPlainEntity,
 } from '@/entities';
-import { CONFIG, isDev } from '@/config';
-import { HEADER_NAME, REFRESH_TOKEN_COOKIE_CONFIG } from '../../constants';
-import { ErrorInvalidUserAgent, ErrorUnauthorized, ErrorUserNotExists } from '@/pkg';
+import { isDev } from '@/config';
+import { HEADER_NAME } from '../../constants';
+import { ErrorUserNotExists } from '@/pkg';
 import { PREFIX, ROUTES } from './constants';
+import { TokenService } from './tokens';
 
 export class AuthRoutesController {
   #fastify: FastifyInstance;
   #useCases: IAuthUseCases;
+  #tokenService: TokenService;
 
   constructor(props: { fastify: FastifyInstance; useCases: IAuthUseCases }) {
     this.#fastify = props.fastify;
     this.#useCases = props.useCases;
+    this.#tokenService = new TokenService(this.#fastify);
   }
 
   register() {
@@ -34,7 +36,11 @@ export class AuthRoutesController {
             schema: AUTH_SCHEMAS.login,
           },
           async (request, reply) => {
-            const userAgent = this.#getUserAgentOrThrow(request);
+            const userAgent = request.headers['user-agent'];
+            if (typeof userAgent !== 'string') {
+              request.log.warn('User agent not found');
+              throw new Error('Invalid user agent');
+            }
 
             const { user } = await this.#useCases.login({
               logger: request.log,
@@ -45,11 +51,11 @@ export class AuthRoutesController {
               jwtPayload: { userAgent },
             });
 
-            const tokens = this.#generateTokens({
+            const tokens = this.#tokenService.generateTokens({
               request,
               userId: user.id,
             });
-            this.#setTokens(reply, tokens);
+            this.#tokenService.setTokens(reply, tokens);
 
             reply.status(200).send();
           },
@@ -169,7 +175,7 @@ export class AuthRoutesController {
             schema: AUTH_SCHEMAS.logoutSession,
           },
           async (_, reply) => {
-            this.#removeRefreshTokenFromCookie(reply);
+            this.#tokenService.removeRefreshTokenFromCookie(reply);
             reply.status(200).send();
           },
         );
@@ -180,17 +186,18 @@ export class AuthRoutesController {
             schema: AUTH_SCHEMAS.refreshTokens,
           },
           async (request, reply) => {
-            const refreshToken = this.#getRefreshToken(request);
-            if (!refreshToken) throw new ErrorUnauthorized();
+            const refreshToken = this.#tokenService.getRefreshToken(request);
+            if (!refreshToken) {
+              throw new Error('Unauthorized');
+            }
 
-            const payload = this.#fastify.jwt.verify<{ id: UserId }>(refreshToken);
-            if (!payload?.id) throw new ErrorUnauthorized();
+            const payload = this.#tokenService.verifyRefreshToken(refreshToken);
 
-            const tokens = this.#generateTokens({
+            const tokens = this.#tokenService.generateTokens({
               request,
               userId: payload.id,
             });
-            this.#setTokens(reply, tokens);
+            this.#tokenService.setTokens(reply, tokens);
 
             reply.status(200).send();
           },
@@ -198,58 +205,5 @@ export class AuthRoutesController {
       },
       { prefix: PREFIX },
     );
-  }
-
-  #generateTokens(options: { userId: UserId; request: FastifyRequest }) {
-    const userAgent = this.#getUserAgentOrThrow(options.request);
-    return {
-      access: this.#generateAccessToken({ userId: options.userId, userAgent, request: options.request }),
-      refresh: this.#generateRefreshToken({ userId: options.userId, userAgent, request: options.request }),
-    };
-  }
-
-  #generateAccessToken(options: { userId: UserId; userAgent: string; request: FastifyRequest }): string {
-    return this.#fastify.jwt.sign(
-      { id: options.userId, userAgent: options.userAgent },
-      { expiresIn: CONFIG.jwt.access.expiry / 1000 },
-    );
-  }
-
-  #generateRefreshToken(options: { userId: UserId; userAgent: string; request: FastifyRequest }): string {
-    return this.#fastify.jwt.sign(
-      { id: options.userId, userAgent: options.userAgent },
-      { expiresIn: CONFIG.jwt.refresh.expiry / 1000 },
-    );
-  }
-
-  #setTokens(reply: FastifyReply, tokens: { access: string; refresh: string }) {
-    this.#setAccessTokenToHeaders(reply, tokens.access);
-    this.#setRefreshTokenToCookie(reply, tokens.refresh);
-  }
-
-  #setAccessTokenToHeaders(reply: FastifyReply, accessToken: string) {
-    return reply.header(HEADER_NAME.authorization, accessToken);
-  }
-
-  #setRefreshTokenToCookie(reply: FastifyReply, refreshToken: string) {
-    return reply.setCookie(CONFIG.jwt.refresh.cookieName, refreshToken, REFRESH_TOKEN_COOKIE_CONFIG);
-  }
-
-  #removeRefreshTokenFromCookie(reply: FastifyReply) {
-    return reply.setCookie(CONFIG.jwt.refresh.cookieName, '', { ...REFRESH_TOKEN_COOKIE_CONFIG, maxAge: 0 });
-  }
-
-  #getRefreshToken(request: FastifyRequest): string | null {
-    return request.cookies?.[CONFIG.jwt.refresh.cookieName] || null;
-  }
-
-  #getUserAgentOrThrow(request: FastifyRequest) {
-    const userAgent = request.headers['user-agent'];
-    if (typeof userAgent !== 'string') {
-      request.log.warn('User agent not found');
-      throw new ErrorInvalidUserAgent();
-    }
-
-    return userAgent;
   }
 }
