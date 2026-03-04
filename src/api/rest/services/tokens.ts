@@ -3,8 +3,9 @@ import { CONFIG } from '@/config';
 import { HEADER_NAME, REFRESH_TOKEN_COOKIE_CONFIG } from '../constants';
 import { ErrorInvalidUserAgent, ErrorUnauthorized } from '@/pkg';
 import { UserId } from '@/entities';
+import { ITokenService } from '../domains';
 
-export class TokenService {
+export class TokenService implements ITokenService {
   #fastify: FastifyInstance;
 
   constructor(fastify: FastifyInstance) {
