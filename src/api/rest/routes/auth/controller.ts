@@ -12,14 +12,14 @@ import { isDev } from '@/config';
 import { HEADER_NAME } from '../../constants';
 import { ErrorUnauthorized, ErrorUserNotExists } from '@/pkg';
 import { PREFIX, ROUTES } from './constants';
-import { ITokenService } from '../../domains';
+import { ITokensService } from '../../domains';
 
 export class AuthRoutesController {
   #fastify: FastifyInstance;
   #useCases: IAuthUseCases;
-  #tokenService: ITokenService;
+  #tokenService: ITokensService;
 
-  constructor(props: { fastify: FastifyInstance; useCases: IAuthUseCases; tokenService: ITokenService }) {
+  constructor(props: { fastify: FastifyInstance; useCases: IAuthUseCases; tokenService: ITokensService }) {
     this.#fastify = props.fastify;
     this.#useCases = props.useCases;
     this.#tokenService = props.tokenService;
@@ -210,6 +210,11 @@ export class AuthRoutesController {
             schema: AUTH_SCHEMAS.logoutSession,
           },
           async (request, reply) => {
+            const accessToken = this.#tokenService.getRefreshToken(request);
+            if (accessToken) {
+              this.#tokenService.setAccessTokenInBlackList(accessToken);
+            }
+
             const refreshToken = this.#tokenService.getRefreshToken(request);
             if (!refreshToken) {
               throw new ErrorUnauthorized();

@@ -3,16 +3,20 @@ import { CONFIG } from '@/config';
 import { HEADER_NAME, REFRESH_TOKEN_COOKIE_CONFIG } from '../../constants';
 import { ErrorInvalidUserAgent, ErrorUnauthorized, RedisClient } from '@/pkg';
 import { UserId } from '@/entities';
-import { ITokenService } from '../../domains';
+import { ITokensService } from '../../domains';
 import { RefreshTokensStore, SessionData, SessionWithToken } from './refreshTokensStore';
+import { AccessTokensBlackList } from './accessTokensBlackList';
+import { extractAuthToken } from '../../utils';
 
-export class TokenService implements ITokenService {
+export class TokensService implements ITokensService {
   #fastify: FastifyInstance;
   #refreshTokensStore: RefreshTokensStore;
+  #accessTokensBlackList: AccessTokensBlackList;
 
   constructor(props: { fastify: FastifyInstance; redis: RedisClient }) {
     this.#fastify = props.fastify;
     this.#refreshTokensStore = new RefreshTokensStore({ redis: props.redis });
+    this.#accessTokensBlackList = new AccessTokensBlackList();
   }
 
   generateTokens(options: { userId: UserId; request: FastifyRequest }) {
@@ -54,6 +58,8 @@ export class TokenService implements ITokenService {
     return reply.setCookie(CONFIG.jwt.refresh.cookieName, '', { ...REFRESH_TOKEN_COOKIE_CONFIG, maxAge: 0 });
   }
 
+  getAccessToken = extractAuthToken;
+
   getRefreshToken(request: FastifyRequest): string | null {
     return request.cookies?.[CONFIG.jwt.refresh.cookieName] || null;
   }
@@ -94,5 +100,13 @@ export class TokenService implements ITokenService {
 
   async getAllSessions(options: { userId: UserId; currentRefreshToken?: string }): Promise<SessionWithToken[]> {
     return this.#refreshTokensStore.getAllSessions(options);
+  }
+
+  setAccessTokenInBlackList(accessToken: string) {
+    this.#accessTokensBlackList.add(accessToken);
+  }
+
+  hasAccessTokenInBlackList(accessToken: string) {
+    return this.#accessTokensBlackList.has(accessToken);
   }
 }
