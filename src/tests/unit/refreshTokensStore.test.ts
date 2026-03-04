@@ -3,6 +3,7 @@ import { RefreshTokensStore } from '@/api/rest/services/tokens/refreshTokensStor
 import { createClient } from 'redis';
 import { RedisContainer, StartedRedisContainer } from '@testcontainers/redis';
 import { UserId } from '@/entities';
+import { CONFIG } from '@/config';
 
 // Helper to generate test UUIDs
 const generateTestId = (): UserId => {
@@ -22,7 +23,6 @@ describe('RefreshTokensStore', () => {
   const testUserId: UserId = generateTestId();
   const testRefreshToken = 'test.jwt.refresh.token.here';
   const testUserAgent = 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36';
-  const testExpiresAt = Date.now() + 30 * 24 * 60 * 60 * 1000; // 30 days from now
 
   beforeAll(async () => {
     // Start Redis container
@@ -43,6 +43,11 @@ describe('RefreshTokensStore', () => {
     await redis.flushDb();
   });
 
+  afterEach(async () => {
+    // Clean up Redis after each test for isolation
+    await redis.flushDb();
+  });
+
   afterAll(async () => {
     // Cleanup
     await redis.quit();
@@ -51,36 +56,39 @@ describe('RefreshTokensStore', () => {
 
   describe('setSession', () => {
     it('should save a session to Redis', async () => {
+      const uniqueToken = `test.token.${Date.now()}`;
+
       await store.setSession({
         userId: testUserId,
-        refreshToken: testRefreshToken,
+        refreshToken: uniqueToken,
         userAgent: testUserAgent,
-        expiresAt: testExpiresAt,
       });
 
       // Verify session was saved
       const sessions = await store.getAllSessions({ userId: testUserId });
       expect(sessions).toHaveLength(1);
       expect(sessions[0].userAgent).toBe(testUserAgent);
-      expect(sessions[0].expiresAt).toBe(testExpiresAt);
+      expect(sessions[0].expiresAt).toBeGreaterThan(Date.now()); // expiresAt is in the future
     });
 
     it('should set TTL for the session', async () => {
-      const shortExpiresAt = Date.now() + 5000; // 5 seconds from now
+      const uniqueToken = `test.token.ttl.${Date.now()}`;
 
       await store.setSession({
         userId: testUserId,
-        refreshToken: testRefreshToken,
+        refreshToken: uniqueToken,
         userAgent: testUserAgent,
-        expiresAt: shortExpiresAt,
       });
 
-      // Get TTL from Redis
-      const sessionKey = `session:${testUserId}:${testRefreshToken.slice(-8)}`;
+      // Get TTL from Redis immediately
+      const { createHash } = await import('node:crypto');
+      const fingerprint = createHash('sha256').update(uniqueToken).digest('hex').slice(-8);
+      const sessionKey = `session:${testUserId}:${fingerprint}`;
       const ttl = await redis.ttl(sessionKey);
 
+      // TTL should be positive and less than config expiry + 5s tolerance for slow containers
       expect(ttl).toBeGreaterThan(0);
-      expect(ttl).toBeLessThanOrEqual(5);
+      expect(ttl).toBeLessThanOrEqual(Math.floor(CONFIG.jwt.refresh.expiry / 1000) + 5);
     });
 
     it('should store multiple sessions for the same user', async () => {
@@ -91,14 +99,12 @@ describe('RefreshTokensStore', () => {
         userId: testUserId,
         refreshToken: token1,
         userAgent: testUserAgent,
-        expiresAt: testExpiresAt,
       });
 
       await store.setSession({
         userId: testUserId,
         refreshToken: token2,
         userAgent: testUserAgent,
-        expiresAt: testExpiresAt,
       });
 
       const sessions = await store.getAllSessions({ userId: testUserId });
@@ -112,7 +118,6 @@ describe('RefreshTokensStore', () => {
         userId: testUserId,
         refreshToken: testRefreshToken,
         userAgent: testUserAgent,
-        expiresAt: testExpiresAt,
       });
 
       const session = await store.getSession({
@@ -122,7 +127,7 @@ describe('RefreshTokensStore', () => {
 
       expect(session).not.toBeNull();
       expect(session?.userAgent).toBe(testUserAgent);
-      expect(session?.expiresAt).toBe(testExpiresAt);
+      expect(session?.expiresAt).toBeGreaterThan(Date.now());
     });
 
     it('should return null for non-existent session', async () => {
@@ -141,7 +146,6 @@ describe('RefreshTokensStore', () => {
         userId: testUserId,
         refreshToken: testRefreshToken,
         userAgent: testUserAgent,
-        expiresAt: testExpiresAt,
       });
 
       const session = await store.getSession({
@@ -162,14 +166,12 @@ describe('RefreshTokensStore', () => {
         userId: testUserId,
         refreshToken: token1,
         userAgent: testUserAgent,
-        expiresAt: testExpiresAt,
       });
 
       await store.setSession({
         userId: testUserId,
         refreshToken: token2,
         userAgent: testUserAgent,
-        expiresAt: testExpiresAt,
       });
 
       // Delete first session
@@ -203,21 +205,18 @@ describe('RefreshTokensStore', () => {
         userId: testUserId,
         refreshToken: token1,
         userAgent: testUserAgent,
-        expiresAt: testExpiresAt,
       });
 
       await store.setSession({
         userId: testUserId,
         refreshToken: token2,
         userAgent: testUserAgent,
-        expiresAt: testExpiresAt,
       });
 
       await store.setSession({
         userId: testUserId,
         refreshToken: token3,
         userAgent: testUserAgent,
-        expiresAt: testExpiresAt,
       });
 
       // Delete all sessions
@@ -234,14 +233,12 @@ describe('RefreshTokensStore', () => {
         userId: testUserId,
         refreshToken: testRefreshToken,
         userAgent: testUserAgent,
-        expiresAt: testExpiresAt,
       });
 
       await store.setSession({
         userId: otherUserId,
         refreshToken: testRefreshToken,
         userAgent: testUserAgent,
-        expiresAt: testExpiresAt,
       });
 
       // Delete all sessions for test user only
@@ -268,14 +265,12 @@ describe('RefreshTokensStore', () => {
         userId: testUserId,
         refreshToken: token1,
         userAgent: testUserAgent,
-        expiresAt: testExpiresAt,
       });
 
       await store.setSession({
         userId: testUserId,
         refreshToken: token2,
         userAgent: testUserAgent,
-        expiresAt: testExpiresAt,
       });
 
       const sessions = await store.getAllSessions({ userId: testUserId });
@@ -290,14 +285,12 @@ describe('RefreshTokensStore', () => {
         userId: testUserId,
         refreshToken: token1,
         userAgent: testUserAgent,
-        expiresAt: testExpiresAt,
       });
 
       await store.setSession({
         userId: testUserId,
         refreshToken: token2,
         userAgent: testUserAgent,
-        expiresAt: testExpiresAt,
       });
 
       const sessions = await store.getAllSessions({
@@ -319,7 +312,6 @@ describe('RefreshTokensStore', () => {
         userId: testUserId,
         refreshToken: testRefreshToken,
         userAgent: testUserAgent,
-        expiresAt: testExpiresAt,
       });
 
       const sessions = await store.getAllSessions({ userId: testUserId });
@@ -329,21 +321,22 @@ describe('RefreshTokensStore', () => {
 
   describe('getCurrentSession', () => {
     it('should return session data for current token', async () => {
+      const uniqueToken = `test.token.${Date.now()}`;
+
       await store.setSession({
         userId: testUserId,
-        refreshToken: testRefreshToken,
+        refreshToken: uniqueToken,
         userAgent: testUserAgent,
-        expiresAt: testExpiresAt,
       });
 
       const session = await store.getCurrentSession({
         userId: testUserId,
-        refreshToken: testRefreshToken,
+        refreshToken: uniqueToken,
       });
 
       expect(session).not.toBeNull();
       expect(session?.userAgent).toBe(testUserAgent);
-      expect(session?.expiresAt).toBe(testExpiresAt);
+      expect(session?.expiresAt).toBeGreaterThan(Date.now()); // expiresAt is in the future
     });
 
     it('should return null for non-existent session', async () => {
@@ -358,12 +351,10 @@ describe('RefreshTokensStore', () => {
 
   describe('fingerprint generation', () => {
     it('should generate consistent fingerprints for the same token', async () => {
-      // This is implicitly tested by other tests, but let's verify
       await store.setSession({
         userId: testUserId,
         refreshToken: testRefreshToken,
         userAgent: testUserAgent,
-        expiresAt: testExpiresAt,
       });
 
       // Get session twice - should work both times
@@ -388,14 +379,12 @@ describe('RefreshTokensStore', () => {
         userId: testUserId,
         refreshToken: token1,
         userAgent: testUserAgent,
-        expiresAt: testExpiresAt,
       });
 
       await store.setSession({
         userId: testUserId,
         refreshToken: token2,
         userAgent: testUserAgent,
-        expiresAt: testExpiresAt,
       });
 
       const sessions = await store.getAllSessions({ userId: testUserId });

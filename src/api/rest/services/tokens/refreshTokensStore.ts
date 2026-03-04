@@ -47,6 +47,7 @@ export class RefreshTokensStore {
       .hSet(sessionKey, sessionData)
       .expire(sessionKey, ttlSeconds)
       .sAdd(sessionsSetKey, sessionKey)
+      .expire(sessionsSetKey, ttlSeconds)
       .exec();
   }
 
