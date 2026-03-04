@@ -1,6 +1,6 @@
 import { FastifyInstance, FastifyReply, FastifyRequest } from 'fastify';
 import { CONFIG } from '@/config';
-import { HEADER_NAME, REFRESH_TOKEN_COOKIE_CONFIG } from '../../constants';
+import { HEADER_NAME, REFRESH_TOKEN_COOKIE_CONFIG } from '../constants';
 import { ErrorInvalidUserAgent, ErrorUnauthorized } from '@/pkg';
 import { UserId } from '@/entities';
 

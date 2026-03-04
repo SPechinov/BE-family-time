@@ -12,17 +12,17 @@ import { isDev } from '@/config';
 import { HEADER_NAME } from '../../constants';
 import { ErrorUserNotExists } from '@/pkg';
 import { PREFIX, ROUTES } from './constants';
-import { TokenService } from './tokens';
+import { TokenService } from '../../services';
 
 export class AuthRoutesController {
   #fastify: FastifyInstance;
   #useCases: IAuthUseCases;
   #tokenService: TokenService;
 
-  constructor(props: { fastify: FastifyInstance; useCases: IAuthUseCases }) {
+  constructor(props: { fastify: FastifyInstance; useCases: IAuthUseCases; tokenService: TokenService }) {
     this.#fastify = props.fastify;
     this.#useCases = props.useCases;
-    this.#tokenService = new TokenService(this.#fastify);
+    this.#tokenService = props.tokenService;
   }
 
   register() {

@@ -3,6 +3,7 @@ import { FastifyInstance } from 'fastify';
 import { Pool } from 'pg';
 import { AuthRoutesController } from '../../../routes/auth';
 import { createDependencies } from './utils';
+import { TokenService } from '../../../services';
 
 export class AuthComposite {
   #fastifyInstance: FastifyInstance;
@@ -23,6 +24,7 @@ export class AuthComposite {
     new AuthRoutesController({
       fastify: this.#fastifyInstance,
       useCases: dependencies.authUseCases,
+      tokenService: new TokenService(this.#fastifyInstance),
     }).register();
   }
 }
