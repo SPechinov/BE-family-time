@@ -24,7 +24,7 @@ export class AuthComposite {
     new AuthRoutesController({
       fastify: this.#fastifyInstance,
       useCases: dependencies.authUseCases,
-      tokenService: new TokenService(this.#fastifyInstance),
+      tokenService: new TokenService({ fastify: this.#fastifyInstance, redis: this.#redis }),
     }).register();
   }
 }

@@ -1,15 +1,18 @@
 import { FastifyInstance, FastifyReply, FastifyRequest } from 'fastify';
 import { CONFIG } from '@/config';
-import { HEADER_NAME, REFRESH_TOKEN_COOKIE_CONFIG } from '../constants';
-import { ErrorInvalidUserAgent, ErrorUnauthorized } from '@/pkg';
+import { HEADER_NAME, REFRESH_TOKEN_COOKIE_CONFIG } from '../../constants';
+import { ErrorInvalidUserAgent, ErrorUnauthorized, RedisClient } from '@/pkg';
 import { UserId } from '@/entities';
-import { ITokenService } from '../domains';
+import { ITokenService } from '../../domains';
+import { Store } from './store';
 
 export class TokenService implements ITokenService {
   #fastify: FastifyInstance;
+  #store: Store;
 
-  constructor(fastify: FastifyInstance) {
-    this.#fastify = fastify;
+  constructor(props: { fastify: FastifyInstance; redis: RedisClient }) {
+    this.#fastify = props.fastify;
+    this.#store = new Store({ redis: props.redis });
   }
 
   generateTokens(options: { userId: UserId; request: FastifyRequest }) {
