@@ -4,15 +4,15 @@ import { HEADER_NAME, REFRESH_TOKEN_COOKIE_CONFIG } from '../../constants';
 import { ErrorInvalidUserAgent, ErrorUnauthorized, RedisClient } from '@/pkg';
 import { UserId } from '@/entities';
 import { ITokenService } from '../../domains';
-import { Store } from './store';
+import { RefreshTokensStore, SessionData, SessionWithToken } from './refreshTokensStore';
 
 export class TokenService implements ITokenService {
   #fastify: FastifyInstance;
-  #store: Store;
+  #refreshTokensStore: RefreshTokensStore;
 
   constructor(props: { fastify: FastifyInstance; redis: RedisClient }) {
     this.#fastify = props.fastify;
-    this.#store = new Store({ redis: props.redis });
+    this.#refreshTokensStore = new RefreshTokensStore({ redis: props.redis });
   }
 
   generateTokens(options: { userId: UserId; request: FastifyRequest }) {
@@ -74,5 +74,30 @@ export class TokenService implements ITokenService {
       throw new ErrorUnauthorized();
     }
     return payload;
+  }
+
+  async storeSession(options: {
+    userId: UserId;
+    refreshToken: string;
+    userAgent: string;
+    expiresAt: number;
+  }): Promise<void> {
+    await this.#refreshTokensStore.setSession(options);
+  }
+
+  async getSession(options: { userId: UserId; refreshToken: string }): Promise<SessionData | null> {
+    return this.#refreshTokensStore.getSession(options);
+  }
+
+  async deleteSession(options: { userId: UserId; refreshToken: string }): Promise<void> {
+    await this.#refreshTokensStore.deleteSession(options);
+  }
+
+  async deleteAllSessions(options: { userId: UserId }): Promise<void> {
+    await this.#refreshTokensStore.deleteAllSessions(options);
+  }
+
+  async getAllSessions(options: { userId: UserId; currentRefreshToken?: string }): Promise<SessionWithToken[]> {
+    return this.#refreshTokensStore.getAllSessions(options);
   }
 }
