@@ -76,12 +76,7 @@ export class TokenService implements ITokenService {
     return payload;
   }
 
-  async storeSession(options: {
-    userId: UserId;
-    refreshToken: string;
-    userAgent: string;
-    expiresAt: number;
-  }): Promise<void> {
+  async storeSession(options: { userId: UserId; refreshToken: string; userAgent: string }): Promise<void> {
     await this.#refreshTokensStore.setSession(options);
   }
 

@@ -1,4 +1,5 @@
 import { createHash, UUID } from 'node:crypto';
+import { CONFIG } from '@/config';
 import { RedisClient } from '@/pkg';
 import { UserId } from '@/entities';
 
@@ -17,6 +18,7 @@ export class RefreshTokensStore {
   #redis: RedisClient;
   #SESSION_KEY_PREFIX = 'session';
   #SESSIONS_SET_PREFIX = 'sessions';
+  #REFRESH_TOKEN_EXPIRY = CONFIG.jwt.refresh.expiry;
 
   constructor(props: { redis: RedisClient }) {
     this.#redis = props.redis;
@@ -25,13 +27,9 @@ export class RefreshTokensStore {
   /**
    * Save a session (refresh token) to Redis
    */
-  async setSession(options: {
-    userId: UserId;
-    refreshToken: string;
-    userAgent: string;
-    expiresAt: number;
-  }): Promise<void> {
-    const { userId, refreshToken, userAgent, expiresAt } = options;
+  async setSession(options: { userId: UserId; userAgent: string; refreshToken: string }): Promise<void> {
+    const { userId, userAgent, refreshToken } = options;
+    const expiresAt = Date.now() + this.#REFRESH_TOKEN_EXPIRY;
     const sessionKey = this.#buildSessionKey(userId, refreshToken);
     const sessionsSetKey = this.#buildSessionsSetKey(userId);
 
