@@ -13,7 +13,7 @@ export interface ITokenService {
 
   verifyRefreshToken(refreshToken: string): { id: UserId };
 
-  storeSession(options: { userId: UserId; refreshToken: string; userAgent: string; expiresAt?: number }): Promise<void>;
+  storeSession(options: { userId: UserId; refreshToken: string; userAgent: string }): Promise<void>;
 
   getSession(options: { userId: UserId; refreshToken: string }): Promise<SessionData | null>;
 

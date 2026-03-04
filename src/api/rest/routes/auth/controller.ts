@@ -8,7 +8,7 @@ import {
   UserPasswordPlainEntity,
   UserPersonalInfoPlainEntity,
 } from '@/entities';
-import { CONFIG, isDev } from '@/config';
+import { isDev } from '@/config';
 import { HEADER_NAME } from '../../constants';
 import { ErrorUnauthorized, ErrorUserNotExists } from '@/pkg';
 import { PREFIX, ROUTES } from './constants';
@@ -57,13 +57,10 @@ export class AuthRoutesController {
             });
             this.#tokenService.setTokens(reply, tokens);
 
-            // Store session in Redis
-            const expiresAt = Date.now() + CONFIG.jwt.refresh.expiry;
             await this.#tokenService.storeSession({
               userId: user.id,
-              refreshToken: tokens.refresh,
               userAgent,
-              expiresAt,
+              refreshToken: tokens.refresh,
             });
 
             reply.status(200).send();
@@ -147,6 +144,7 @@ export class AuthRoutesController {
                 otpCode: request.body.otpCode,
                 password: new UserPasswordPlainEntity(request.body.password),
               });
+
               reply.status(200).send();
             } catch (error: unknown) {
               if (error instanceof ErrorUserNotExists) {
@@ -239,7 +237,6 @@ export class AuthRoutesController {
 
             const payload = this.#tokenService.verifyRefreshToken(refreshToken);
 
-            // Verify session exists in Redis
             const session = await this.#tokenService.getSession({
               userId: payload.id,
               refreshToken,
@@ -256,16 +253,12 @@ export class AuthRoutesController {
             });
             this.#tokenService.setTokens(reply, tokens);
 
-            // Update session with new refresh token
-            const expiresAt = Date.now() + CONFIG.jwt.refresh.expiry;
             await this.#tokenService.storeSession({
               userId: payload.id,
               refreshToken: tokens.refresh,
               userAgent: request.headers['user-agent'] || session.userAgent,
-              expiresAt,
             });
 
-            // Delete old session
             await this.#tokenService.deleteSession({ userId: payload.id, refreshToken });
 
             reply.status(200).send();
