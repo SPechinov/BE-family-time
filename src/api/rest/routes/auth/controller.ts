@@ -11,7 +11,7 @@ import {
 } from '@/entities';
 import { isDev } from '@/config';
 import { HEADER_NAME } from '../../constants';
-import { ErrorUnauthorized, ErrorUserNotExists } from '@/pkg';
+import { ErrorInvalidUserAgent, ErrorUnauthorized, ErrorUserNotExists } from '@/pkg';
 import { PREFIX, ROUTES } from './constants';
 import { ITokensService } from '../../domains';
 
@@ -40,7 +40,7 @@ export class AuthRoutesController {
             const userAgent = request.headers['user-agent'];
             if (typeof userAgent !== 'string') {
               request.log.warn('User agent not found');
-              throw new Error('Invalid user agent');
+              throw new ErrorInvalidUserAgent();
             }
 
             const { user } = await this.#useCases.login({

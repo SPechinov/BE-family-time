@@ -14,7 +14,9 @@ import {
   GroupsUsersFindOneEntity,
   UserId,
 } from '@/entities';
-import { ErrorCalendarEventNotExists, ErrorGroupNotExists, ILogger } from '@/pkg';
+import {
+  ErrorCalendarEventInvalidDateRange,
+  ErrorCalendarEventNotExists, ErrorCalendarEventRecurrencePattern, ErrorGroupNotExists, ILogger } from '@/pkg';
 
 export class CalendarEventsUseCases implements ICalendarEventsUseCases {
   readonly #usersService: IUsersService;
@@ -205,37 +207,45 @@ export class CalendarEventsUseCases implements ICalendarEventsUseCases {
   ): void {
     if (iterationType === 'oneTime' || iterationType === 'yearly') {
       if (recurrencePattern) {
-        throw new Error(`recurrencePattern must not be set for iterationType '${iterationType}'`);
+        throw new ErrorCalendarEventRecurrencePattern({ reason: "not be set for iterationType '${iterationType}'" });
       }
       return;
     }
 
     if (!recurrencePattern) {
-      throw new Error(`recurrencePattern is required for iterationType '${iterationType}'`);
+      throw new ErrorCalendarEventRecurrencePattern({ reason: `required for iterationType '${iterationType}'` });
     }
 
     if (iterationType === 'weekly') {
       if (recurrencePattern.type !== 'weekly') {
-        throw new Error(`recurrencePattern.type must be 'weekly' for iterationType 'weekly'`);
+        throw new ErrorCalendarEventRecurrencePattern({
+          reason: `type of recurrencePattern must be 'weekly' for iterationType 'weekly'`,
+        });
       }
       if (recurrencePattern.dayOfWeek < 0 || recurrencePattern.dayOfWeek > 6) {
-        throw new Error('recurrencePattern.dayOfWeek must be between 0 and 6');
+        throw new ErrorCalendarEventRecurrencePattern({
+          reason: `dayOfWeek of recurrencePattern must be between 0 and 6'`,
+        });
       }
     }
 
     if (iterationType === 'monthly') {
       if (recurrencePattern.type !== 'monthly') {
-        throw new Error(`recurrencePattern.type must be 'monthly' for iterationType 'monthly'`);
+        throw new ErrorCalendarEventRecurrencePattern({
+          reason: `type of recurrencePattern must be 'monthly' for iterationType 'monthly'`,
+        });
       }
-      if (recurrencePattern.dayOfMonth < 1 || recurrencePattern.dayOfMonth > 31) {
-        throw new Error('recurrencePattern.dayOfMonth must be between 1 and 31');
+      if (recurrencePattern.dayOfMonth < 0 || recurrencePattern.dayOfMonth > 30) {
+        throw new ErrorCalendarEventRecurrencePattern({
+          reason: `dayOfMonth of recurrencePattern must be between 0 and 30'`,
+        });
       }
     }
   }
 
   #validateDateRangeOrThrow(startDate: Date, endDate?: Date | null): void {
     if (endDate !== null && endDate !== undefined && endDate < startDate) {
-      throw new Error('endDate must be greater than or equal to startDate');
+      throw new ErrorCalendarEventInvalidDateRange();
     }
   }
 }

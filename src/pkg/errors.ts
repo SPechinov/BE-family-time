@@ -13,12 +13,16 @@ const CODES = {
   groupNotExists: 'groupNotExists',
   groupsLimitExceeded: 'groupsLimitExceeded',
   groupUsersCountLimitExceeded: 'groupUsersCountLimitExceeded',
+  invalidUserFindParams: 'invalidUserFindParams',
+  invalidUserPatchParams: 'invalidUserPatchParams',
   userIsNotGroupOwner: 'userIsNotGroupOwner',
   userInGroup: 'userInGroup',
   userNotInGroup: 'userNotInGroup',
   userIsGroupOwner: 'userIsGroupOwner',
   groupHasUsers: 'groupHasUsers',
   calendarEventNotExists: 'calendarEventNotExists',
+  calendarEventRecurrencePattern: 'calendarEventRecurrencePattern',
+  calendarEventInvalidDateRange: 'calendarEventInvalidDateRange',
 };
 
 export abstract class BusinessError extends Error {
@@ -128,6 +132,22 @@ export class ErrorGroupUsersCountLimitExceeded extends BusinessError {
   }
 }
 
+export class ErrorInvalidUserFindParams extends BusinessError {
+  statusCode = 400;
+
+  constructor() {
+    super(CODES.invalidUserFindParams);
+  }
+}
+
+export class ErrorInvalidUserPatchParams extends BusinessError {
+  statusCode = 400;
+
+  constructor() {
+    super(CODES.invalidUserPatchParams);
+  }
+}
+
 export class ErrorUserInGroup extends BusinessError {
   statusCode = 400;
   constructor() {
@@ -167,5 +187,23 @@ export class ErrorCalendarEventNotExists extends BusinessError {
   statusCode = 404;
   constructor() {
     super(CODES.calendarEventNotExists);
+  }
+}
+
+export class ErrorCalendarEventRecurrencePattern extends BusinessError {
+  statusCode = 400;
+  reason?: string;
+
+  constructor(props: { reason?: string }) {
+    super(CODES.calendarEventRecurrencePattern);
+    this.reason = props.reason;
+  }
+}
+
+export class ErrorCalendarEventInvalidDateRange extends BusinessError {
+  statusCode = 400;
+
+  constructor() {
+    super(CODES.calendarEventInvalidDateRange);
   }
 }

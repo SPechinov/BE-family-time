@@ -18,7 +18,7 @@ import {
   UserPlainEntity,
   UserId,
 } from '@/entities';
-import { ErrorUserNotExists } from '@/pkg/errors';
+import { ErrorInvalidUserFindParams, ErrorInvalidUserPatchParams, ErrorUserNotExists } from '@/pkg/errors';
 import { ILogger } from '@/pkg/logger';
 import { PoolClient } from 'pg';
 
@@ -170,7 +170,7 @@ export class UsersService implements IUsersService {
     }
 
     if (!contactsPlain?.getContact()) {
-      throw new Error('Either id or contacts must be provided to find a user.');
+      throw new ErrorInvalidUserFindParams();
     }
 
     return new UserFindOneEntity({
@@ -200,7 +200,7 @@ export class UsersService implements IUsersService {
       contactsHashed === undefined &&
       passwordHashed === undefined
     ) {
-      throw new Error('At least one field must be provided to update a user.');
+      throw new ErrorInvalidUserPatchParams();
     }
 
     return new UserPatchOneEntity({
