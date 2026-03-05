@@ -23,6 +23,7 @@ export class GroupsRoutesController {
           ROUTES.getList,
           {
             schema: SCHEMAS.getList,
+            preHandler: [instance.authenticate],
           },
           async (request, reply) => {
             const groups = await this.#groupsUseCases.findUserGroupsList({
@@ -43,6 +44,7 @@ export class GroupsRoutesController {
           ROUTES.create,
           {
             schema: SCHEMAS.create,
+            preHandler: [instance.authenticate],
           },
           async (request, reply) => {
             await this.#groupsUseCases.createUserGroup({
@@ -61,6 +63,7 @@ export class GroupsRoutesController {
           ROUTES.get,
           {
             schema: SCHEMAS.get,
+            preHandler: [instance.authenticate],
           },
           async (request, reply) => {
             const group = await this.#groupsUseCases.findUserGroup({
@@ -81,6 +84,7 @@ export class GroupsRoutesController {
           ROUTES.patch,
           {
             schema: SCHEMAS.patch,
+            preHandler: [instance.authenticate],
           },
           async (request, reply) => {
             const group = await this.#groupsUseCases.patchUserGroup({
@@ -104,6 +108,7 @@ export class GroupsRoutesController {
           ROUTES.inviteUser,
           {
             schema: SCHEMAS.invite,
+            preHandler: [instance.authenticate],
           },
           async (request, reply) => {
             await this.#groupsUseCases.inviteUserInGroup({
@@ -120,6 +125,7 @@ export class GroupsRoutesController {
           ROUTES.excludeUser,
           {
             schema: SCHEMAS.exclude,
+            preHandler: [instance.authenticate],
           },
           async (request, reply) => {
             await this.#groupsUseCases.excludeUserFromGroup({
@@ -136,6 +142,7 @@ export class GroupsRoutesController {
           ROUTES.delete,
           {
             schema: SCHEMAS.delete,
+            preHandler: [instance.authenticate],
           },
           async (request, reply) => {
             await this.#groupsUseCases.deleteUserGroup({

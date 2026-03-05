@@ -23,6 +23,7 @@ export class CalendarEventsRoutesController {
           ROUTES.getList,
           {
             schema: SCHEMAS.getList,
+            preHandler: [instance.authenticate],
           },
           async (request, reply) => {
             const calendarEvents = await this.#calendarEventsUseCases.getCalendarEventsByGroupId({
@@ -42,6 +43,7 @@ export class CalendarEventsRoutesController {
           ROUTES.get,
           {
             schema: SCHEMAS.get,
+            preHandler: [instance.authenticate],
           },
           async (request, reply) => {
             const calendarEvent = await this.#calendarEventsUseCases.getCalendarEvent({
@@ -59,6 +61,7 @@ export class CalendarEventsRoutesController {
           ROUTES.create,
           {
             schema: SCHEMAS.create,
+            preHandler: [instance.authenticate],
           },
           async (request, reply) => {
             const userId = request.userId;
@@ -88,6 +91,7 @@ export class CalendarEventsRoutesController {
           ROUTES.patch,
           {
             schema: SCHEMAS.patch,
+            preHandler: [instance.authenticate],
           },
           async (request, reply) => {
             const calendarEvent = await this.#calendarEventsUseCases.patchCalendarEvent({
@@ -109,6 +113,7 @@ export class CalendarEventsRoutesController {
           ROUTES.delete,
           {
             schema: SCHEMAS.delete,
+            preHandler: [instance.authenticate],
           },
           async (request, reply) => {
             await this.#calendarEventsUseCases.deleteCalendarEvent({
@@ -133,7 +138,7 @@ export class CalendarEventsRoutesController {
       id: calendarEvent.id,
       title: calendarEvent.title,
       description: calendarEvent.description,
-      type: calendarEvent.eventType ?? undefined,
+      eventType: calendarEvent.eventType ?? undefined,
       iterationType: calendarEvent.iterationType,
       startDate: calendarEvent.startDate.toISOString(),
       endDate: calendarEvent.endDate?.toISOString(),

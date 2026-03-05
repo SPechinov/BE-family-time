@@ -60,7 +60,7 @@ export const CALENDAR_EVENT_SCHEMA = z
     id: GLOBAL_SCHEMAS.calendarEventId,
     title: GLOBAL_SCHEMAS.calendarEventTitle,
     description: GLOBAL_SCHEMAS.calendarEventDescription.optional(),
-    type: GLOBAL_SCHEMAS.calendarEventType.optional(),
+    eventType: GLOBAL_SCHEMAS.calendarEventType.optional(),
     iterationType: GLOBAL_SCHEMAS.calendarEventIterationType,
     startDate: z.coerce.date(),
     endDate: z.coerce.date().optional(),

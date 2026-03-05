@@ -13,15 +13,15 @@ export const authenticate = async (request: FastifyRequest, props: { tokensServi
     }
 
     switch (error.code) {
-      case 'FST_JWT_AUTHORIZATION_TOKEN_INVALID': {
-        throw new ErrorUnauthorized();
-      }
-      case 'FST_JWT_AUTHORIZATION_TOKEN_EXPIRED': {
+      case 'FST_JWT_AUTHORIZATION_TOKEN_EXPIRED':
         throw new ErrorTokenExpired();
-      }
+      case 'FST_JWT_AUTHORIZATION_TOKEN_INVALID':
+      case 'FST_JWT_NO_AUTHORIZATION_HEADER':
+      case 'FST_JWT_INVALID_AUTHORIZATION_HEADER':
+        throw new ErrorUnauthorized();
     }
 
-    throw error;
+    throw new ErrorUnauthorized();
   }
 
   const accessToken = props.tokensService.getAccessToken(request);

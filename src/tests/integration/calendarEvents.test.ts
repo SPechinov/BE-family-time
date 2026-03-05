@@ -182,7 +182,7 @@ describe('Calendar Events API Integration Tests', () => {
       expect(response.body).toMatchObject({
         title: eventData.title,
         iterationType: eventData.iterationType,
-        type: eventData.eventType ?? undefined,
+        eventType: eventData.eventType ?? undefined,
       });
       expect(response.body.id).toMatch(/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i);
     });
@@ -712,7 +712,7 @@ describe('Calendar Events API Integration Tests', () => {
       expect(response.status).toBe(200);
       expect(Array.isArray(response.body)).toBe(true);
       response.body.forEach((event: any) => {
-        expect(event.type).toBe('birthday');
+        expect(event.eventType).toBe('birthday');
       });
     });
 
@@ -781,7 +781,7 @@ describe('Calendar Events API Integration Tests', () => {
       expect(response.status).toBe(200);
       expect(Array.isArray(response.body)).toBe(true);
       response.body.forEach((event: any) => {
-        expect(event.type).toBe('birthday');
+        expect(event.eventType).toBe('birthday');
       });
     });
 
