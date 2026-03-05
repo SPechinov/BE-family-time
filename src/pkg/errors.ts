@@ -192,11 +192,9 @@ export class ErrorCalendarEventNotExists extends BusinessError {
 
 export class ErrorCalendarEventRecurrencePattern extends BusinessError {
   statusCode = 400;
-  reason?: string;
 
-  constructor(props: { reason?: string }) {
+  constructor() {
     super(CODES.calendarEventRecurrencePattern);
-    this.reason = props.reason;
   }
 }
 

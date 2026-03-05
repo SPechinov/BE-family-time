@@ -16,7 +16,11 @@ import {
 } from '@/entities';
 import {
   ErrorCalendarEventInvalidDateRange,
-  ErrorCalendarEventNotExists, ErrorCalendarEventRecurrencePattern, ErrorGroupNotExists, ILogger } from '@/pkg';
+  ErrorCalendarEventNotExists,
+  ErrorCalendarEventRecurrencePattern,
+  ErrorGroupNotExists,
+  ILogger,
+} from '@/pkg';
 
 export class CalendarEventsUseCases implements ICalendarEventsUseCases {
   readonly #usersService: IUsersService;
@@ -47,6 +51,7 @@ export class CalendarEventsUseCases implements ICalendarEventsUseCases {
       this.#validateRecurrencePatternOrThrow(
         calendarEventCreateEntity.iterationType,
         calendarEventCreateEntity.recurrencePattern,
+        logger,
       );
       this.#validateDateRangeOrThrow(calendarEventCreateEntity.startDate, calendarEventCreateEntity.endDate);
     } catch (error: unknown) {
@@ -127,6 +132,7 @@ export class CalendarEventsUseCases implements ICalendarEventsUseCases {
         this.#validateRecurrencePatternOrThrow(
           calendarEventPatchOneEntity.iterationType,
           calendarEventPatchOneEntity.recurrencePattern,
+          logger,
         );
       }
 
@@ -203,42 +209,53 @@ export class CalendarEventsUseCases implements ICalendarEventsUseCases {
 
   #validateRecurrencePatternOrThrow(
     iterationType: CalendarEventIterationType,
-    recurrencePattern?: CalendarEventRecurrencePattern | null,
+    recurrencePattern: CalendarEventRecurrencePattern | null | undefined,
+    logger: ILogger,
   ): void {
     if (iterationType === 'oneTime' || iterationType === 'yearly') {
       if (recurrencePattern) {
-        throw new ErrorCalendarEventRecurrencePattern({ reason: "not be set for iterationType '${iterationType}'" });
+        logger.warn({ iterationType, recurrencePattern }, 'recurrencePattern must not be set for this iterationType');
+        throw new ErrorCalendarEventRecurrencePattern();
       }
       return;
     }
 
     if (!recurrencePattern) {
-      throw new ErrorCalendarEventRecurrencePattern({ reason: `required for iterationType '${iterationType}'` });
+      logger.warn({ iterationType }, 'recurrencePattern is required for this iterationType');
+      throw new ErrorCalendarEventRecurrencePattern();
     }
 
     if (iterationType === 'weekly') {
       if (recurrencePattern.type !== 'weekly') {
-        throw new ErrorCalendarEventRecurrencePattern({
-          reason: `type of recurrencePattern must be 'weekly' for iterationType 'weekly'`,
-        });
+        logger.warn(
+          { iterationType, recurrencePatternType: recurrencePattern.type },
+          'recurrencePattern type must be weekly for weekly iterationType',
+        );
+        throw new ErrorCalendarEventRecurrencePattern();
       }
       if (recurrencePattern.dayOfWeek < 0 || recurrencePattern.dayOfWeek > 6) {
-        throw new ErrorCalendarEventRecurrencePattern({
-          reason: `dayOfWeek of recurrencePattern must be between 0 and 6'`,
-        });
+        logger.warn(
+          { iterationType, dayOfWeek: recurrencePattern.dayOfWeek },
+          'recurrencePattern dayOfWeek must be between 0 and 6',
+        );
+        throw new ErrorCalendarEventRecurrencePattern();
       }
     }
 
     if (iterationType === 'monthly') {
       if (recurrencePattern.type !== 'monthly') {
-        throw new ErrorCalendarEventRecurrencePattern({
-          reason: `type of recurrencePattern must be 'monthly' for iterationType 'monthly'`,
-        });
+        logger.warn(
+          { iterationType, recurrencePatternType: recurrencePattern.type },
+          'recurrencePattern type must be monthly for monthly iterationType',
+        );
+        throw new ErrorCalendarEventRecurrencePattern();
       }
       if (recurrencePattern.dayOfMonth < 0 || recurrencePattern.dayOfMonth > 30) {
-        throw new ErrorCalendarEventRecurrencePattern({
-          reason: `dayOfMonth of recurrencePattern must be between 0 and 30'`,
-        });
+        logger.warn(
+          { iterationType, dayOfMonth: recurrencePattern.dayOfMonth },
+          'recurrencePattern dayOfMonth must be between 0 and 30',
+        );
+        throw new ErrorCalendarEventRecurrencePattern();
       }
     }
   }
