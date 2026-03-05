@@ -91,13 +91,6 @@ export class ErrorInvalidLoginOrPassword extends BusinessError {
   }
 }
 
-export class ErrorInvalidRefreshToken extends BusinessError {
-  statusCode = 400;
-  constructor() {
-    super(CODES.invalidRefreshToken);
-  }
-}
-
 export class ErrorUnauthorized extends BusinessError {
   statusCode = 401;
   constructor() {
