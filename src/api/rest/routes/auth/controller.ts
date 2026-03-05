@@ -7,6 +7,7 @@ import {
   UserCreatePlainEntity,
   UserPasswordPlainEntity,
   UserPersonalInfoPlainEntity,
+  UserId,
 } from '@/entities';
 import { isDev } from '@/config';
 import { HEADER_NAME } from '../../constants';
@@ -167,7 +168,12 @@ export class AuthRoutesController {
               throw new ErrorUnauthorized();
             }
 
-            const payload = this.#tokenService.verifyRefreshToken(refreshToken);
+            let payload: { id: UserId };
+            try {
+              payload = this.#tokenService.verifyRefreshToken(refreshToken);
+            } catch {
+              throw new ErrorUnauthorized();
+            }
 
             const sessions = await this.#tokenService.getAllSessions({
               userId: payload.id,
@@ -195,7 +201,12 @@ export class AuthRoutesController {
               throw new ErrorUnauthorized();
             }
 
-            const payload = this.#tokenService.verifyRefreshToken(refreshToken);
+            let payload: { id: UserId };
+            try {
+              payload = this.#tokenService.verifyRefreshToken(refreshToken);
+            } catch {
+              throw new ErrorUnauthorized();
+            }
 
             await this.#tokenService.deleteAllSessions({ userId: payload.id });
             this.#tokenService.removeRefreshTokenFromCookie(reply);
@@ -220,7 +231,12 @@ export class AuthRoutesController {
               throw new ErrorUnauthorized();
             }
 
-            const payload = this.#tokenService.verifyRefreshToken(refreshToken);
+            let payload: { id: UserId };
+            try {
+              payload = this.#tokenService.verifyRefreshToken(refreshToken);
+            } catch {
+              throw new ErrorUnauthorized();
+            }
 
             await this.#tokenService.deleteSession({ userId: payload.id, refreshToken });
             this.#tokenService.removeRefreshTokenFromCookie(reply);
@@ -237,10 +253,15 @@ export class AuthRoutesController {
           async (request, reply) => {
             const refreshToken = this.#tokenService.getRefreshToken(request);
             if (!refreshToken) {
-              throw new Error('Unauthorized');
+              throw new ErrorUnauthorized();
             }
 
-            const payload = this.#tokenService.verifyRefreshToken(refreshToken);
+            let payload: { id: UserId };
+            try {
+              payload = this.#tokenService.verifyRefreshToken(refreshToken);
+            } catch {
+              throw new ErrorUnauthorized();
+            }
 
             const session = await this.#tokenService.getSession({
               userId: payload.id,
@@ -249,7 +270,7 @@ export class AuthRoutesController {
 
             if (!session) {
               request.log.warn({ userId: payload.id }, 'Session not found in Redis');
-              throw new Error('Unauthorized');
+              throw new ErrorUnauthorized();
             }
 
             const tokens = this.#tokenService.generateTokens({

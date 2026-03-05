@@ -424,6 +424,7 @@ describe('Auth API Integration Tests', () => {
         const response = await request.get(`${API_PREFIX}/get-all-sessions`).set({
           ...DEFAULT_HEADERS,
           Authorization: `Bearer ${authToken}`,
+          Cookie: `refreshToken=${refreshToken}`,
         });
 
         expect(response.status).toBe(200);
@@ -514,6 +515,7 @@ describe('Auth API Integration Tests', () => {
           .set({
             ...DEFAULT_HEADERS,
             Authorization: `Bearer ${authToken}`,
+            Cookie: `refreshToken=${refreshToken}`,
           })
           .send({});
 
@@ -585,11 +587,14 @@ describe('Auth API Integration Tests', () => {
 
       // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
       const validToken = extractAuthToken(loginResponse)!;
+      // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+      const refreshToken = extractCookie(loginResponse, 'refreshToken')!;
 
       // Token should work initially
       const initialResponse = await request.get(`${API_PREFIX}/get-all-sessions`).set({
         ...DEFAULT_HEADERS,
         Authorization: `Bearer ${validToken}`,
+        Cookie: `refreshToken=${refreshToken}`,
       });
 
       expect(initialResponse.status).toBe(200);
