@@ -28,8 +28,4 @@ export interface ITokensService {
   setAccessTokenInBlackList(accessToken: string): void;
 
   hasAccessTokenInBlackList(accessToken: string): boolean;
-
-  isTokenRecentlyDeleted(options: { userId: UserId; refreshToken: string }): Promise<boolean>;
-
-  invalidateAllSessionsAndBlacklist(options: { userId: UserId; accessToken?: string }): Promise<void>;
 }
