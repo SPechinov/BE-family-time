@@ -5,6 +5,7 @@ import { z } from 'zod';
 const ConfigSchema = z.object({
   nodeEnv: z.enum(['local', 'development', 'production']),
   server: z.object({
+    host: z.string(),
     port: z.number(),
   }),
   postgres: z.object({

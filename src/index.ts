@@ -54,7 +54,7 @@ const run = async () => {
     postgres,
     logger,
   });
-  apiRest.listen({ port: CONFIG.server.port });
+  apiRest.listen({ host: CONFIG.server.host, port: CONFIG.server.port });
 
   const destroyApp = async () => {
     await apiRest.close();
