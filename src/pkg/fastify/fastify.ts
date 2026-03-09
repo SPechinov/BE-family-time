@@ -1,6 +1,7 @@
 import Fastify, { FastifyError, FastifyReply, FastifyRequest } from 'fastify';
 import fastifyJwt from '@fastify/jwt';
 import formBody from '@fastify/formbody';
+import cors from '@fastify/cors';
 import { serializerCompiler, validatorCompiler } from 'fastify-type-provider-zod';
 import fastifySwagger, { FastifyDynamicSwaggerOptions } from '@fastify/swagger';
 import fastifySwaggerUi from '@fastify/swagger-ui';
@@ -41,6 +42,16 @@ export const newFastify = (props: {
 
   fastify.register(formBody);
   fastify.register(cookie, CookieConfig);
+
+  // Отключаем CORS в dev режиме для удобства разработки
+  if (isDev()) {
+    fastify.register(cors, {
+      origin: true, // Разрешить все origins
+      methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
+      allowedHeaders: ['Content-Type', 'Authorization', 'X-Dev-Otp-Code'],
+      credentials: true,
+    });
+  }
 
   fastify.register(fastifyJwt, JwtConfig);
 
