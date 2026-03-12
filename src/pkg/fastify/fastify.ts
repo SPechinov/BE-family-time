@@ -46,9 +46,10 @@ export const newFastify = (props: {
   // Отключаем CORS в dev режиме для удобства разработки
   if (isDev()) {
     fastify.register(cors, {
-      origin: true, // Разрешить все origins
-      methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
-      allowedHeaders: ['Content-Type', 'Authorization', 'X-Dev-Otp-Code'],
+      origin: true,
+      methods: '*',
+      allowedHeaders: '*',
+      exposedHeaders: '*',
       credentials: true,
     });
   }
