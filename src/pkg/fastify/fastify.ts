@@ -43,15 +43,13 @@ export const newFastify = (props: {
   fastify.register(formBody);
   fastify.register(cookie, CookieConfig);
 
-  // Отключаем CORS в dev режиме для удобства разработки
   if (isDev()) {
     fastify.register(cors, {
-      origin: (origin, cb) => cb(null, true), // Разрешить все origins
-      methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
-      allowedHeaders: ['Content-Type', 'Authorization', 'Cookie', 'X-Dev-Otp-Code', 'X-Request-ID'],
-      exposedHeaders: ['Set-Cookie', 'X-Request-ID', 'Authorization'],
+      origin: (_, cb) => cb(null, true),
+      methods: '*',
+      allowedHeaders: ['Authorization'],
+      exposedHeaders: ['X-Request-ID', 'Authorization'],
       credentials: true,
-      maxAge: 86400,
     });
   }
 

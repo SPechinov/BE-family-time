@@ -252,6 +252,14 @@ export class AuthRoutesController {
           },
           async (request, reply) => {
             const refreshToken = this.#tokenService.getRefreshToken(request);
+
+            console.log('refreshToken: ', refreshToken);
+            console.log('refreshToken: ', refreshToken);
+            console.log('refreshToken: ', refreshToken);
+            console.log('refreshToken: ', refreshToken);
+            console.log('refreshToken: ', refreshToken);
+            console.log('refreshToken: ', refreshToken);
+
             if (!refreshToken) {
               throw new ErrorUnauthorized();
             }
