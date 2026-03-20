@@ -160,7 +160,7 @@ export class UsersRepository implements IUsersRepository {
 
   #buildUpdateSetClause(userPatchEntity: UserPatchOneEntity, startValueIndex: number) {
     const setParts: string[] = [];
-    const updateValues: (string | null | Buffer)[] = [];
+    const updateValues: (string | null | Buffer | Date)[] = [];
     let valueIndex = startValueIndex;
     if (userPatchEntity.personalInfoEncrypted !== undefined) {
       if (userPatchEntity.personalInfoEncrypted === null) {
@@ -229,6 +229,11 @@ export class UsersRepository implements IUsersRepository {
       );
       valueIndex++;
     }
+    if (userPatchEntity.dateOfBirth !== undefined) {
+      setParts.push(`date_of_birth = $${valueIndex}`);
+      updateValues.push(userPatchEntity.dateOfBirth ? userPatchEntity.dateOfBirth : null);
+      valueIndex++;
+    }
     return { setParts, updateValues, nextValueIndex: valueIndex };
   }
 
@@ -259,6 +264,7 @@ export class UsersRepository implements IUsersRepository {
       contactsHashed,
       contactsEncrypted,
       passwordHashed,
+      dateOfBirth: row.date_of_birth,
       createdAt: row.created_at,
       updatedAt: row.updated_at,
     });

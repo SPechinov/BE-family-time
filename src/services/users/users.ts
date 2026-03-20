@@ -120,6 +120,7 @@ export class UsersService implements IUsersService {
       id: userEntity.id,
       createdAt: userEntity.createdAt,
       updatedAt: userEntity.updatedAt,
+      dateOfBirth: userEntity.dateOfBirth,
       contacts,
       personalInfo,
     });
@@ -208,6 +209,7 @@ export class UsersService implements IUsersService {
       contactsEncrypted,
       contactsHashed,
       passwordHashed,
+      dateOfBirth: userPatchOnePlainEntity.dateOfBirth,
     });
   }
 

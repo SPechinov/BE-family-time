@@ -1,0 +1,32 @@
+meta {
+  name: patch
+  type: http
+  seq: 2
+}
+
+patch {
+  url: {{url}}/me
+  body: formUrlEncoded
+  auth: bearer
+}
+
+auth:bearer {
+  token: {{authToken}}
+}
+
+body:json {
+  {
+    firstName: 'SS'
+  }
+}
+
+body:form-urlencoded {
+  firstName: Sergei
+  lastName: Pechinov
+  dateOfBirth: 1995-09-10T00:00:00.000Z
+}
+
+settings {
+  encodeUrl: true
+  timeout: 0
+}

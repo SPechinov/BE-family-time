@@ -4,6 +4,7 @@ import { isXss } from '@/api/rest/schemas/utils';
 
 export const GLOBAL_SCHEMAS = {
   firstName: z.string().min(2).max(40).refine(isXss, { message: 'Invalid characters in firstName' }),
+  lastName: z.string().min(2).max(40).refine(isXss, { message: 'Invalid characters in firstName' }),
   password: z.string().min(8).max(100),
   email: z.email().max(254).refine(isXss, { message: 'Invalid characters in email' }),
   otpCode: (length: number) =>
@@ -47,7 +48,8 @@ export const USER_SCHEMA = z
     email: GLOBAL_SCHEMAS.email.nullable(),
     phone: z.string().nullable(),
     firstName: GLOBAL_SCHEMAS.firstName.nullable(),
-    lastName: z.string().nullable(),
+    lastName: GLOBAL_SCHEMAS.lastName.nullable(),
+    dateOfBirth: z.string().nullable(),
   })
   .register(z.globalRegistry, { id: 'User' });
 
