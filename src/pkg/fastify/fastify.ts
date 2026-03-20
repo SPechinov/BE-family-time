@@ -46,9 +46,9 @@ export const newFastify = (props: {
   if (isDev()) {
     fastify.register(cors, {
       origin: (_, cb) => cb(null, true),
-      methods: '*',
-      allowedHeaders: ['Authorization'],
-      exposedHeaders: ['X-Request-ID', 'Authorization'],
+      methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
+      allowedHeaders: ['Authorization', `Content-Type`],
+      exposedHeaders: ['X-Request-ID', 'Authorization', 'Content-Type'],
       credentials: true,
     });
   }

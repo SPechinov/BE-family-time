@@ -9,6 +9,7 @@ CREATE TABLE IF NOT EXISTS users (
     password_hashed BYTEA,
     first_name_encrypted BYTEA,
     last_name_encrypted BYTEA,
+    date_of_birth TIMESTAMP,
     created_at TIMESTAMP DEFAULT NOW(),
     updated_at TIMESTAMP DEFAULT NOW()
     );
