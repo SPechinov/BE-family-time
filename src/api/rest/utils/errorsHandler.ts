@@ -1,9 +1,10 @@
 import { hasZodFastifySchemaValidationErrors } from 'fastify-type-provider-zod';
 import { BusinessError } from '@/pkg';
+import { ApiErrorPayload } from './response';
 import { FastifyError, FastifyReply, FastifyRequest } from 'fastify';
 
 export const globalErrorHandler = (error: FastifyError, request: FastifyRequest, reply: FastifyReply) => {
-  const params: Record<string, any> = {
+  const params: ApiErrorPayload = {
     statusCode: 500,
     originalUrl: request.originalUrl,
     timestamp: Date.now(),

@@ -33,6 +33,18 @@ export const RESPONSE_500 = z.object({
   statusCode: z.literal(500),
 });
 
+export const API_ERROR_SCHEMA = z.union([RESPONSE_400, RESPONSE_401, RESPONSE_422, RESPONSE_429, RESPONSE_500]);
+
+export type ApiError = z.infer<typeof API_ERROR_SCHEMA>;
+
+export interface ApiErrorPayload {
+  statusCode: number;
+  originalUrl: string;
+  timestamp: number;
+  message?: string | null;
+  code?: string;
+}
+
 export const DEFAULT_RESPONSE_SCHEMA = Object.freeze({
   400: RESPONSE_400,
   401: RESPONSE_401,
