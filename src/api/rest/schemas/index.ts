@@ -3,6 +3,7 @@ import { CalendarEventId, GroupId, UserId } from '@/entities';
 import { isXss } from '@/api/rest/schemas/utils';
 
 export const GLOBAL_SCHEMAS = {
+  emptyString: z.literal(''),
   firstName: z.string().min(2).max(40).refine(isXss, { message: 'Invalid characters in firstName' }),
   lastName: z.string().min(2).max(40).refine(isXss, { message: 'Invalid characters in firstName' }),
   password: z.string().min(8).max(100),
