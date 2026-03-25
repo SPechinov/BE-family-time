@@ -248,8 +248,8 @@ export class UsersService implements IUsersService {
 
     const { firstName, lastName } = personalInfoPlain;
     const [encryptedFirstName, encryptedLastName] = await Promise.all([
-      firstName ? this.#encryptionService.encrypt(firstName, encryptionSalt) : Promise.resolve(firstName),
-      lastName ? this.#encryptionService.encrypt(lastName, encryptionSalt) : Promise.resolve(lastName),
+      firstName ? this.#encryptionService.encrypt(firstName, encryptionSalt) : Promise.resolve(null),
+      lastName ? this.#encryptionService.encrypt(lastName, encryptionSalt) : Promise.resolve(null),
     ]);
 
     return new UserPersonalInfoEncryptedEntity({
