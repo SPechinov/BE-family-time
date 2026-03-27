@@ -36,7 +36,7 @@ export class MeRoutesController {
               phone: user.contacts?.phone ?? null,
               firstName: user.personalInfo?.firstName ?? null,
               lastName: user.personalInfo?.lastName ?? null,
-              dateOfBirth: user.dateOfBirth?.toISOString() ?? null,
+              dateOfBirth: user.personalInfo?.dateOfBirth?.toISOString() ?? null,
             });
           },
         );
@@ -49,17 +49,21 @@ export class MeRoutesController {
           },
           async (request, reply) => {
             let personalInfoPlain: UserPersonalInfoPlainEntity | undefined;
-            if (request.body.firstName || request.body.lastName) {
+            if (
+              request.body.firstName !== undefined ||
+              request.body.lastName !== undefined ||
+              request.body.dateOfBirth !== undefined
+            ) {
               personalInfoPlain = new UserPersonalInfoPlainEntity({
                 firstName: request.body.firstName,
                 lastName: request.body.lastName,
+                dateOfBirth: request.body.dateOfBirth,
               });
             }
             const user = await this.#meUseCases.patch({
               logger: request.log,
               userId: request.userId,
               userPatchOnePlainEntity: new UserPatchOnePlainEntity({
-                dateOfBirth: request.body.dateOfBirth,
                 personalInfoPlain,
               }),
             });
@@ -70,7 +74,7 @@ export class MeRoutesController {
               phone: user.contacts?.phone ?? null,
               firstName: user.personalInfo?.firstName ?? null,
               lastName: user.personalInfo?.lastName ?? null,
-              dateOfBirth: user.dateOfBirth?.toISOString() ?? null,
+              dateOfBirth: user.personalInfo?.dateOfBirth?.toISOString() ?? null,
             });
           },
         );

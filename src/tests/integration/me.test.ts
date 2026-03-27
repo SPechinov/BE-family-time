@@ -164,6 +164,58 @@ describe('Me API Integration Tests', () => {
     });
   });
 
+  describe('PATCH /me', () => {
+    it('should update dateOfBirth without changing firstName/lastName', async () => {
+      const dateOfBirth = '1990-01-10T00:00:00.000Z';
+
+      const patchResponse = await request
+        .patch(API_PREFIX)
+        .set({
+          ...DEFAULT_HEADERS,
+          Authorization: `Bearer ${authToken}`,
+        })
+        .send({ dateOfBirth });
+
+      expect(patchResponse.status).toBe(200);
+      expect(patchResponse.body.firstName).toBe(registeredUser.firstName);
+      expect(patchResponse.body.lastName).toBeNull();
+      expect(patchResponse.body.dateOfBirth).toBe(dateOfBirth);
+
+      const getResponse = await request.get(API_PREFIX).set({
+        ...DEFAULT_HEADERS,
+        Authorization: `Bearer ${authToken}`,
+      });
+
+      expect(getResponse.status).toBe(200);
+      expect(getResponse.body.firstName).toBe(registeredUser.firstName);
+      expect(getResponse.body.lastName).toBeNull();
+      expect(getResponse.body.dateOfBirth).toBe(dateOfBirth);
+    });
+
+    it('should clear dateOfBirth with null', async () => {
+      const dateOfBirth = '1991-12-15T00:00:00.000Z';
+
+      await request
+        .patch(API_PREFIX)
+        .set({
+          ...DEFAULT_HEADERS,
+          Authorization: `Bearer ${authToken}`,
+        })
+        .send({ dateOfBirth });
+
+      const clearResponse = await request
+        .patch(API_PREFIX)
+        .set({
+          ...DEFAULT_HEADERS,
+          Authorization: `Bearer ${authToken}`,
+        })
+        .send({ dateOfBirth: null });
+
+      expect(clearResponse.status).toBe(200);
+      expect(clearResponse.body.dateOfBirth).toBeNull();
+    });
+  });
+
   describe('Response schema validation', () => {
     it('should return response matching User schema', async () => {
       const response = await request.get(API_PREFIX).set({

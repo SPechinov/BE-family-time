@@ -4,10 +4,12 @@ export type UserId = UUID & { readonly __brand: 'UserId' };
 export class UserPersonalInfoPlainEntity {
   readonly #firstName?: string | null;
   readonly #lastName?: string | null;
+  readonly #dateOfBirth?: Date | null;
 
-  constructor(props: { firstName?: string | null; lastName?: string | null }) {
+  constructor(props: { firstName?: string | null; lastName?: string | null; dateOfBirth?: Date | null }) {
     this.#firstName = props.firstName;
     this.#lastName = props.lastName;
+    this.#dateOfBirth = props.dateOfBirth;
   }
 
   get firstName() {
@@ -16,6 +18,10 @@ export class UserPersonalInfoPlainEntity {
 
   get lastName() {
     return this.#lastName;
+  }
+
+  get dateOfBirth() {
+    return this.#dateOfBirth;
   }
 }
 
@@ -97,7 +103,6 @@ interface UserEntityProps extends UserBaseEntityProps {
   contactsEncrypted?: UserContactsEncryptedEntity;
   contactsHashed?: UserContactsHashedEntity;
   passwordHashed?: UserPasswordHashedEntity;
-  dateOfBirth?: Date | null;
 }
 export class UserEntity extends UserBaseEntity {
   readonly #encryptionSalt: string;
@@ -105,7 +110,6 @@ export class UserEntity extends UserBaseEntity {
   readonly #contactsEncrypted?: UserContactsEncryptedEntity;
   readonly #contactsHashed?: UserContactsHashedEntity;
   readonly #passwordHashed?: UserPasswordHashedEntity;
-  readonly #dateOfBirth?: Date | null;
 
   constructor(props: UserEntityProps) {
     super(props);
@@ -114,7 +118,6 @@ export class UserEntity extends UserBaseEntity {
     this.#contactsEncrypted = props.contactsEncrypted;
     this.#contactsHashed = props.contactsHashed;
     this.#passwordHashed = props.passwordHashed;
-    this.#dateOfBirth = props.dateOfBirth;
   }
 
   get encryptionSalt(): string {
@@ -136,28 +139,21 @@ export class UserEntity extends UserBaseEntity {
   get passwordHashed() {
     return this.#passwordHashed;
   }
-
-  get dateOfBirth() {
-    return this.#dateOfBirth;
-  }
 }
 
 export interface UserPlainEntityProps extends UserBaseEntityProps {
   personalInfo?: UserPersonalInfoPlainEntity;
   contacts?: UserContactsPlainEntity;
-  dateOfBirth?: Date | null;
 }
 
 export class UserPlainEntity extends UserBaseEntity {
   readonly #personalInfo?: UserPersonalInfoPlainEntity;
   readonly #contacts?: UserContactsPlainEntity;
-  readonly #dateOfBirth?: Date | null;
 
   constructor(props: UserPlainEntityProps) {
     super(props);
     this.#personalInfo = props.personalInfo;
     this.#contacts = props.contacts;
-    this.#dateOfBirth = props.dateOfBirth;
   }
 
   get personalInfo() {
@@ -166,10 +162,6 @@ export class UserPlainEntity extends UserBaseEntity {
 
   get contacts() {
     return this.#contacts;
-  }
-
-  get dateOfBirth() {
-    return this.#dateOfBirth;
   }
 }
 
@@ -283,18 +275,15 @@ export class UserPatchOnePlainEntity {
   readonly #personalInfoPlain?: UserPersonalInfoPlainEntity | null;
   readonly #contactsPlain?: UserContactsPlainEntity | null;
   readonly #passwordPlain?: UserPasswordPlainEntity | null;
-  readonly #dateOfBirth?: Date | null;
 
   constructor(props: {
     personalInfoPlain?: UserPersonalInfoPlainEntity | null;
     contactsPlain?: UserContactsPlainEntity | null;
     passwordPlain?: UserPasswordPlainEntity | null;
-    dateOfBirth?: Date | null;
   }) {
     this.#personalInfoPlain = props.personalInfoPlain;
     this.#contactsPlain = props.contactsPlain;
     this.#passwordPlain = props.passwordPlain;
-    this.#dateOfBirth = props.dateOfBirth;
   }
 
   get personalInfoPlain() {
@@ -308,10 +297,6 @@ export class UserPatchOnePlainEntity {
   get passwordPlain() {
     return this.#passwordPlain;
   }
-
-  get dateOfBirth() {
-    return this.#dateOfBirth;
-  }
 }
 
 export class UserPatchOneEntity {
@@ -319,20 +304,17 @@ export class UserPatchOneEntity {
   readonly #contactsHashed?: UserContactsHashedEntity | null;
   readonly #contactsEncrypted?: UserContactsEncryptedEntity | null;
   readonly #passwordHashed?: UserPasswordHashedEntity | null;
-  readonly #dateOfBirth?: Date | null;
 
   constructor(props: {
     personalInfoEncrypted?: UserPersonalInfoEncryptedEntity | null;
     contactsHashed?: UserContactsHashedEntity | null;
     contactsEncrypted?: UserContactsEncryptedEntity | null;
     passwordHashed?: UserPasswordHashedEntity | null;
-    dateOfBirth?: Date | null;
   }) {
     this.#personalInfoEncrypted = props.personalInfoEncrypted;
     this.#contactsHashed = props.contactsHashed;
     this.#contactsEncrypted = props.contactsEncrypted;
     this.#passwordHashed = props.passwordHashed;
-    this.#dateOfBirth = props.dateOfBirth;
   }
 
   get personalInfoEncrypted() {
@@ -349,9 +331,5 @@ export class UserPatchOneEntity {
 
   get passwordHashed() {
     return this.#passwordHashed;
-  }
-
-  get dateOfBirth() {
-    return this.#dateOfBirth;
   }
 }

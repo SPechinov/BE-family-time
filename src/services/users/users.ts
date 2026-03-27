@@ -120,7 +120,6 @@ export class UsersService implements IUsersService {
       id: userEntity.id,
       createdAt: userEntity.createdAt,
       updatedAt: userEntity.updatedAt,
-      dateOfBirth: userEntity.dateOfBirth,
       contacts,
       personalInfo,
     });
@@ -155,13 +154,42 @@ export class UsersService implements IUsersService {
       return;
     }
 
-    if (!personalInfoEncrypted.firstName && !personalInfoEncrypted.lastName) return;
+    if (
+      personalInfoEncrypted.firstName === undefined &&
+      personalInfoEncrypted.lastName === undefined &&
+      personalInfoEncrypted.dateOfBirth === undefined
+    ) {
+      return;
+    }
 
-    const { firstName, lastName } = personalInfoEncrypted;
+    const { firstName, lastName, dateOfBirth } = personalInfoEncrypted;
     return new UserPersonalInfoPlainEntity({
-      firstName: firstName ? await this.#encryptionService.decrypt(firstName, encryptionSalt) : undefined,
-      lastName: lastName ? await this.#encryptionService.decrypt(lastName, encryptionSalt) : undefined,
+      firstName:
+        firstName === undefined
+          ? undefined
+          : firstName === null
+            ? null
+            : await this.#decryptOptionalField(firstName, encryptionSalt),
+      lastName:
+        lastName === undefined
+          ? undefined
+          : lastName === null
+            ? null
+            : await this.#decryptOptionalField(lastName, encryptionSalt),
+      dateOfBirth,
     });
+  }
+
+  async #decryptOptionalField(value: string, encryptionSalt: string): Promise<string | null> {
+    if (value.trim() === '' || value.split(':').length !== 3) {
+      return null;
+    }
+
+    try {
+      return await this.#encryptionService.decrypt(value, encryptionSalt);
+    } catch {
+      return null;
+    }
   }
 
   #convertUserFindOnePlainToHashedOrThrow(userFindOnePlainEntity: UserFindOnePlainEntity): UserFindOneEntity {
@@ -209,7 +237,6 @@ export class UsersService implements IUsersService {
       contactsEncrypted,
       contactsHashed,
       passwordHashed,
-      dateOfBirth: userPatchOnePlainEntity.dateOfBirth,
     });
   }
 
@@ -248,13 +275,22 @@ export class UsersService implements IUsersService {
 
     const { firstName, lastName } = personalInfoPlain;
     const [encryptedFirstName, encryptedLastName] = await Promise.all([
-      firstName ? this.#encryptionService.encrypt(firstName, encryptionSalt) : Promise.resolve(null),
-      lastName ? this.#encryptionService.encrypt(lastName, encryptionSalt) : Promise.resolve(null),
+      firstName === undefined
+        ? Promise.resolve(undefined)
+        : firstName === null
+          ? Promise.resolve(null)
+          : this.#encryptionService.encrypt(firstName, encryptionSalt),
+      lastName === undefined
+        ? Promise.resolve(undefined)
+        : lastName === null
+          ? Promise.resolve(null)
+          : this.#encryptionService.encrypt(lastName, encryptionSalt),
     ]);
 
     return new UserPersonalInfoEncryptedEntity({
       firstName: encryptedFirstName,
       lastName: encryptedLastName,
+      dateOfBirth: personalInfoPlain.dateOfBirth,
     });
   }
 

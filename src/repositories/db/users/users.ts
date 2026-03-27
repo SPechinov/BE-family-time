@@ -164,16 +164,21 @@ export class UsersRepository implements IUsersRepository {
     let valueIndex = startValueIndex;
     if (userPatchEntity.personalInfoEncrypted !== undefined) {
       if (userPatchEntity.personalInfoEncrypted === null) {
-        setParts.push(`first_name_encrypted = NULL`, `last_name_encrypted = NULL`);
+        setParts.push(`first_name_encrypted = NULL`, `last_name_encrypted = NULL`, `date_of_birth = NULL`);
       } else {
         if (userPatchEntity.personalInfoEncrypted.firstName !== undefined) {
           setParts.push(`first_name_encrypted = $${valueIndex}`);
-          updateValues.push(userPatchEntity.personalInfoEncrypted.firstName || '');
+          updateValues.push(userPatchEntity.personalInfoEncrypted.firstName || null);
           valueIndex++;
         }
         if (userPatchEntity.personalInfoEncrypted.lastName !== undefined) {
           setParts.push(`last_name_encrypted = $${valueIndex}`);
           updateValues.push(userPatchEntity.personalInfoEncrypted.lastName || null);
+          valueIndex++;
+        }
+        if (userPatchEntity.personalInfoEncrypted.dateOfBirth !== undefined) {
+          setParts.push(`date_of_birth = $${valueIndex}`);
+          updateValues.push(userPatchEntity.personalInfoEncrypted.dateOfBirth || null);
           valueIndex++;
         }
       }
@@ -229,18 +234,19 @@ export class UsersRepository implements IUsersRepository {
       );
       valueIndex++;
     }
-    if (userPatchEntity.dateOfBirth !== undefined) {
-      setParts.push(`date_of_birth = $${valueIndex}`);
-      updateValues.push(userPatchEntity.dateOfBirth ? userPatchEntity.dateOfBirth : null);
-      valueIndex++;
-    }
     return { setParts, updateValues, nextValueIndex: valueIndex };
   }
 
   #buildUserEntity(row: IUserRowData) {
+    const firstNameEncrypted = row.first_name_encrypted?.toString('utf-8') || null;
+    const lastNameEncrypted = row.last_name_encrypted?.toString('utf-8') || null;
+    const emailEncrypted = row.email_encrypted?.toString('utf-8') || null;
+    const phoneEncrypted = row.phone_encrypted?.toString('utf-8') || null;
+
     const personalInfoEncrypted = new UserPersonalInfoEncryptedEntity({
-      firstName: row.first_name_encrypted?.toString('utf-8'),
-      lastName: row.last_name_encrypted?.toString('utf-8'),
+      firstName: firstNameEncrypted,
+      lastName: lastNameEncrypted,
+      dateOfBirth: row.date_of_birth,
     });
 
     const contactsHashed = new UserContactsHashedEntity({
@@ -249,8 +255,8 @@ export class UsersRepository implements IUsersRepository {
     });
 
     const contactsEncrypted = new UserContactsEncryptedEntity({
-      email: row.email_encrypted?.toString('utf-8'),
-      phone: row.phone_encrypted?.toString('utf-8'),
+      email: emailEncrypted,
+      phone: phoneEncrypted,
     });
 
     const passwordHashed = row.password_hashed
@@ -264,7 +270,6 @@ export class UsersRepository implements IUsersRepository {
       contactsHashed,
       contactsEncrypted,
       passwordHashed,
-      dateOfBirth: row.date_of_birth,
       createdAt: row.created_at,
       updatedAt: row.updated_at,
     });
