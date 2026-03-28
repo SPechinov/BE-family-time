@@ -1,5 +1,5 @@
 import z from 'zod';
-import { CalendarEventId, GroupId, UserId } from '@/entities';
+import { CalendarEventId, GroupId, UserId, USER_LANGUAGES } from '@/entities';
 import { isXss } from '@/api/rest/schemas/utils';
 
 const isValidIanaTimezone = (value: string): boolean => {
@@ -24,6 +24,7 @@ export const GLOBAL_SCHEMAS = {
       .refine((v) => !isNaN(Number(v)), { message: 'Invalid number' }),
   userAgent: z.string().min(1),
   timeZone: z.string().min(1).refine(isValidIanaTimezone, { message: 'Invalid IANA timezone' }),
+  language: z.enum(USER_LANGUAGES),
   groupName: z.string().min(1).max(50).refine(isXss, { message: 'Invalid characters in groupName' }),
   groupDescription: z.string().max(1000).refine(isXss, { message: 'Invalid characters in groupDescription' }),
   groupId: z.uuidv4().transform((val) => val as GroupId),
@@ -57,6 +58,7 @@ export const USER_SCHEMA = z
   .object({
     id: GLOBAL_SCHEMAS.userId,
     timeZone: GLOBAL_SCHEMAS.timeZone,
+    language: GLOBAL_SCHEMAS.language,
     email: GLOBAL_SCHEMAS.email.nullable(),
     phone: z.string().nullable(),
     firstName: GLOBAL_SCHEMAS.firstName.nullable(),

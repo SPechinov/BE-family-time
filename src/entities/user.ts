@@ -1,6 +1,10 @@
 import { UUID } from 'node:crypto';
 export type UserId = UUID & { readonly __brand: 'UserId' };
 
+export const USER_LANGUAGES = ['ru', 'en'] as const;
+
+export type UserLanguage = (typeof USER_LANGUAGES)[number];
+
 export class UserPersonalInfoPlainEntity {
   readonly #firstName?: string | null;
   readonly #lastName?: string | null;
@@ -100,6 +104,7 @@ class UserBaseEntity {
 interface UserEntityProps extends UserBaseEntityProps {
   encryptionSalt: string;
   timeZone: string;
+  language: UserLanguage;
   personalInfoEncrypted?: UserPersonalInfoEncryptedEntity;
   contactsEncrypted?: UserContactsEncryptedEntity;
   contactsHashed?: UserContactsHashedEntity;
@@ -108,6 +113,7 @@ interface UserEntityProps extends UserBaseEntityProps {
 export class UserEntity extends UserBaseEntity {
   readonly #encryptionSalt: string;
   readonly #timeZone: string;
+  readonly #language: UserLanguage;
   readonly #personalInfoEncrypted?: UserPersonalInfoEncryptedEntity;
   readonly #contactsEncrypted?: UserContactsEncryptedEntity;
   readonly #contactsHashed?: UserContactsHashedEntity;
@@ -117,6 +123,7 @@ export class UserEntity extends UserBaseEntity {
     super(props);
     this.#encryptionSalt = props.encryptionSalt;
     this.#timeZone = props.timeZone;
+    this.#language = props.language;
     this.#personalInfoEncrypted = props.personalInfoEncrypted;
     this.#contactsEncrypted = props.contactsEncrypted;
     this.#contactsHashed = props.contactsHashed;
@@ -129,6 +136,10 @@ export class UserEntity extends UserBaseEntity {
 
   get timeZone(): string {
     return this.#timeZone;
+  }
+
+  get language(): UserLanguage {
+    return this.#language;
   }
 
   get personalInfoEncrypted() {
@@ -150,24 +161,31 @@ export class UserEntity extends UserBaseEntity {
 
 export interface UserPlainEntityProps extends UserBaseEntityProps {
   timeZone: string;
+  language: UserLanguage;
   personalInfo?: UserPersonalInfoPlainEntity;
   contacts?: UserContactsPlainEntity;
 }
 
 export class UserPlainEntity extends UserBaseEntity {
   readonly #timeZone: string;
+  readonly #language: UserLanguage;
   readonly #personalInfo?: UserPersonalInfoPlainEntity;
   readonly #contacts?: UserContactsPlainEntity;
 
   constructor(props: UserPlainEntityProps) {
     super(props);
     this.#timeZone = props.timeZone;
+    this.#language = props.language;
     this.#personalInfo = props.personalInfo;
     this.#contacts = props.contacts;
   }
 
   get timeZone() {
     return this.#timeZone;
+  }
+
+  get language() {
+    return this.#language;
   }
 
   get personalInfo() {
@@ -184,14 +202,17 @@ export class UserCreatePlainEntity {
   readonly #contactsPlain?: UserContactsPlainEntity;
   readonly #passwordPlain?: UserPasswordPlainEntity;
   readonly #timeZone: string;
+  readonly #language: UserLanguage;
 
   constructor(props: {
     timeZone: string;
+    language: UserLanguage;
     personalInfoPlain?: UserPersonalInfoPlainEntity;
     contactsPlain?: UserContactsPlainEntity;
     passwordPlain?: UserPasswordPlainEntity;
   }) {
     this.#timeZone = props.timeZone;
+    this.#language = props.language;
     this.#personalInfoPlain = props.personalInfoPlain;
     this.#contactsPlain = props.contactsPlain;
     this.#passwordPlain = props.passwordPlain;
@@ -199,6 +220,10 @@ export class UserCreatePlainEntity {
 
   get timeZone() {
     return this.#timeZone;
+  }
+
+  get language() {
+    return this.#language;
   }
 
   get personalInfoPlain() {
@@ -217,6 +242,7 @@ export class UserCreatePlainEntity {
 export class UserCreateEntity {
   readonly #encryptionSalt: string;
   readonly #timeZone: string;
+  readonly #language: UserLanguage;
   readonly #personalInfoEncrypted?: UserPersonalInfoEncryptedEntity;
   readonly #contactsHashed?: UserContactsHashedEntity;
   readonly #contactsEncrypted?: UserContactsEncryptedEntity;
@@ -225,6 +251,7 @@ export class UserCreateEntity {
   constructor(props: {
     encryptionSalt: string;
     timeZone: string;
+    language: UserLanguage;
     personalInfoEncrypted?: UserPersonalInfoEncryptedEntity;
     contactsHashed?: UserContactsHashedEntity;
     contactsEncrypted?: UserContactsEncryptedEntity;
@@ -232,6 +259,7 @@ export class UserCreateEntity {
   }) {
     this.#encryptionSalt = props.encryptionSalt;
     this.#timeZone = props.timeZone;
+    this.#language = props.language;
     this.#personalInfoEncrypted = props.personalInfoEncrypted;
     this.#contactsHashed = props.contactsHashed;
     this.#contactsEncrypted = props.contactsEncrypted;
@@ -244,6 +272,10 @@ export class UserCreateEntity {
 
   get timeZone() {
     return this.#timeZone;
+  }
+
+  get language() {
+    return this.#language;
   }
 
   get personalInfoEncrypted() {
@@ -304,17 +336,20 @@ export class UserPatchOnePlainEntity {
   readonly #contactsPlain?: UserContactsPlainEntity | null;
   readonly #passwordPlain?: UserPasswordPlainEntity | null;
   readonly #timeZone?: string;
+  readonly #language?: UserLanguage;
 
   constructor(props: {
     personalInfoPlain?: UserPersonalInfoPlainEntity | null;
     contactsPlain?: UserContactsPlainEntity | null;
     passwordPlain?: UserPasswordPlainEntity | null;
     timeZone?: string;
+    language?: UserLanguage;
   }) {
     this.#personalInfoPlain = props.personalInfoPlain;
     this.#contactsPlain = props.contactsPlain;
     this.#passwordPlain = props.passwordPlain;
     this.#timeZone = props.timeZone;
+    this.#language = props.language;
   }
 
   get personalInfoPlain() {
@@ -332,6 +367,10 @@ export class UserPatchOnePlainEntity {
   get timeZone() {
     return this.#timeZone;
   }
+
+  get language() {
+    return this.#language;
+  }
 }
 
 export class UserPatchOneEntity {
@@ -340,6 +379,7 @@ export class UserPatchOneEntity {
   readonly #contactsEncrypted?: UserContactsEncryptedEntity | null;
   readonly #passwordHashed?: UserPasswordHashedEntity | null;
   readonly #timeZone?: string;
+  readonly #language?: UserLanguage;
 
   constructor(props: {
     personalInfoEncrypted?: UserPersonalInfoEncryptedEntity | null;
@@ -347,12 +387,14 @@ export class UserPatchOneEntity {
     contactsEncrypted?: UserContactsEncryptedEntity | null;
     passwordHashed?: UserPasswordHashedEntity | null;
     timeZone?: string;
+    language?: UserLanguage;
   }) {
     this.#personalInfoEncrypted = props.personalInfoEncrypted;
     this.#contactsHashed = props.contactsHashed;
     this.#contactsEncrypted = props.contactsEncrypted;
     this.#passwordHashed = props.passwordHashed;
     this.#timeZone = props.timeZone;
+    this.#language = props.language;
   }
 
   get personalInfoEncrypted() {
@@ -373,5 +415,9 @@ export class UserPatchOneEntity {
 
   get timeZone() {
     return this.#timeZone;
+  }
+
+  get language() {
+    return this.#language;
   }
 }

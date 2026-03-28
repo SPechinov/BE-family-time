@@ -31,6 +31,7 @@ export class UsersRepository implements IUsersRepository {
       INSERT INTO users (
         encryption_salt,
         time_zone,
+        language,
         email_hashed,
         email_encrypted,
         phone_hashed,
@@ -39,13 +40,14 @@ export class UsersRepository implements IUsersRepository {
         first_name_encrypted,
         last_name_encrypted
       )
-      VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)
+      VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)
       RETURNING *
     `;
 
     const values = [
       userCreateEntity.encryptionSalt,
       userCreateEntity.timeZone,
+      userCreateEntity.language,
       userCreateEntity.contactsHashed?.email,
       userCreateEntity.contactsEncrypted?.email,
       userCreateEntity.contactsHashed?.phone,
@@ -241,6 +243,11 @@ export class UsersRepository implements IUsersRepository {
       updateValues.push(userPatchEntity.timeZone);
       valueIndex++;
     }
+    if (userPatchEntity.language !== undefined) {
+      setParts.push(`language = $${valueIndex}`);
+      updateValues.push(userPatchEntity.language);
+      valueIndex++;
+    }
     return { setParts, updateValues, nextValueIndex: valueIndex };
   }
 
@@ -274,6 +281,7 @@ export class UsersRepository implements IUsersRepository {
       id: row.id,
       encryptionSalt: row.encryption_salt,
       timeZone: row.time_zone,
+      language: row.language,
       personalInfoEncrypted,
       contactsHashed,
       contactsEncrypted,

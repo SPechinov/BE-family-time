@@ -111,6 +111,7 @@ describe('Auth API Integration Tests', () => {
         firstName: user.firstName,
         password: user.password,
         timeZone: 'Europe/Moscow',
+        language: 'ru',
       });
 
       expect(response.status).toBe(201);
@@ -132,6 +133,7 @@ describe('Auth API Integration Tests', () => {
         firstName: user.firstName,
         password: user.password,
         timeZone: 'Europe/Moscow',
+        language: 'ru',
       });
 
       expect(response.status).toBe(400);
@@ -147,6 +149,7 @@ describe('Auth API Integration Tests', () => {
         firstName: user.firstName,
         password: 'weak',
         timeZone: 'Europe/Moscow',
+        language: 'ru',
       });
 
       expect(response.status).toBe(422);
@@ -161,6 +164,7 @@ describe('Auth API Integration Tests', () => {
         otpCode,
         password: user.password,
         timeZone: 'Europe/Moscow',
+        language: 'ru',
       });
 
       expect(response.status).toBe(422);
@@ -185,6 +189,7 @@ describe('Auth API Integration Tests', () => {
         firstName: user.firstName,
         password: user.password,
         timeZone: 'Europe/Moscow',
+        language: 'ru',
       });
 
       expect(endResponse.status).toBe(201);
@@ -225,6 +230,7 @@ describe('Auth API Integration Tests', () => {
         firstName: user.firstName,
         password: user.password,
         timeZone: 'Europe/Moscow',
+        language: 'ru',
       });
 
       // Try to login with wrong password
@@ -266,6 +272,7 @@ describe('Auth API Integration Tests', () => {
         firstName: user.firstName,
         password: user.password,
         timeZone: 'Europe/Moscow',
+        language: 'ru',
       });
 
       // Try to login without user-agent
@@ -299,6 +306,7 @@ describe('Auth API Integration Tests', () => {
         firstName: user.firstName,
         password: user.password,
         timeZone: 'Europe/Moscow',
+        language: 'ru',
       });
     });
 
@@ -347,6 +355,7 @@ describe('Auth API Integration Tests', () => {
         firstName: user.firstName,
         password: user.password,
         timeZone: 'Europe/Moscow',
+        language: 'ru',
       });
 
       // Start password recovery
@@ -416,6 +425,7 @@ describe('Auth API Integration Tests', () => {
         firstName: user.firstName,
         password: user.password,
         timeZone: 'Europe/Moscow',
+        language: 'ru',
       });
 
       const loginResponse = await request.post(`${API_PREFIX}/login`).set(DEFAULT_HEADERS).send({
@@ -589,6 +599,7 @@ describe('Auth API Integration Tests', () => {
         firstName: user.firstName,
         password: user.password,
         timeZone: 'Europe/Moscow',
+        language: 'ru',
       });
 
       const loginResponse = await request.post(`${API_PREFIX}/login`).set(DEFAULT_HEADERS).send({

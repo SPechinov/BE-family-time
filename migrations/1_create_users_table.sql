@@ -11,6 +11,7 @@ CREATE TABLE IF NOT EXISTS users (
     last_name_encrypted BYTEA,
     date_of_birth TIMESTAMP,
     time_zone TEXT NOT NULL DEFAULT 'Europe/Moscow',
+    language TEXT NOT NULL DEFAULT 'ru' CHECK (language IN ('ru','en')),
     created_at TIMESTAMP DEFAULT NOW(),
     updated_at TIMESTAMP DEFAULT NOW()
     );

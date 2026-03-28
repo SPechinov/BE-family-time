@@ -38,6 +38,7 @@ const SCHEMA_REGISTRATION_END = {
     firstName: GLOBAL_SCHEMAS.firstName.nonempty(),
     password: GLOBAL_SCHEMAS.password.nonempty(),
     timeZone: GLOBAL_SCHEMAS.timeZone,
+    language: GLOBAL_SCHEMAS.language,
   }),
   response: createResponseSchema({
     201: z.void(),
