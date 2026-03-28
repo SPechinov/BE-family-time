@@ -32,6 +32,7 @@ export class MeRoutesController {
             });
             reply.status(200).send({
               id: user.id,
+              timeZone: user.timeZone,
               email: user.contacts?.email ?? null,
               phone: user.contacts?.phone ?? null,
               firstName: user.personalInfo?.firstName ?? null,
@@ -65,11 +66,13 @@ export class MeRoutesController {
               userId: request.userId,
               userPatchOnePlainEntity: new UserPatchOnePlainEntity({
                 personalInfoPlain,
+                timeZone: request.body.timeZone,
               }),
             });
 
             reply.status(200).send({
               id: user.id,
+              timeZone: user.timeZone,
               email: user.contacts?.email ?? null,
               phone: user.contacts?.phone ?? null,
               firstName: user.personalInfo?.firstName ?? null,

@@ -99,6 +99,7 @@ class UserBaseEntity {
 
 interface UserEntityProps extends UserBaseEntityProps {
   encryptionSalt: string;
+  timeZone: string;
   personalInfoEncrypted?: UserPersonalInfoEncryptedEntity;
   contactsEncrypted?: UserContactsEncryptedEntity;
   contactsHashed?: UserContactsHashedEntity;
@@ -106,6 +107,7 @@ interface UserEntityProps extends UserBaseEntityProps {
 }
 export class UserEntity extends UserBaseEntity {
   readonly #encryptionSalt: string;
+  readonly #timeZone: string;
   readonly #personalInfoEncrypted?: UserPersonalInfoEncryptedEntity;
   readonly #contactsEncrypted?: UserContactsEncryptedEntity;
   readonly #contactsHashed?: UserContactsHashedEntity;
@@ -114,6 +116,7 @@ export class UserEntity extends UserBaseEntity {
   constructor(props: UserEntityProps) {
     super(props);
     this.#encryptionSalt = props.encryptionSalt;
+    this.#timeZone = props.timeZone;
     this.#personalInfoEncrypted = props.personalInfoEncrypted;
     this.#contactsEncrypted = props.contactsEncrypted;
     this.#contactsHashed = props.contactsHashed;
@@ -122,6 +125,10 @@ export class UserEntity extends UserBaseEntity {
 
   get encryptionSalt(): string {
     return this.#encryptionSalt;
+  }
+
+  get timeZone(): string {
+    return this.#timeZone;
   }
 
   get personalInfoEncrypted() {
@@ -142,18 +149,25 @@ export class UserEntity extends UserBaseEntity {
 }
 
 export interface UserPlainEntityProps extends UserBaseEntityProps {
+  timeZone: string;
   personalInfo?: UserPersonalInfoPlainEntity;
   contacts?: UserContactsPlainEntity;
 }
 
 export class UserPlainEntity extends UserBaseEntity {
+  readonly #timeZone: string;
   readonly #personalInfo?: UserPersonalInfoPlainEntity;
   readonly #contacts?: UserContactsPlainEntity;
 
   constructor(props: UserPlainEntityProps) {
     super(props);
+    this.#timeZone = props.timeZone;
     this.#personalInfo = props.personalInfo;
     this.#contacts = props.contacts;
+  }
+
+  get timeZone() {
+    return this.#timeZone;
   }
 
   get personalInfo() {
@@ -169,15 +183,22 @@ export class UserCreatePlainEntity {
   readonly #personalInfoPlain?: UserPersonalInfoPlainEntity;
   readonly #contactsPlain?: UserContactsPlainEntity;
   readonly #passwordPlain?: UserPasswordPlainEntity;
+  readonly #timeZone: string;
 
   constructor(props: {
+    timeZone: string;
     personalInfoPlain?: UserPersonalInfoPlainEntity;
     contactsPlain?: UserContactsPlainEntity;
     passwordPlain?: UserPasswordPlainEntity;
   }) {
+    this.#timeZone = props.timeZone;
     this.#personalInfoPlain = props.personalInfoPlain;
     this.#contactsPlain = props.contactsPlain;
     this.#passwordPlain = props.passwordPlain;
+  }
+
+  get timeZone() {
+    return this.#timeZone;
   }
 
   get personalInfoPlain() {
@@ -195,6 +216,7 @@ export class UserCreatePlainEntity {
 
 export class UserCreateEntity {
   readonly #encryptionSalt: string;
+  readonly #timeZone: string;
   readonly #personalInfoEncrypted?: UserPersonalInfoEncryptedEntity;
   readonly #contactsHashed?: UserContactsHashedEntity;
   readonly #contactsEncrypted?: UserContactsEncryptedEntity;
@@ -202,12 +224,14 @@ export class UserCreateEntity {
 
   constructor(props: {
     encryptionSalt: string;
+    timeZone: string;
     personalInfoEncrypted?: UserPersonalInfoEncryptedEntity;
     contactsHashed?: UserContactsHashedEntity;
     contactsEncrypted?: UserContactsEncryptedEntity;
     passwordHashed?: UserPasswordHashedEntity;
   }) {
     this.#encryptionSalt = props.encryptionSalt;
+    this.#timeZone = props.timeZone;
     this.#personalInfoEncrypted = props.personalInfoEncrypted;
     this.#contactsHashed = props.contactsHashed;
     this.#contactsEncrypted = props.contactsEncrypted;
@@ -216,6 +240,10 @@ export class UserCreateEntity {
 
   get encryptionSalt() {
     return this.#encryptionSalt;
+  }
+
+  get timeZone() {
+    return this.#timeZone;
   }
 
   get personalInfoEncrypted() {
@@ -275,15 +303,18 @@ export class UserPatchOnePlainEntity {
   readonly #personalInfoPlain?: UserPersonalInfoPlainEntity | null;
   readonly #contactsPlain?: UserContactsPlainEntity | null;
   readonly #passwordPlain?: UserPasswordPlainEntity | null;
+  readonly #timeZone?: string;
 
   constructor(props: {
     personalInfoPlain?: UserPersonalInfoPlainEntity | null;
     contactsPlain?: UserContactsPlainEntity | null;
     passwordPlain?: UserPasswordPlainEntity | null;
+    timeZone?: string;
   }) {
     this.#personalInfoPlain = props.personalInfoPlain;
     this.#contactsPlain = props.contactsPlain;
     this.#passwordPlain = props.passwordPlain;
+    this.#timeZone = props.timeZone;
   }
 
   get personalInfoPlain() {
@@ -297,6 +328,10 @@ export class UserPatchOnePlainEntity {
   get passwordPlain() {
     return this.#passwordPlain;
   }
+
+  get timeZone() {
+    return this.#timeZone;
+  }
 }
 
 export class UserPatchOneEntity {
@@ -304,17 +339,20 @@ export class UserPatchOneEntity {
   readonly #contactsHashed?: UserContactsHashedEntity | null;
   readonly #contactsEncrypted?: UserContactsEncryptedEntity | null;
   readonly #passwordHashed?: UserPasswordHashedEntity | null;
+  readonly #timeZone?: string;
 
   constructor(props: {
     personalInfoEncrypted?: UserPersonalInfoEncryptedEntity | null;
     contactsHashed?: UserContactsHashedEntity | null;
     contactsEncrypted?: UserContactsEncryptedEntity | null;
     passwordHashed?: UserPasswordHashedEntity | null;
+    timeZone?: string;
   }) {
     this.#personalInfoEncrypted = props.personalInfoEncrypted;
     this.#contactsHashed = props.contactsHashed;
     this.#contactsEncrypted = props.contactsEncrypted;
     this.#passwordHashed = props.passwordHashed;
+    this.#timeZone = props.timeZone;
   }
 
   get personalInfoEncrypted() {
@@ -331,5 +369,9 @@ export class UserPatchOneEntity {
 
   get passwordHashed() {
     return this.#passwordHashed;
+  }
+
+  get timeZone() {
+    return this.#timeZone;
   }
 }

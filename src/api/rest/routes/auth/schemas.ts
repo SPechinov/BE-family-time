@@ -37,6 +37,7 @@ const SCHEMA_REGISTRATION_END = {
     otpCode: GLOBAL_SCHEMAS.otpCode(CONFIG.codesLength.registration),
     firstName: GLOBAL_SCHEMAS.firstName.nonempty(),
     password: GLOBAL_SCHEMAS.password.nonempty(),
+    timeZone: GLOBAL_SCHEMAS.timeZone,
   }),
   response: createResponseSchema({
     201: z.void(),

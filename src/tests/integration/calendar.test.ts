@@ -58,6 +58,7 @@ async function registerAndLogin(request: any): Promise<AuthTokens> {
     otpCode,
     firstName: user.firstName,
     password: user.password,
+    timeZone: 'Europe/Moscow',
   });
 
   const loginResponse = await request.post('/api/auth/login').set(DEFAULT_HEADERS).send({

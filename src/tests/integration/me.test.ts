@@ -66,6 +66,7 @@ describe('Me API Integration Tests', () => {
       otpCode,
       firstName: user.firstName,
       password: user.password,
+      timeZone: 'Europe/Moscow',
     });
 
     const loginResponse = await request.post('/api/auth/login').set(DEFAULT_HEADERS).send({

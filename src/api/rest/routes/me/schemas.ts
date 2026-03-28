@@ -15,6 +15,7 @@ const PATCH = {
     firstName: GLOBAL_SCHEMAS.firstName.nullable().optional(),
     lastName: GLOBAL_SCHEMAS.lastName.nullable().optional().or(GLOBAL_SCHEMAS.emptyString),
     dateOfBirth: z.coerce.date().nullable().optional(),
+    timeZone: GLOBAL_SCHEMAS.timeZone.optional(),
   }),
   response: createResponseSchema({
     200: USER_SCHEMA,

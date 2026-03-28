@@ -56,6 +56,7 @@ export class UsersService implements IUsersService {
     return this.#usersRepository.createOne(
       new UserCreateEntity({
         encryptionSalt,
+        timeZone: userCreatePlainEntity.timeZone,
         personalInfoEncrypted: personalInfoEncrypted ?? undefined,
         contactsHashed: contactsHashed ?? undefined,
         contactsEncrypted: contactsEncrypted ?? undefined,
@@ -118,6 +119,7 @@ export class UsersService implements IUsersService {
 
     return new UserPlainEntity({
       id: userEntity.id,
+      timeZone: userEntity.timeZone,
       createdAt: userEntity.createdAt,
       updatedAt: userEntity.updatedAt,
       contacts,
@@ -217,7 +219,7 @@ export class UsersService implements IUsersService {
     userPatchOnePlainEntity: UserPatchOnePlainEntity;
     encryptionSalt: string;
   }): Promise<UserPatchOneEntity> {
-    const { personalInfoPlain, contactsPlain, passwordPlain } = userPatchOnePlainEntity;
+    const { personalInfoPlain, contactsPlain, passwordPlain, timeZone } = userPatchOnePlainEntity;
 
     const personalInfoEncrypted = await this.#preparePersonalInfo(personalInfoPlain, encryptionSalt);
     const { contactsEncrypted, contactsHashed } = await this.#prepareContacts(contactsPlain, encryptionSalt);
@@ -227,7 +229,8 @@ export class UsersService implements IUsersService {
       personalInfoEncrypted === undefined &&
       contactsEncrypted === undefined &&
       contactsHashed === undefined &&
-      passwordHashed === undefined
+      passwordHashed === undefined &&
+      timeZone === undefined
     ) {
       throw new ErrorInvalidUserPatchParams();
     }
@@ -237,6 +240,7 @@ export class UsersService implements IUsersService {
       contactsEncrypted,
       contactsHashed,
       passwordHashed,
+      timeZone,
     });
   }
 

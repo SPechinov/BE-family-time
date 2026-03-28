@@ -11,6 +11,7 @@ export interface IUserRowData {
   phone_hashed?: Buffer | null;
   password_hashed?: Buffer | null;
   date_of_birth?: Date | null;
+  time_zone: string;
   created_at: Date;
   updated_at: Date;
 }

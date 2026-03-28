@@ -30,6 +30,7 @@ export class UsersRepository implements IUsersRepository {
     const query = `
       INSERT INTO users (
         encryption_salt,
+        time_zone,
         email_hashed,
         email_encrypted,
         phone_hashed,
@@ -38,12 +39,13 @@ export class UsersRepository implements IUsersRepository {
         first_name_encrypted,
         last_name_encrypted
       )
-      VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
+      VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)
       RETURNING *
     `;
 
     const values = [
       userCreateEntity.encryptionSalt,
+      userCreateEntity.timeZone,
       userCreateEntity.contactsHashed?.email,
       userCreateEntity.contactsEncrypted?.email,
       userCreateEntity.contactsHashed?.phone,
@@ -234,6 +236,11 @@ export class UsersRepository implements IUsersRepository {
       );
       valueIndex++;
     }
+    if (userPatchEntity.timeZone !== undefined) {
+      setParts.push(`time_zone = $${valueIndex}`);
+      updateValues.push(userPatchEntity.timeZone);
+      valueIndex++;
+    }
     return { setParts, updateValues, nextValueIndex: valueIndex };
   }
 
@@ -266,6 +273,7 @@ export class UsersRepository implements IUsersRepository {
     return new UserEntity({
       id: row.id,
       encryptionSalt: row.encryption_salt,
+      timeZone: row.time_zone,
       personalInfoEncrypted,
       contactsHashed,
       contactsEncrypted,

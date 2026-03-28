@@ -95,6 +95,7 @@ export class AuthRoutesController {
               logger: request.log,
               otpCode: request.body.otpCode,
               userCreatePlainEntity: new UserCreatePlainEntity({
+                timeZone: request.body.timeZone,
                 contactsPlain: new UserContactsPlainEntity({ email: request.body.email }),
                 personalInfoPlain: new UserPersonalInfoPlainEntity({
                   firstName: request.body.firstName,
