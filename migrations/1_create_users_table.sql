@@ -10,6 +10,7 @@ CREATE TABLE IF NOT EXISTS users (
     first_name_encrypted BYTEA,
     last_name_encrypted BYTEA,
     date_of_birth TIMESTAMP,
+    time_zone TEXT NOT NULL DEFAULT 'Europe/Moscow',
     created_at TIMESTAMP DEFAULT NOW(),
     updated_at TIMESTAMP DEFAULT NOW()
     );
