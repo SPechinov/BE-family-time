@@ -59,16 +59,16 @@ export const USER_SCHEMA = z
     id: GLOBAL_SCHEMAS.userId,
     timeZone: GLOBAL_SCHEMAS.timeZone,
     language: GLOBAL_SCHEMAS.language,
-    email: GLOBAL_SCHEMAS.email.nullable(),
-    phone: z.string().nullable(),
-    firstName: GLOBAL_SCHEMAS.firstName.nullable(),
-    lastName: GLOBAL_SCHEMAS.lastName.nullable(),
-    dateOfBirth: z.string().nullable(),
+    email: GLOBAL_SCHEMAS.email,
+    phone: z.string(),
+    firstName: GLOBAL_SCHEMAS.firstName,
+    lastName: GLOBAL_SCHEMAS.lastName,
+    dateOfBirth: z.string(),
   })
   .register(z.globalRegistry, { id: 'User' });
 
 export const GROUP_SCHEMA = z
-  .object({ id: GLOBAL_SCHEMAS.groupId, name: z.string(), description: z.string().optional() })
+  .object({ id: GLOBAL_SCHEMAS.groupId, name: z.string(), description: z.string() })
   .register(z.globalRegistry, { id: 'Group' });
 
 export const CALENDAR_EVENT_SCHEMA = z

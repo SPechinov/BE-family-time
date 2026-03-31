@@ -34,11 +34,11 @@ export class MeRoutesController {
               id: user.id,
               timeZone: user.timeZone,
               language: user.language,
-              email: user.contacts?.email ?? null,
-              phone: user.contacts?.phone ?? null,
-              firstName: user.personalInfo?.firstName ?? null,
-              lastName: user.personalInfo?.lastName ?? null,
-              dateOfBirth: user.personalInfo?.dateOfBirth?.toISOString() ?? null,
+              email: user.contacts?.email ?? '',
+              phone: user.contacts?.phone ?? '',
+              firstName: user.personalInfo?.firstName ?? '',
+              lastName: user.personalInfo?.lastName ?? '',
+              dateOfBirth: user.personalInfo?.dateOfBirth?.toISOString() ?? '',
             });
           },
         );
@@ -76,11 +76,11 @@ export class MeRoutesController {
               id: user.id,
               timeZone: user.timeZone,
               language: user.language,
-              email: user.contacts?.email ?? null,
-              phone: user.contacts?.phone ?? null,
-              firstName: user.personalInfo?.firstName ?? null,
-              lastName: user.personalInfo?.lastName ?? null,
-              dateOfBirth: user.personalInfo?.dateOfBirth?.toISOString() ?? null,
+              email: user.contacts?.email ?? '',
+              phone: user.contacts?.phone ?? '',
+              firstName: user.personalInfo?.firstName ?? '',
+              lastName: user.personalInfo?.lastName ?? '',
+              dateOfBirth: user.personalInfo?.dateOfBirth?.toISOString() ?? '',
             });
           },
         );

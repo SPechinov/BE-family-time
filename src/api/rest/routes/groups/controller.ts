@@ -34,7 +34,7 @@ export class GroupsRoutesController {
               groups.map((group) => ({
                 id: group.id,
                 name: group.name,
-                description: group.description,
+                description: group.description ?? '',
               })),
             );
           },
@@ -75,7 +75,7 @@ export class GroupsRoutesController {
             reply.status(200).send({
               id: group.id,
               name: group.name,
-              description: group.description,
+              description: group.description ?? '',
             });
           },
         );
@@ -99,7 +99,7 @@ export class GroupsRoutesController {
             reply.status(200).send({
               id: group.id,
               name: group.name,
-              description: group.description,
+              description: group.description ?? '',
             });
           },
         );
