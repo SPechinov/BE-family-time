@@ -15,6 +15,9 @@ const CREATE = {
     name: GLOBAL_SCHEMAS.groupName,
     description: GLOBAL_SCHEMAS.groupDescription.optional(),
   }),
+  response: createResponseSchema({
+    201: GROUP_SCHEMA,
+  }),
 };
 
 const GET = {

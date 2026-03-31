@@ -47,7 +47,7 @@ export class GroupsRoutesController {
             preHandler: [instance.authenticate],
           },
           async (request, reply) => {
-            await this.#groupsUseCases.createUserGroup({
+            const group = await this.#groupsUseCases.createUserGroup({
               groupCreateEntity: new GroupCreateEntity({
                 name: request.body.name,
                 description: request.body.description ?? undefined,
@@ -55,7 +55,11 @@ export class GroupsRoutesController {
               userId: request.userId,
               logger: request.log,
             });
-            reply.status(201).send();
+            reply.status(201).send({
+              id: group.id,
+              name: group.name,
+              description: group.description ?? '',
+            });
           },
         );
 
