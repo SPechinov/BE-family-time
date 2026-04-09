@@ -1,14 +1,15 @@
-# PROJECT CONTEXT (for assistant)
+# PROJECT CONTEXT
 
-This file is a compact, always-up-to-date context snapshot for work in this repository.
-Assistant should read this file at the start of future tasks.
+Короткий технический snapshot для быстрых задач по репозиторию.
+Перед стартом новой задачи сначала стоит читать этот файл, а затем при необходимости открывать `README.md`.
 
 ## Project
 
 - Name: `be-family-time`
 - Type: Backend REST API
-- Stack: TypeScript, Fastify, PostgreSQL, Redis, Zod, JWT, Pino, Jest
+- Stack: TypeScript, Fastify, PostgreSQL, Redis, Zod, JWT, Pino, Jest, Testcontainers
 - Entry point: `src/index.ts`
+- Main documentation: `README.md`
 
 ## Architecture
 
@@ -21,71 +22,94 @@ Assistant should read this file at the start of future tasks.
 - Infra utils: `src/pkg/`
 
 Dependency direction:
-- Routes/controllers -> use cases/services -> repositories -> DB/Redis
 
-## Main Runtime Commands
+- Routes/controllers -> use cases -> services -> repositories -> PostgreSQL/Redis
 
-- Dev: `npm run dev`
-- Build/typecheck: `npm run build`
-- Tests: `npm test`
-- Integration subset: `npm run test:integration`
-
-## API Notes
+## API Surface
 
 - Base prefix: `/api`
-- Main route groups:
+- Route groups:
   - `/api/auth/*`
   - `/api/me/*`
   - `/api/groups/*`
-  - `/api/:groupId/calendar-events/*`
+  - `/api/groups/:groupId/calendar-events/*`
 
-## User Model (current)
+## Main Business Areas
 
-Important user settings are stored as separate plain fields:
+- Auth:
+  - OTP-based registration
+  - login/logout
+  - refresh tokens
+  - session management in Redis
+- Me:
+  - current profile read/update
+- Groups:
+  - create/read/update/delete
+  - invite/exclude members
+  - exactly one owner per group
+- Calendar events:
+  - CRUD inside group
+  - supports `oneTime`, `weekly`, `monthly`, `yearly`
 
-- `timeZone` (IANA string, DB column `time_zone`)
-- `language` (`'ru' | 'en'`, DB column `language`, default `ru`)
+## User Model
 
-Personal profile fields:
+Separate plain profile fields:
 
+- `timeZone` -> DB column `time_zone`
+- `language` -> DB column `language`, values `ru | en`
+
+Sensitive fields handling:
+
+- `email`, `phone`:
+  - hashed for lookup/uniqueness
+  - encrypted for readback
 - `firstName`, `lastName` -> encrypted
-- `dateOfBirth` -> plain (not encrypted/hashed), part of `personalInfo` in domain model
+- `dateOfBirth` -> stored plain
+- `password` -> argon2 hash
 
-Auth registration (`registration-end`) currently expects:
+## Important Rules
 
-- `email`
-- `otpCode`
-- `firstName`
-- `password`
-- `timeZone`
-- `language`
+- `timeZone` and `language` remain outside `personalInfo`.
+- Group count per user is limited by `CONFIG.limits.user.maxGroups`.
+- User count per group is limited by `CONFIG.limits.group.maxUsers`.
+- Group owner can invite/exclude users and edit/delete group.
+- Group deletion is allowed only when owner is the last member.
+- `weekly` and `monthly` calendar events require valid `recurrencePattern`.
 
-`GET /me` returns `timeZone` and `language`.
-`PATCH /me` can update `timeZone` and `language` (plus personal fields).
+## Auth Notes
 
-## Validation Rules (current)
+- Access token is returned in `Authorization` response header.
+- Refresh token is stored in cookie.
+- Refresh sessions are stored in Redis.
+- Access token blacklist is in-memory only.
+- In dev mode OTP is exposed via `x-dev-otp-code`.
 
-- `timeZone`: validated as IANA timezone in `GLOBAL_SCHEMAS.timeZone`
-- `language`: validated as enum `['ru', 'en']` in `GLOBAL_SCHEMAS.language`
-- Shared language source in entities:
-  - `USER_LANGUAGES`
-  - `UserLanguage`
+## Runtime Commands
 
-## Error Handling
-
-- Global handler: `src/api/rest/utils/errorsHandler.ts`
-- Business errors from `src/pkg/errors.ts`
-- Standard shape includes `statusCode`, `originalUrl`, `timestamp`, optional `code/message`
+- Dev: `npm run dev`
+- Build/typecheck: `npm run build`
+- Lint: `npm run lint`
+- Tests: `npm test`
+- Integration subset: `npm run test:integration`
+- Migrations: `npm run migrations:up`
 
 ## Testing Constraints
 
-- Integration tests use Testcontainers.
-- In environments without Docker/container runtime, integration tests fail to start.
-- `npm run build` is the reliable baseline verification in restricted environments.
+- Integration tests use Testcontainers and require Docker runtime.
+- Test environment starts PostgreSQL and Redis containers automatically.
+- In restricted environments `npm run build` is the minimum reliable verification.
 
-## Current Practical Conventions
+## Known Technical Notes
 
-- Keep `timeZone` and `language` outside `personalInfo`.
-- Keep DB timestamps in UTC (`timestamptz` where relevant), user timezone for display/period calculations.
-- For language scope now: only `ru` and `en`.
+- `docker-compose.yaml` database name differs from `config/env.yaml` and migration script target.
+- Redis password expectations in `docker-compose.yaml` and app config are not fully synchronized.
+- `calendar_events.creator_user_id` uses `NOT NULL` together with `ON DELETE SET NULL`.
+- The project mostly uses `TIMESTAMP`, not `TIMESTAMPTZ`.
+- Period filtering for recurring calendar events is simplified in repository logic.
 
+## Documentation Rule
+
+When code changes affect architecture, routes, config, migrations, business rules, or testing flow, update both:
+
+- `README.md`
+- `PROJECT_CONTEXT.md`
