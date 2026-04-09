@@ -62,7 +62,7 @@ export const USER_SCHEMA = z
     email: GLOBAL_SCHEMAS.email,
     phone: z.string(),
     firstName: GLOBAL_SCHEMAS.firstName,
-    lastName: GLOBAL_SCHEMAS.lastName,
+    lastName: GLOBAL_SCHEMAS.lastName.or(GLOBAL_SCHEMAS.emptyString),
     dateOfBirth: z.string(),
   })
   .register(z.globalRegistry, { id: 'User' });
