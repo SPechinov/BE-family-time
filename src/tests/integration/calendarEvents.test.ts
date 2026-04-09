@@ -405,7 +405,7 @@ describe('Calendar Events API Integration Tests', () => {
         .set(createAuthHeaders(owner.authToken))
         .send(eventData);
 
-      expect(response.status).toBe(500);
+      expect(response.status).toBe(400);
     });
 
     it('should reject weekly event without recurrencePattern', async () => {
@@ -420,7 +420,7 @@ describe('Calendar Events API Integration Tests', () => {
         .set(createAuthHeaders(owner.authToken))
         .send(eventData);
 
-      expect(response.status).toBe(500);
+      expect(response.status).toBe(400);
     });
 
     it('should reject monthly event without recurrencePattern', async () => {
@@ -435,7 +435,7 @@ describe('Calendar Events API Integration Tests', () => {
         .set(createAuthHeaders(owner.authToken))
         .send(eventData);
 
-      expect(response.status).toBe(500);
+      expect(response.status).toBe(400);
     });
 
     it('should reject oneTime event with recurrencePattern', async () => {
@@ -451,7 +451,7 @@ describe('Calendar Events API Integration Tests', () => {
         .set(createAuthHeaders(owner.authToken))
         .send(eventData);
 
-      expect(response.status).toBe(500);
+      expect(response.status).toBe(400);
     });
 
     it('should reject yearly event with recurrencePattern', async () => {
@@ -467,7 +467,7 @@ describe('Calendar Events API Integration Tests', () => {
         .set(createAuthHeaders(owner.authToken))
         .send(eventData);
 
-      expect(response.status).toBe(500);
+      expect(response.status).toBe(400);
     });
 
     it('should reject weekly event with invalid dayOfWeek', async () => {
@@ -515,7 +515,7 @@ describe('Calendar Events API Integration Tests', () => {
         .set(createAuthHeaders(owner.authToken))
         .send(eventData);
 
-      expect(response.status).toBe(500);
+      expect(response.status).toBe(400);
     });
   });
 
@@ -598,7 +598,7 @@ describe('Calendar Events API Integration Tests', () => {
         .get(`${API_PREFIX}/${groupId}/calendar-events/${fakeId}`)
         .set(createAuthHeaders(owner.authToken));
 
-      expect(response.status).toBe(422);
+      expect(response.status).toBe(404);
     });
 
     it('should return 422 for invalid calendarEventId', async () => {
@@ -757,6 +757,17 @@ describe('Calendar Events API Integration Tests', () => {
           expect(eventDate).toBeGreaterThanOrEqual(startDate);
         }
       });
+
+      const oneTimeTitles = response.body
+        .filter((event: any) => event.iterationType === 'oneTime')
+        .map((event: any) => event.title);
+      expect(oneTimeTitles).toContain('Event 3');
+      expect(oneTimeTitles).not.toContain('Event 2');
+
+      const recurringTitles = response.body
+        .filter((event: any) => event.iterationType !== 'oneTime')
+        .map((event: any) => event.title);
+      expect(recurringTitles).toContain('Weekly Event');
     });
 
     it('should filter events by endDate only', async () => {
@@ -768,8 +779,10 @@ describe('Calendar Events API Integration Tests', () => {
       expect(Array.isArray(response.body)).toBe(true);
       const endDate = new Date('2026-04-01T00:00:00.000Z').getTime();
       response.body.forEach((event: any) => {
-        const eventDate = new Date(event.startDate).getTime();
-        expect(eventDate).toBeLessThanOrEqual(endDate);
+        if (event.iterationType === 'oneTime') {
+          const eventDate = new Date(event.startDate).getTime();
+          expect(eventDate).toBeLessThanOrEqual(endDate);
+        }
       });
     });
 
@@ -972,7 +985,7 @@ describe('Calendar Events API Integration Tests', () => {
         .set(createAuthHeaders(owner.authToken))
         .send(updateData);
 
-      expect(response.status).toBe(422);
+      expect(response.status).toBe(404);
     });
   });
 
@@ -1023,7 +1036,7 @@ describe('Calendar Events API Integration Tests', () => {
         .set(createAuthHeaders(owner.authToken))
         .send({});
 
-      expect(response.status).toBe(422);
+      expect(response.status).toBe(404);
     });
 
     it('should return 422 for invalid calendarEventId', async () => {

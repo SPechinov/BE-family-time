@@ -3,7 +3,7 @@ CREATE TABLE IF NOT EXISTS calendar_events
 (
     id                 UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     group_id           UUID         NOT NULL REFERENCES groups (id) ON DELETE CASCADE,
-    creator_user_id    UUID         NOT NULL REFERENCES users (id) ON DELETE SET NULL,
+    creator_user_id    UUID             REFERENCES users (id) ON DELETE SET NULL,
     title              VARCHAR(50) NOT NULL,
     description        VARCHAR(1000),
     event_type         VARCHAR(20),

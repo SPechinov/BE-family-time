@@ -111,15 +111,36 @@ export class CalendarEventsRepository implements ICalendarEventsRepository {
       values.push(filter.eventType);
     }
     if (filter.period !== undefined) {
-      const startDate = filter.period.startDate ?? null;
-      const endDate = filter.period.endDate ?? null;
-      conditions.push(`
-        (
-          (iteration_type = 'oneTime' AND start_date >= $${paramIndex++} AND start_date <= $${paramIndex++} AND (end_date IS NULL OR end_date >= $${paramIndex++}))
-          OR (iteration_type IN ('weekly', 'monthly', 'yearly'))
-        )
-      `);
-      values.push(startDate, endDate, startDate);
+      const { startDate, endDate } = filter.period;
+      if (startDate !== undefined && endDate !== undefined) {
+        const startParam = paramIndex++;
+        const endParam = paramIndex++;
+        conditions.push(`
+          (
+            (iteration_type = 'oneTime' AND start_date <= $${endParam} AND (end_date IS NULL OR end_date >= $${startParam}))
+            OR (iteration_type IN ('weekly', 'monthly', 'yearly'))
+          )
+        `);
+        values.push(startDate, endDate);
+      } else if (startDate !== undefined) {
+        const startParam = paramIndex++;
+        conditions.push(`
+          (
+            (iteration_type = 'oneTime' AND start_date >= $${startParam} AND (end_date IS NULL OR end_date >= $${startParam}))
+            OR (iteration_type IN ('weekly', 'monthly', 'yearly'))
+          )
+        `);
+        values.push(startDate);
+      } else if (endDate !== undefined) {
+        const endParam = paramIndex++;
+        conditions.push(`
+          (
+            (iteration_type = 'oneTime' AND start_date <= $${endParam})
+            OR (iteration_type IN ('weekly', 'monthly', 'yearly'))
+          )
+        `);
+        values.push(endDate);
+      }
     }
 
     const whereClause = conditions.length > 0 ? `WHERE ${conditions.join(' AND ')}` : '';

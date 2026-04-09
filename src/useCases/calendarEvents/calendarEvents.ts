@@ -85,14 +85,13 @@ export class CalendarEventsUseCases implements ICalendarEventsUseCases {
     await this.#usersService.findOneByUserIdOrThrow(userId, options);
     await this.#checkUserInGroupOrThrow(userId, groupId, options);
 
+    const period = startDate === undefined && endDate === undefined ? undefined : { startDate, endDate };
+
     return this.#calendarEventsService.findMany(
       new CalendarEventFindManyEntity({
         groupId,
         eventType,
-        period: {
-          startDate,
-          endDate,
-        },
+        period,
       }),
     );
   }
