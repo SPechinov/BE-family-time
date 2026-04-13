@@ -52,9 +52,9 @@ export class AuthRoutesController {
               jwtPayload: { userAgent },
             });
 
-            const tokens = this.#tokenGenerator.generateTokens({
+            this.#tokenGenerator.generateTokens({
               userId: user.id,
-              userAgent: this.#extractUserAgentOrThrow(request),
+              userAgent,
             });
 
             reply.status(200).send();

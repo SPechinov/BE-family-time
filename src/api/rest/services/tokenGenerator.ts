@@ -1,5 +1,8 @@
 import { UserId } from '@/entities';
 import { FastifyInstance } from 'fastify';
+import { randomUUID } from 'node:crypto';
+
+type TokenType = 'access' | 'refresh';
 
 export class TokenGenerator {
   readonly #fastify: FastifyInstance;
@@ -13,23 +16,38 @@ export class TokenGenerator {
   }
 
   generateTokens({ userId, userAgent }: { userId: UserId; userAgent: string }) {
+    const sessionId = randomUUID();
+
     return {
-      access: this.#generateAccess({ userId, userAgent }),
-      refresh: this.#generateRefresh({ userId, userAgent }),
+      access: this.#generateAccess({ userId, userAgent, sessionId }),
+      refresh: this.#generateRefresh({ userId, userAgent, sessionId }),
     };
   }
 
-  #generateAccess({ userId, userAgent }: { userId: UserId; userAgent: string }) {
-    return this.#generateToken({ userId, userAgent, expiresIn: this.#accessExpiresIn });
+  #generateAccess({ userId, userAgent, sessionId }: { userId: UserId; userAgent: string; sessionId: string }) {
+    return this.#generateToken({ userId, userAgent, expiresIn: this.#accessExpiresIn, type: 'access', sessionId });
   }
 
-  #generateRefresh({ userId, userAgent }: { userId: UserId; userAgent: string }) {
-    return this.#generateToken({ userId, userAgent, expiresIn: this.#refreshExpiresIn });
+  #generateRefresh({ userId, userAgent, sessionId }: { userId: UserId; userAgent: string; sessionId: string }) {
+    return this.#generateToken({ userId, userAgent, expiresIn: this.#refreshExpiresIn, type: 'refresh', sessionId });
   }
 
-  #generateToken(options: { userId: UserId; userAgent: string; expiresIn: number }): string {
+  #generateToken(options: {
+    userId: UserId;
+    userAgent: string;
+    expiresIn: number;
+    type: TokenType;
+    sessionId: string;
+  }): string {
     return this.#fastify.jwt.sign(
-      { id: options.userId, userAgent: options.userAgent, createdAt: Date.now() },
+      {
+        userId: options.userId,
+        userAgent: options.userAgent,
+        createdAt: Date.now(),
+        sid: options.sessionId,
+        jti: randomUUID(),
+        typ: options.type,
+      },
       { expiresIn: options.expiresIn },
     );
   }
