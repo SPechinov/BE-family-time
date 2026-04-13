@@ -1,4 +1,4 @@
-import { FastifyInstance, FastifyRequest } from 'fastify';
+import { FastifyInstance, FastifyReply, FastifyRequest } from 'fastify';
 import { ZodTypeProvider } from 'fastify-type-provider-zod';
 import { AUTH_SCHEMAS } from './schemas';
 import { IAuthUseCases } from '@/domains/useCases';
@@ -7,19 +7,21 @@ import {
   UserCreatePlainEntity,
   UserPasswordPlainEntity,
   UserPersonalInfoPlainEntity,
+  UserId,
 } from '@/entities';
 import { CONFIG, isDev } from '@/config';
-import { HEADER_NAME } from '../../constants';
-import { ErrorInvalidUserAgent, ErrorUserNotExists } from '@/pkg';
+import { HEADER_NAME, REFRESH_TOKEN_COOKIE_CONFIG } from '../../constants';
+import { ErrorInvalidUserAgent, ErrorUnauthorized, ErrorUserNotExists, RedisClient } from '@/pkg';
 import { PREFIX, ROUTES } from './constants';
-import { TokenGenerator } from '../../services';
+import { TokenGenerator, TokenStore } from '../../services';
 
 export class AuthRoutesController {
   #fastify: FastifyInstance;
   #useCases: IAuthUseCases;
   #tokenGenerator: TokenGenerator;
+  #tokenStore: TokenStore;
 
-  constructor(props: { fastify: FastifyInstance; useCases: IAuthUseCases }) {
+  constructor(props: { fastify: FastifyInstance; useCases: IAuthUseCases; redis: RedisClient }) {
     this.#fastify = props.fastify;
     this.#useCases = props.useCases;
 
@@ -27,6 +29,10 @@ export class AuthRoutesController {
       fastify: this.#fastify,
       expiresInAccess: CONFIG.jwt.access.expiry / 1000,
       expiresInRefresh: CONFIG.jwt.refresh.expiry / 1000,
+    });
+    this.#tokenStore = new TokenStore({
+      redis: props.redis,
+      sessionsIndexTtlSec: CONFIG.jwt.refresh.expiry / 1000,
     });
   }
 
@@ -52,10 +58,22 @@ export class AuthRoutesController {
               jwtPayload: { userAgent },
             });
 
-            this.#tokenGenerator.generateTokens({
+            const tokens = this.#tokenGenerator.generateTokens({
               userId: user.id,
               userAgent,
             });
+            const refreshPayload = this.#verifyRefreshTokenOrThrow(tokens.refresh);
+
+            await this.#tokenStore.createSession({
+              userId: refreshPayload.userId,
+              sessionId: refreshPayload.sid,
+              userAgent,
+              expiresAt: (refreshPayload.exp ?? Math.floor(Date.now() / 1000)) * 1000,
+              refreshJti: refreshPayload.jti,
+            });
+
+            this.#setAccessTokenToHeaders(reply, tokens.access);
+            this.#setRefreshTokenToCookie(reply, tokens.refresh);
 
             reply.status(200).send();
           },
@@ -157,7 +175,33 @@ export class AuthRoutesController {
           {
             schema: AUTH_SCHEMAS.getAllSession,
           },
-          async (request, reply) => {},
+          async (request, reply) => {
+            const refreshToken = this.#getRefreshToken(request);
+            if (!refreshToken) throw new ErrorUnauthorized();
+
+            const payload = this.#verifyRefreshTokenOrThrow(refreshToken);
+            const currentSession = await this.#tokenStore.getSessionByRefreshJti({
+              userId: payload.userId,
+              refreshJti: payload.jti,
+            });
+
+            if (!currentSession) {
+              throw new ErrorUnauthorized();
+            }
+
+            const sessions = await this.#tokenStore.getUserSessions({
+              userId: payload.userId,
+              currentSessionId: payload.sid,
+            });
+
+            reply.status(200).send({
+              sessions: sessions.map((session: { expiresAt: number; userAgent: string; isCurrent: boolean }) => ({
+                expiresAt: session.expiresAt,
+                userAgent: session.userAgent,
+                isCurrent: session.isCurrent,
+              })),
+            });
+          },
         );
 
         router.post(
@@ -166,6 +210,19 @@ export class AuthRoutesController {
             schema: AUTH_SCHEMAS.logoutAllSession,
           },
           async (request, reply) => {
+            const refreshToken = this.#getRefreshToken(request);
+            if (!refreshToken) throw new ErrorUnauthorized();
+
+            const payload = this.#verifyRefreshTokenOrThrow(refreshToken);
+            const currentSession = await this.#tokenStore.getSessionByRefreshJti({
+              userId: payload.userId,
+              refreshJti: payload.jti,
+            });
+            if (!currentSession) throw new ErrorUnauthorized();
+
+            await this.#tokenStore.deleteAllSessions({ userId: payload.userId });
+            this.#removeRefreshTokenFromCookie(reply);
+
             reply.status(200).send();
           },
         );
@@ -176,6 +233,22 @@ export class AuthRoutesController {
             schema: AUTH_SCHEMAS.logoutSession,
           },
           async (request, reply) => {
+            const refreshToken = this.#getRefreshToken(request);
+            if (!refreshToken) throw new ErrorUnauthorized();
+
+            const payload = this.#verifyRefreshTokenOrThrow(refreshToken);
+            const currentSession = await this.#tokenStore.getSessionByRefreshJti({
+              userId: payload.userId,
+              refreshJti: payload.jti,
+            });
+            if (!currentSession) throw new ErrorUnauthorized();
+
+            await this.#tokenStore.deleteSessionByRefreshJti({
+              userId: payload.userId,
+              refreshJti: payload.jti,
+            });
+            this.#removeRefreshTokenFromCookie(reply);
+
             reply.status(200).send();
           },
         );
@@ -186,6 +259,43 @@ export class AuthRoutesController {
             schema: AUTH_SCHEMAS.refreshTokens,
           },
           async (request, reply) => {
+            const refreshToken = this.#getRefreshToken(request);
+            if (!refreshToken) throw new ErrorUnauthorized();
+
+            const userAgent = this.#extractUserAgentOrThrow(request);
+            const payload = this.#verifyRefreshTokenOrThrow(refreshToken);
+
+            const currentSession = await this.#tokenStore.getSessionByRefreshJti({
+              userId: payload.userId,
+              refreshJti: payload.jti,
+            });
+            if (!currentSession) throw new ErrorUnauthorized();
+
+            if (currentSession.userAgent !== userAgent) {
+              throw new ErrorUnauthorized();
+            }
+
+            const tokens = this.#tokenGenerator.generateTokens({
+              userId: payload.userId,
+              userAgent,
+            });
+            const newRefreshPayload = this.#verifyRefreshTokenOrThrow(tokens.refresh);
+
+            await this.#tokenStore.deleteSessionByRefreshJti({
+              userId: payload.userId,
+              refreshJti: payload.jti,
+            });
+            await this.#tokenStore.createSession({
+              userId: newRefreshPayload.userId,
+              sessionId: newRefreshPayload.sid,
+              userAgent,
+              expiresAt: (newRefreshPayload.exp ?? Math.floor(Date.now() / 1000)) * 1000,
+              refreshJti: newRefreshPayload.jti,
+            });
+
+            this.#setAccessTokenToHeaders(reply, tokens.access);
+            this.#setRefreshTokenToCookie(reply, tokens.refresh);
+
             reply.status(200).send();
           },
         );
@@ -202,5 +312,45 @@ export class AuthRoutesController {
     }
 
     return userAgent;
+  }
+
+  #getRefreshToken(request: FastifyRequest): string | null {
+    return request.cookies?.[CONFIG.jwt.refresh.cookieName] || null;
+  }
+
+  #setAccessTokenToHeaders(reply: FastifyReply, accessToken: string) {
+    return reply.header(HEADER_NAME.authorization, accessToken);
+  }
+
+  #setRefreshTokenToCookie(reply: FastifyReply, refreshToken: string) {
+    return reply.setCookie(CONFIG.jwt.refresh.cookieName, refreshToken, REFRESH_TOKEN_COOKIE_CONFIG);
+  }
+
+  #removeRefreshTokenFromCookie(reply: FastifyReply) {
+    return reply.setCookie(CONFIG.jwt.refresh.cookieName, '', { ...REFRESH_TOKEN_COOKIE_CONFIG, maxAge: 0 });
+  }
+
+  #verifyRefreshTokenOrThrow(token: string): { userId: UserId; sid: string; jti: string; exp?: number } {
+    let payload;
+    try {
+      payload = this.#fastify.jwt.verify<{
+        userId?: UserId;
+        id?: UserId;
+        sid?: string;
+        jti?: string;
+        typ?: 'access' | 'refresh';
+        userAgent?: string;
+        exp?: number;
+      }>(token);
+    } catch {
+      throw new ErrorUnauthorized();
+    }
+
+    const userId = payload.userId ?? payload.id;
+    if (!userId || payload.typ !== 'refresh' || !payload.sid || !payload.jti) {
+      throw new ErrorUnauthorized();
+    }
+
+    return { userId, sid: payload.sid, jti: payload.jti, exp: payload.exp };
   }
 }
