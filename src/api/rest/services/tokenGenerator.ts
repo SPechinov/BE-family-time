@@ -1,18 +1,18 @@
 import { UserId } from '@/entities';
 import { FastifyInstance } from 'fastify';
 
-export class JWTGenerator {
-  #fastify: FastifyInstance;
-  #expiresInAccess: number;
-  #expiresInRefresh: number;
+export class TokenGenerator {
+  readonly #fastify: FastifyInstance;
+  readonly #accessExpiresIn: number;
+  readonly #refreshExpiresIn: number;
 
   constructor(props: { fastify: FastifyInstance; expiresInAccess: number; expiresInRefresh: number }) {
     this.#fastify = props.fastify;
-    this.#expiresInAccess = props.expiresInAccess;
-    this.#expiresInRefresh = props.expiresInRefresh;
+    this.#accessExpiresIn = props.expiresInAccess;
+    this.#refreshExpiresIn = props.expiresInRefresh;
   }
 
-  generate({ userId, userAgent }: { userId: UserId; userAgent: string }) {
+  generateTokens({ userId, userAgent }: { userId: UserId; userAgent: string }) {
     return {
       access: this.#generateAccess({ userId, userAgent }),
       refresh: this.#generateRefresh({ userId, userAgent }),
@@ -20,11 +20,11 @@ export class JWTGenerator {
   }
 
   #generateAccess({ userId, userAgent }: { userId: UserId; userAgent: string }) {
-    return this.#generateToken({ userId, userAgent, expiresIn: this.#expiresInAccess });
+    return this.#generateToken({ userId, userAgent, expiresIn: this.#accessExpiresIn });
   }
 
   #generateRefresh({ userId, userAgent }: { userId: UserId; userAgent: string }) {
-    return this.#generateToken({ userId, userAgent, expiresIn: this.#expiresInRefresh });
+    return this.#generateToken({ userId, userAgent, expiresIn: this.#refreshExpiresIn });
   }
 
   #generateToken(options: { userId: UserId; userAgent: string; expiresIn: number }): string {
