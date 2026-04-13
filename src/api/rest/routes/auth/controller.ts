@@ -1,4 +1,4 @@
-import { FastifyInstance } from 'fastify';
+import { FastifyInstance, FastifyRequest } from 'fastify';
 import { ZodTypeProvider } from 'fastify-type-provider-zod';
 import { AUTH_SCHEMAS } from './schemas';
 import { IAuthUseCases } from '@/domains/useCases';
@@ -8,18 +8,26 @@ import {
   UserPasswordPlainEntity,
   UserPersonalInfoPlainEntity,
 } from '@/entities';
-import { isDev } from '@/config';
+import { CONFIG, isDev } from '@/config';
 import { HEADER_NAME } from '../../constants';
 import { ErrorInvalidUserAgent, ErrorUserNotExists } from '@/pkg';
 import { PREFIX, ROUTES } from './constants';
+import { TokenGenerator } from '../../services';
 
 export class AuthRoutesController {
   #fastify: FastifyInstance;
   #useCases: IAuthUseCases;
+  #tokenGenerator: TokenGenerator;
 
   constructor(props: { fastify: FastifyInstance; useCases: IAuthUseCases }) {
     this.#fastify = props.fastify;
     this.#useCases = props.useCases;
+
+    this.#tokenGenerator = new TokenGenerator({
+      fastify: this.#fastify,
+      expiresInAccess: CONFIG.jwt.access.expiry / 1000,
+      expiresInRefresh: CONFIG.jwt.refresh.expiry / 1000,
+    });
   }
 
   register() {
@@ -39,13 +47,18 @@ export class AuthRoutesController {
               throw new ErrorInvalidUserAgent();
             }
 
-            await this.#useCases.login({
+            const { user } = await this.#useCases.login({
               logger: request.log,
               userContactsPlainEntity: new UserContactsPlainEntity({
                 email: request.body.email,
               }),
               userPasswordPlainEntity: new UserPasswordPlainEntity(request.body.password),
               jwtPayload: { userAgent },
+            });
+
+            const tokens = this.#tokenGenerator.generateTokens({
+              userId: user.id,
+              userAgent: this.#extractUserAgentOrThrow(request),
             });
 
             reply.status(200).send();
@@ -148,8 +161,7 @@ export class AuthRoutesController {
           {
             schema: AUTH_SCHEMAS.getAllSession,
           },
-          async (request, reply) => {
-          },
+          async (request, reply) => {},
         );
 
         router.post(
@@ -184,5 +196,15 @@ export class AuthRoutesController {
       },
       { prefix: PREFIX },
     );
+  }
+
+  #extractUserAgentOrThrow(request: FastifyRequest) {
+    const userAgent = request.headers['user-agent'];
+    if (typeof userAgent !== 'string') {
+      request.log.warn('User agent not found');
+      throw new ErrorInvalidUserAgent();
+    }
+
+    return userAgent;
   }
 }
