@@ -41,11 +41,7 @@ export class AuthRoutesController {
             schema: AUTH_SCHEMAS.login,
           },
           async (request, reply) => {
-            const userAgent = request.headers['user-agent'];
-            if (typeof userAgent !== 'string') {
-              request.log.warn('User agent not found');
-              throw new ErrorInvalidUserAgent();
-            }
+            const userAgent = this.#extractUserAgentOrThrow(request);
 
             const { user } = await this.#useCases.login({
               logger: request.log,
