@@ -3,12 +3,12 @@ import { CONFIG } from '@/config';
 import { HEADER_NAME, REFRESH_TOKEN_COOKIE_CONFIG } from '../../constants';
 import { ErrorInvalidUserAgent, ErrorUnauthorized, RedisClient } from '@/pkg';
 import { UserId } from '@/entities';
-import { ITokensService } from '../../domains';
+import { ITokensServiceOld } from '../../domains';
 import { RefreshTokensStore, SessionData, SessionWithToken } from './refreshTokensStore';
 import { AccessTokensBlackList } from './accessTokensBlackList';
 import { extractAuthToken } from '../../utils';
 
-export class TokensService implements ITokensService {
+export class TokensServiceOld implements ITokensServiceOld {
   #fastify: FastifyInstance;
   #refreshTokensStore: RefreshTokensStore;
   #accessTokensBlackList: AccessTokensBlackList;

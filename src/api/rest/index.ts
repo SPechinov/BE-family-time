@@ -3,7 +3,7 @@ import { isDev } from '@/config';
 import { Pool } from 'pg';
 import { globalErrorHandler, authenticate } from './utils';
 import { AuthComposite, GroupsComposite, MeComposite, CalendarEventsComposite } from './composites';
-import { TokensService } from '@/api/rest/services';
+import { TokensServiceOld } from '@/api/rest/services';
 import { FastifyRequest } from 'fastify';
 
 interface Props {
@@ -18,7 +18,7 @@ export const newApiRest = async (props: Props) => {
     logger: props.logger,
   });
 
-  const tokensService = new TokensService({ fastify, redis: props.redis });
+  const tokensService = new TokensServiceOld({ fastify, redis: props.redis });
 
   fastify.decorate('authenticate', (request: FastifyRequest) => {
     return authenticate(request, { tokensService });

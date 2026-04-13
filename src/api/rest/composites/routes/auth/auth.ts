@@ -3,19 +3,19 @@ import { FastifyInstance } from 'fastify';
 import { Pool } from 'pg';
 import { AuthRoutesController } from '../../../routes/auth';
 import { createDependencies } from './utils';
-import { ITokensService } from '../../../domains';
+import { ITokensServiceOld } from '../../../domains';
 
 export class AuthComposite {
   #fastifyInstance: FastifyInstance;
   #redis: RedisClient;
   #postgres: Pool;
-  #tokensService: ITokensService;
+  #tokensService: ITokensServiceOld;
 
   constructor(props: {
     fastifyInstance: FastifyInstance;
     redis: RedisClient;
     postgres: Pool;
-    tokensService: ITokensService;
+    tokensService: ITokensServiceOld;
   }) {
     this.#fastifyInstance = props.fastifyInstance;
     this.#postgres = props.postgres;

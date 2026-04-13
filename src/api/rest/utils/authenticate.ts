@@ -1,9 +1,9 @@
 import { FastifyRequest } from 'fastify';
 import { ErrorTokenExpired, ErrorUnauthorized } from '@/pkg';
 import { UserId } from '@/entities';
-import { ITokensService } from '../domains';
+import { ITokensServiceOld } from '../domains';
 
-export const authenticate = async (request: FastifyRequest, props: { tokensService: ITokensService }) => {
+export const authenticate = async (request: FastifyRequest, props: { tokensService: ITokensServiceOld }) => {
   try {
     const payload = await request.jwtVerify<{ id: UserId }>();
     request.userId = payload.id;

@@ -2,7 +2,7 @@ import { FastifyReply, FastifyRequest } from 'fastify';
 import { UserId } from '@/entities';
 import { SessionData, SessionWithToken } from '../services/tokens/refreshTokensStore';
 
-export interface ITokensService {
+export interface ITokensServiceOld {
   generateTokens(options: { userId: UserId; request: FastifyRequest }): { access: string; refresh: string };
 
   setTokens(reply: FastifyReply, tokens: { access: string; refresh: string }): void;
