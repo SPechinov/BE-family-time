@@ -7,23 +7,19 @@ import {
   UserCreatePlainEntity,
   UserPasswordPlainEntity,
   UserPersonalInfoPlainEntity,
-  UserId,
 } from '@/entities';
 import { isDev } from '@/config';
 import { HEADER_NAME } from '../../constants';
-import { ErrorInvalidUserAgent, ErrorUnauthorized, ErrorUserNotExists } from '@/pkg';
+import { ErrorInvalidUserAgent, ErrorUserNotExists } from '@/pkg';
 import { PREFIX, ROUTES } from './constants';
-import { ITokensServiceOld } from '../../domains';
 
 export class AuthRoutesController {
   #fastify: FastifyInstance;
   #useCases: IAuthUseCases;
-  #tokenService: ITokensServiceOld;
 
-  constructor(props: { fastify: FastifyInstance; useCases: IAuthUseCases; tokenService: ITokensServiceOld }) {
+  constructor(props: { fastify: FastifyInstance; useCases: IAuthUseCases }) {
     this.#fastify = props.fastify;
     this.#useCases = props.useCases;
-    this.#tokenService = props.tokenService;
   }
 
   register() {
@@ -43,25 +39,13 @@ export class AuthRoutesController {
               throw new ErrorInvalidUserAgent();
             }
 
-            const { user } = await this.#useCases.login({
+            await this.#useCases.login({
               logger: request.log,
               userContactsPlainEntity: new UserContactsPlainEntity({
                 email: request.body.email,
               }),
               userPasswordPlainEntity: new UserPasswordPlainEntity(request.body.password),
               jwtPayload: { userAgent },
-            });
-
-            const tokens = this.#tokenService.generateTokens({
-              request,
-              userId: user.id,
-            });
-            this.#tokenService.setTokens(reply, tokens);
-
-            await this.#tokenService.storeSession({
-              userId: user.id,
-              userAgent,
-              refreshToken: tokens.refresh,
             });
 
             reply.status(200).send();
@@ -165,30 +149,6 @@ export class AuthRoutesController {
             schema: AUTH_SCHEMAS.getAllSession,
           },
           async (request, reply) => {
-            const refreshToken = this.#tokenService.getRefreshToken(request);
-            if (!refreshToken) {
-              throw new ErrorUnauthorized();
-            }
-
-            let payload: { id: UserId };
-            try {
-              payload = this.#tokenService.verifyRefreshToken(refreshToken);
-            } catch {
-              throw new ErrorUnauthorized();
-            }
-
-            const sessions = await this.#tokenService.getAllSessions({
-              userId: payload.id,
-              currentRefreshToken: refreshToken,
-            });
-
-            reply.status(200).send({
-              sessions: sessions.map((session) => ({
-                expiresAt: session.expiresAt,
-                userAgent: session.userAgent,
-                isCurrent: session.isCurrent,
-              })),
-            });
           },
         );
 
@@ -198,21 +158,6 @@ export class AuthRoutesController {
             schema: AUTH_SCHEMAS.logoutAllSession,
           },
           async (request, reply) => {
-            const refreshToken = this.#tokenService.getRefreshToken(request);
-            if (!refreshToken) {
-              throw new ErrorUnauthorized();
-            }
-
-            let payload: { id: UserId };
-            try {
-              payload = this.#tokenService.verifyRefreshToken(refreshToken);
-            } catch {
-              throw new ErrorUnauthorized();
-            }
-
-            await this.#tokenService.deleteAllSessions({ userId: payload.id });
-            this.#tokenService.removeRefreshTokenFromCookie(reply);
-
             reply.status(200).send();
           },
         );
@@ -223,26 +168,6 @@ export class AuthRoutesController {
             schema: AUTH_SCHEMAS.logoutSession,
           },
           async (request, reply) => {
-            const accessToken = this.#tokenService.getRefreshToken(request);
-            if (accessToken) {
-              this.#tokenService.setAccessTokenInBlackList(accessToken);
-            }
-
-            const refreshToken = this.#tokenService.getRefreshToken(request);
-            if (!refreshToken) {
-              throw new ErrorUnauthorized();
-            }
-
-            let payload: { id: UserId };
-            try {
-              payload = this.#tokenService.verifyRefreshToken(refreshToken);
-            } catch {
-              throw new ErrorUnauthorized();
-            }
-
-            await this.#tokenService.deleteSession({ userId: payload.id, refreshToken });
-            this.#tokenService.removeRefreshTokenFromCookie(reply);
-
             reply.status(200).send();
           },
         );
@@ -253,43 +178,6 @@ export class AuthRoutesController {
             schema: AUTH_SCHEMAS.refreshTokens,
           },
           async (request, reply) => {
-            const refreshToken = this.#tokenService.getRefreshToken(request);
-
-            if (!refreshToken) {
-              throw new ErrorUnauthorized();
-            }
-
-            let payload: { id: UserId };
-            try {
-              payload = this.#tokenService.verifyRefreshToken(refreshToken);
-            } catch {
-              throw new ErrorUnauthorized();
-            }
-
-            const session = await this.#tokenService.getSession({
-              userId: payload.id,
-              refreshToken,
-            });
-
-            if (!session) {
-              request.log.warn({ userId: payload.id }, 'Session not found in Redis');
-              throw new ErrorUnauthorized();
-            }
-
-            const tokens = this.#tokenService.generateTokens({
-              request,
-              userId: payload.id,
-            });
-            this.#tokenService.setTokens(reply, tokens);
-
-            await this.#tokenService.storeSession({
-              userId: payload.id,
-              refreshToken: tokens.refresh,
-              userAgent: request.headers['user-agent'] || session.userAgent,
-            });
-
-            await this.#tokenService.deleteSession({ userId: payload.id, refreshToken });
-
             reply.status(200).send();
           },
         );
