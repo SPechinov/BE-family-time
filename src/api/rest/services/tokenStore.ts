@@ -6,6 +6,6 @@ interface SessionData {
   expiresAt: number;
 }
 
-export class JwtStore {
+export class TokenStore {
 
 }
