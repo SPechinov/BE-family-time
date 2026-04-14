@@ -11,12 +11,7 @@ import {
 } from '@/entities';
 import { CONFIG, isDev } from '@/config';
 import { ACCESS_TOKEN_COOKIE_CONFIG, HEADER_NAME, REFRESH_TOKEN_COOKIE_CONFIG } from '../../constants';
-import {
-  ErrorInvalidUserAgent,
-  ErrorSessionNotExists,
-  ErrorUnauthorized,
-  ErrorUserNotExists,
-} from '@/pkg';
+import { ErrorInvalidUserAgent, ErrorSessionNotExists, ErrorUnauthorized, ErrorUserNotExists } from '@/pkg';
 import { PREFIX, ROUTES } from './constants';
 import { TokenGenerator } from '../../services';
 import { ITokensSessionsBlacklistStore, ITokensSessionsStore } from '@/domains/repositories/stores';
