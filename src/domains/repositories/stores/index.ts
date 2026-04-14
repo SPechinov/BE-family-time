@@ -1,3 +1,3 @@
 export * from './otpCodes';
-export * from './tokensSessionsStore';
-export * from './tokensSessionsBlacklistStore';
+export * from './tokensSessions';
+export * from './tokensSessionsBlacklist';
