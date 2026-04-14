@@ -265,38 +265,17 @@ export class AuthRoutesController {
           },
         );
 
-        router.post(
+        router.delete(
           ROUTES.logoutSessionById,
           {
             schema: AUTH_SCHEMAS.logoutSessionById,
           },
           async (request, reply) => {
-            const refreshToken = this.#getRefreshToken(request);
-            if (!refreshToken) throw new ErrorUnauthorized();
-
-            const payload = this.#verifyRefreshTokenOrThrow(refreshToken);
-            const currentSession = await this.#tokenStore.getSessionByRefreshJti({
-              userId: payload.userId,
-              refreshJti: payload.jti,
+            await this.#logoutSessionById({
+              request,
+              reply,
+              sessionId: request.params.sessionId,
             });
-            if (!currentSession) throw new ErrorUnauthorized();
-
-            const session = await this.#tokenStore.getSessionById({ sessionId: request.body.sessionId });
-            if (!session || session.userId !== payload.userId) {
-              throw new ErrorSessionNotExists();
-            }
-
-            await this.#tokenStore.deleteSessionById({
-              userId: payload.userId,
-              sessionId: request.body.sessionId,
-            });
-
-            if (request.body.sessionId === payload.sid) {
-              await this.#tryBlacklistAccessToken(request);
-              this.#removeRefreshTokenFromCookie(reply);
-            }
-
-            reply.status(200).send();
           },
         );
 
@@ -424,5 +403,34 @@ export class AuthRoutesController {
       accessJti: payload.jti,
       expiresAt: payload.exp * 1000,
     });
+  }
+
+  async #logoutSessionById(props: { request: FastifyRequest; reply: FastifyReply; sessionId: string }): Promise<void> {
+    const refreshToken = this.#getRefreshToken(props.request);
+    if (!refreshToken) throw new ErrorUnauthorized();
+
+    const payload = this.#verifyRefreshTokenOrThrow(refreshToken);
+    const currentSession = await this.#tokenStore.getSessionByRefreshJti({
+      userId: payload.userId,
+      refreshJti: payload.jti,
+    });
+    if (!currentSession) throw new ErrorUnauthorized();
+
+    const session = await this.#tokenStore.getSessionById({ sessionId: props.sessionId });
+    if (!session || session.userId !== payload.userId) {
+      throw new ErrorSessionNotExists();
+    }
+
+    await this.#tokenStore.deleteSessionById({
+      userId: payload.userId,
+      sessionId: props.sessionId,
+    });
+
+    if (props.sessionId === payload.sid) {
+      await this.#tryBlacklistAccessToken(props.request);
+      this.#removeRefreshTokenFromCookie(props.reply);
+    }
+
+    props.reply.status(200).send();
   }
 }

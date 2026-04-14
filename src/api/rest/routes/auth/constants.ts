@@ -9,6 +9,6 @@ export const ROUTES = Object.freeze({
   getAllSessions: '/get-all-sessions',
   logoutAllSessions: '/logout-all-sessions',
   logoutSession: '/logout-session',
-  logoutSessionById: '/logout-session-by-id',
+  logoutSessionById: '/sessions/:sessionId',
   refreshTokens: '/refresh-tokens',
 });

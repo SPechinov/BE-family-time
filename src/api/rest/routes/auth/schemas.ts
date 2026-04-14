@@ -94,7 +94,7 @@ const SCHEMA_LOGOUT_SESSION = {
 
 const SCHEMA_LOGOUT_SESSION_BY_ID = {
   tags: ['Auth'],
-  body: z.object({
+  params: z.object({
     sessionId: z.uuidv4(),
   }),
   response: createResponseSchema({
