@@ -8,6 +8,8 @@ export interface SessionData {
   userAgent: string;
   expiresAt: number;
   refreshJtiHash: string;
+  accessJtiHash: string;
+  accessExpiresAt: number;
 }
 
 export interface CreateSessionParams {
@@ -16,6 +18,8 @@ export interface CreateSessionParams {
   userAgent: string;
   expiresAt: number;
   refreshJti: string;
+  accessJti: string;
+  accessExpiresAt: number;
 }
 
 export class TokenStore {
@@ -34,6 +38,7 @@ export class TokenStore {
 
   async createSession(props: CreateSessionParams): Promise<void> {
     const refreshJtiHash = this.#fingerprint(props.refreshJti);
+    const accessJtiHash = this.#fingerprint(props.accessJti);
     const sessionKey = this.#buildSessionKey(props.sessionId);
     const refreshMapKey = this.#buildRefreshMapKey(refreshJtiHash);
     const userSessionsKey = this.#buildUserSessionsKey(props.userId);
@@ -48,6 +53,8 @@ export class TokenStore {
         userAgent: props.userAgent,
         expiresAt: String(props.expiresAt),
         refreshJtiHash,
+        accessJtiHash,
+        accessExpiresAt: String(props.accessExpiresAt),
       })
       .expire(sessionKey, ttlSec)
       .setEx(refreshMapKey, ttlSec, props.sessionId)
@@ -85,6 +92,8 @@ export class TokenStore {
       userAgent: sessionData.userAgent ?? '',
       expiresAt: parseInt(sessionData.expiresAt ?? '0', 10),
       refreshJtiHash: sessionData.refreshJtiHash ?? '',
+      accessJtiHash: sessionData.accessJtiHash ?? '',
+      accessExpiresAt: parseInt(sessionData.accessExpiresAt ?? '0', 10),
     };
   }
 
@@ -93,7 +102,13 @@ export class TokenStore {
     const sessionIds = await this.#redis.sMembers(userSessionsKey);
     if (sessionIds.length === 0) return [];
 
-    const result: (Omit<SessionData, 'refreshJtiHash'> & { isCurrent: boolean })[] = [];
+    const result: {
+      userId: UserId;
+      sessionId: string;
+      userAgent: string;
+      expiresAt: number;
+      isCurrent: boolean;
+    }[] = [];
 
     for (const sessionId of sessionIds) {
       const session = await this.getSessionById({ sessionId });
@@ -129,6 +144,10 @@ export class TokenStore {
 
     const sessionKey = this.#buildSessionKey(props.sessionId);
     const refreshMapKey = this.#buildRefreshMapKey(session.refreshJtiHash);
+    await this.#blacklistAccessJtiHash({
+      accessJtiHash: session.accessJtiHash,
+      expiresAt: session.accessExpiresAt,
+    });
 
     await this.#redis.multi().del(sessionKey).del(refreshMapKey).sRem(userSessionsKey, props.sessionId).exec();
   }
@@ -151,6 +170,12 @@ export class TokenStore {
     const pipeline = this.#redis.multi();
     for (const sessionId of sessionIds) {
       const session = await this.getSessionById({ sessionId });
+      if (session?.accessJtiHash) {
+        await this.#blacklistAccessJtiHash({
+          accessJtiHash: session.accessJtiHash,
+          expiresAt: session.accessExpiresAt,
+        });
+      }
       pipeline.del(this.#buildSessionKey(sessionId));
       if (session?.refreshJtiHash) {
         pipeline.del(this.#buildRefreshMapKey(session.refreshJtiHash));
@@ -189,6 +214,10 @@ export class TokenStore {
     return `${this.#ACCESS_BLACKLIST_KEY_PREFIX}:${this.#fingerprint(accessJti)}`;
   }
 
+  #buildAccessBlacklistKeyByHash(accessJtiHash: string): string {
+    return `${this.#ACCESS_BLACKLIST_KEY_PREFIX}:${accessJtiHash}`;
+  }
+
   #fingerprint(value: string): string {
     return createHash('sha256').update(value).digest('hex');
   }
@@ -209,5 +238,12 @@ export class TokenStore {
         await this.#redis.sRem(userSessionsKey, sessionId);
       }
     }
+  }
+
+  async #blacklistAccessJtiHash(props: { accessJtiHash: string; expiresAt: number }): Promise<void> {
+    if (!props.accessJtiHash) return;
+    const ttlSec = this.#ttlSecondsFromEpochMs(props.expiresAt);
+    const key = this.#buildAccessBlacklistKeyByHash(props.accessJtiHash);
+    await this.#redis.setEx(key, ttlSec, '1');
   }
 }

@@ -69,6 +69,7 @@ export class AuthRoutesController {
               userAgent,
             });
             const refreshPayload = this.#verifyRefreshTokenOrThrow(tokens.refresh);
+            const accessPayload = this.#verifyAccessTokenOrThrow(tokens.access);
 
             await this.#tokenStore.createSession({
               userId: refreshPayload.userId,
@@ -76,6 +77,8 @@ export class AuthRoutesController {
               userAgent,
               expiresAt: (refreshPayload.exp ?? Math.floor(Date.now() / 1000)) * 1000,
               refreshJti: refreshPayload.jti,
+              accessJti: accessPayload.jti,
+              accessExpiresAt: accessPayload.exp * 1000,
             });
 
             this.#setAccessTokenToCookie(reply, tokens.access);
@@ -158,13 +161,16 @@ export class AuthRoutesController {
           },
           async (request, reply) => {
             try {
-              await this.#useCases.forgotPasswordEnd({
+              const user = await this.#useCases.forgotPasswordEnd({
                 logger: request.log,
                 userContactsPlainEntity: new UserContactsPlainEntity({ email: request.body.email }),
                 otpCode: request.body.otpCode,
                 password: new UserPasswordPlainEntity(request.body.password),
               });
 
+              await this.#tokenStore.deleteAllSessions({ userId: user.id });
+              this.#removeAccessTokenFromCookie(reply);
+              this.#removeRefreshTokenFromCookie(reply);
               reply.status(200).send();
             } catch (error: unknown) {
               if (error instanceof ErrorUserNotExists) {
@@ -307,6 +313,7 @@ export class AuthRoutesController {
               userAgent,
             });
             const newRefreshPayload = this.#verifyRefreshTokenOrThrow(tokens.refresh);
+            const newAccessPayload = this.#verifyAccessTokenOrThrow(tokens.access);
 
             await this.#tokenStore.deleteSessionByRefreshJti({
               userId: payload.userId,
@@ -318,6 +325,8 @@ export class AuthRoutesController {
               userAgent,
               expiresAt: (newRefreshPayload.exp ?? Math.floor(Date.now() / 1000)) * 1000,
               refreshJti: newRefreshPayload.jti,
+              accessJti: newAccessPayload.jti,
+              accessExpiresAt: newAccessPayload.exp * 1000,
             });
 
             await this.#tryBlacklistAccessToken(request);
@@ -383,6 +392,27 @@ export class AuthRoutesController {
     }
 
     if (!payload.userId || payload.typ !== 'refresh' || !payload.sid || !payload.jti) {
+      throw new ErrorUnauthorized();
+    }
+
+    return { userId: payload.userId, sid: payload.sid, jti: payload.jti, exp: payload.exp };
+  }
+
+  #verifyAccessTokenOrThrow(token: string): { userId: UserId; sid: string; jti: string; exp: number } {
+    let payload;
+    try {
+      payload = this.#fastify.jwt.verify<{
+        userId?: UserId;
+        sid?: string;
+        jti?: string;
+        typ?: 'access' | 'refresh';
+        exp?: number;
+      }>(token);
+    } catch {
+      throw new ErrorUnauthorized();
+    }
+
+    if (!payload.userId || payload.typ !== 'access' || !payload.sid || !payload.jti || !payload.exp) {
       throw new ErrorUnauthorized();
     }
 
