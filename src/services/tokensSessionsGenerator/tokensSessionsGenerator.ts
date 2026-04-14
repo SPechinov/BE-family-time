@@ -1,17 +1,16 @@
 import { UserId } from '@/entities';
-import { ITokensSessionsGenerator } from '@/domains/services';
-import { FastifyInstance } from 'fastify';
+import { IJwtSigner, ITokensSessionsGenerator } from '@/domains/services';
 import { randomUUID } from 'node:crypto';
 
 type TokenType = 'access' | 'refresh';
 
 export class TokensSessionsGenerator implements ITokensSessionsGenerator {
-  readonly #fastify: FastifyInstance;
+  readonly #jwtSigner: IJwtSigner;
   readonly #accessExpiresIn: number;
   readonly #refreshExpiresIn: number;
 
-  constructor(props: { fastify: FastifyInstance; expiresInAccess: number; expiresInRefresh: number }) {
-    this.#fastify = props.fastify;
+  constructor(props: { jwtSigner: IJwtSigner; expiresInAccess: number; expiresInRefresh: number }) {
+    this.#jwtSigner = props.jwtSigner;
     this.#accessExpiresIn = props.expiresInAccess;
     this.#refreshExpiresIn = props.expiresInRefresh;
   }
@@ -40,7 +39,7 @@ export class TokensSessionsGenerator implements ITokensSessionsGenerator {
     type: TokenType;
     sessionId: string;
   }): string {
-    return this.#fastify.jwt.sign(
+    return this.#jwtSigner.sign(
       {
         userId: options.userId,
         userAgent: options.userAgent,
