@@ -54,6 +54,8 @@ export class TokenStore {
       .sAdd(userSessionsKey, props.sessionId)
       .expire(userSessionsKey, this.#sessionsIndexTtlSec)
       .exec();
+
+    await this.#pruneUserSessions(props.userId);
   }
 
   async getSessionByRefreshJti(props: { userId: UserId; refreshJti: string }): Promise<SessionData | null> {
@@ -194,5 +196,18 @@ export class TokenStore {
   #ttlSecondsFromEpochMs(expiresAtMs: number): number {
     const ttlMs = expiresAtMs - Date.now();
     return Math.max(1, Math.floor(ttlMs / 1000));
+  }
+
+  async #pruneUserSessions(userId: UserId): Promise<void> {
+    const userSessionsKey = this.#buildUserSessionsKey(userId);
+    const sessionIds = await this.#redis.sMembers(userSessionsKey);
+    if (sessionIds.length === 0) return;
+
+    for (const sessionId of sessionIds) {
+      const session = await this.getSessionById({ sessionId });
+      if (!session || session.userId !== userId || session.expiresAt <= Date.now()) {
+        await this.#redis.sRem(userSessionsKey, sessionId);
+      }
+    }
   }
 }
