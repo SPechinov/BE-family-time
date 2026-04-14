@@ -5,12 +5,12 @@ import { AuthRoutesController } from '../../../routes/auth';
 import { createDependencies } from './utils';
 import { TokensSessionsGenerator } from '@/services';
 import { CONFIG } from '@/config';
-import { FastifyJwtSigner } from '../../../adapters/jwt/fastifyJwtSigner';
+import { FastifyJwtSigner } from '../../../adapters';
 
 export class AuthComposite {
-  #fastifyInstance: FastifyInstance;
-  #redis: RedisClient;
-  #postgres: Pool;
+  readonly #fastifyInstance: FastifyInstance;
+  readonly #redis: RedisClient;
+  readonly #postgres: Pool;
 
   constructor(props: { fastifyInstance: FastifyInstance; redis: RedisClient; postgres: Pool }) {
     this.#fastifyInstance = props.fastifyInstance;
