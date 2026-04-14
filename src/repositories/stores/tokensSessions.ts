@@ -3,7 +3,7 @@ import { RedisClient } from '@/pkg';
 import { createHash } from 'node:crypto';
 import { CreateSessionParams, ITokensSessionsStore, SessionData, UserSession } from '@/domains/repositories/stores';
 
-export class TokensSessionsStore implements ITokensSessionsStore {
+export class TokensSessions implements ITokensSessionsStore {
   readonly #redis: RedisClient;
   readonly #sessionsIndexTtlSec: number;
 
