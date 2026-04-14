@@ -23,6 +23,7 @@ const CODES = {
   calendarEventNotExists: 'calendarEventNotExists',
   calendarEventRecurrencePattern: 'calendarEventRecurrencePattern',
   calendarEventInvalidDateRange: 'calendarEventInvalidDateRange',
+  sessionNotExists: 'sessionNotExists',
 };
 
 export abstract class BusinessError extends Error {
@@ -203,5 +204,13 @@ export class ErrorCalendarEventInvalidDateRange extends BusinessError {
 
   constructor() {
     super(CODES.calendarEventInvalidDateRange);
+  }
+}
+
+export class ErrorSessionNotExists extends BusinessError {
+  statusCode = 404;
+
+  constructor() {
+    super(CODES.sessionNotExists);
   }
 }

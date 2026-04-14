@@ -48,6 +48,7 @@ export const GLOBAL_SCHEMAS = {
 
 export const SESSION_SCHEMA = z
   .object({
+    sessionId: z.uuidv4(),
     expiresAt: z.number(),
     userAgent: z.string().nullable(),
     isCurrent: z.boolean(),

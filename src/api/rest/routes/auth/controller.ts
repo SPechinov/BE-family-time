@@ -11,7 +11,13 @@ import {
 } from '@/entities';
 import { CONFIG, isDev } from '@/config';
 import { HEADER_NAME, REFRESH_TOKEN_COOKIE_CONFIG } from '../../constants';
-import { ErrorInvalidUserAgent, ErrorUnauthorized, ErrorUserNotExists, RedisClient } from '@/pkg';
+import {
+  ErrorInvalidUserAgent,
+  ErrorSessionNotExists,
+  ErrorUnauthorized,
+  ErrorUserNotExists,
+  RedisClient,
+} from '@/pkg';
 import { PREFIX, ROUTES } from './constants';
 import { TokenGenerator, TokenStore } from '../../services';
 import { extractAuthToken } from '../../utils';
@@ -196,11 +202,14 @@ export class AuthRoutesController {
             });
 
             reply.status(200).send({
-              sessions: sessions.map((session: { expiresAt: number; userAgent: string; isCurrent: boolean }) => ({
-                expiresAt: session.expiresAt,
-                userAgent: session.userAgent,
-                isCurrent: session.isCurrent,
-              })),
+              sessions: sessions.map(
+                (session: { sessionId: string; expiresAt: number; userAgent: string; isCurrent: boolean }) => ({
+                  sessionId: session.sessionId,
+                  expiresAt: session.expiresAt,
+                  userAgent: session.userAgent,
+                  isCurrent: session.isCurrent,
+                }),
+              ),
             });
           },
         );
@@ -274,7 +283,7 @@ export class AuthRoutesController {
 
             const session = await this.#tokenStore.getSessionById({ sessionId: request.body.sessionId });
             if (!session || session.userId !== payload.userId) {
-              throw new ErrorUnauthorized();
+              throw new ErrorSessionNotExists();
             }
 
             await this.#tokenStore.deleteSessionById({
