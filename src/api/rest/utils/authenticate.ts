@@ -1,11 +1,12 @@
 import { FastifyRequest } from 'fastify';
 import { ErrorTokenExpired, ErrorUnauthorized } from '@/pkg';
 import { UserId } from '@/entities';
+import { TokenStore } from '../services';
 
-export const authenticate = async (request: FastifyRequest) => {
+export const authenticate = async (request: FastifyRequest, props: { tokenStore: TokenStore }) => {
+  let payload: { userId?: UserId; id?: UserId; typ?: 'access' | 'refresh'; jti?: string };
   try {
-    const payload = await request.jwtVerify<{ id: UserId }>();
-    request.userId = payload.id;
+    payload = await request.jwtVerify<{ userId?: UserId; id?: UserId; typ?: 'access' | 'refresh'; jti?: string }>();
   } catch (error: unknown) {
     if (typeof error !== 'object' || error === null || !('code' in error)) {
       throw error;
@@ -22,4 +23,15 @@ export const authenticate = async (request: FastifyRequest) => {
 
     throw new ErrorUnauthorized();
   }
+
+  const userId = payload.userId ?? payload.id;
+  if (!userId || payload.typ !== 'access' || !payload.jti) {
+    throw new ErrorUnauthorized();
+  }
+
+  if (await props.tokenStore.hasAccessJtiInBlacklist({ accessJti: payload.jti })) {
+    throw new ErrorUnauthorized();
+  }
+
+  request.userId = userId;
 };

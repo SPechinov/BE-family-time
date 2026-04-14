@@ -25,6 +25,7 @@ export class TokenStore {
   readonly #SESSION_KEY_PREFIX = 'auth:session';
   readonly #USER_SESSIONS_KEY_PREFIX = 'auth:user-sessions';
   readonly #REFRESH_MAP_KEY_PREFIX = 'auth:refresh';
+  readonly #ACCESS_BLACKLIST_KEY_PREFIX = 'auth:blacklist:access';
 
   constructor(props: { redis: RedisClient; sessionsIndexTtlSec: number }) {
     this.#redis = props.redis;
@@ -158,6 +159,18 @@ export class TokenStore {
     await pipeline.exec();
   }
 
+  async blacklistAccessJti(props: { accessJti: string; expiresAt: number }): Promise<void> {
+    const ttlSec = this.#ttlSecondsFromEpochMs(props.expiresAt);
+    const key = this.#buildAccessBlacklistKey(props.accessJti);
+    await this.#redis.setEx(key, ttlSec, '1');
+  }
+
+  async hasAccessJtiInBlacklist(props: { accessJti: string }): Promise<boolean> {
+    const key = this.#buildAccessBlacklistKey(props.accessJti);
+    const exists = await this.#redis.exists(key);
+    return exists === 1;
+  }
+
   #buildSessionKey(sessionId: string): string {
     return `${this.#SESSION_KEY_PREFIX}:${sessionId}`;
   }
@@ -168,6 +181,10 @@ export class TokenStore {
 
   #buildRefreshMapKey(refreshJtiHash: string): string {
     return `${this.#REFRESH_MAP_KEY_PREFIX}:${refreshJtiHash}`;
+  }
+
+  #buildAccessBlacklistKey(accessJti: string): string {
+    return `${this.#ACCESS_BLACKLIST_KEY_PREFIX}:${this.#fingerprint(accessJti)}`;
   }
 
   #fingerprint(value: string): string {

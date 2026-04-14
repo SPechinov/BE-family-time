@@ -14,6 +14,7 @@ import { HEADER_NAME, REFRESH_TOKEN_COOKIE_CONFIG } from '../../constants';
 import { ErrorInvalidUserAgent, ErrorUnauthorized, ErrorUserNotExists, RedisClient } from '@/pkg';
 import { PREFIX, ROUTES } from './constants';
 import { TokenGenerator, TokenStore } from '../../services';
+import { extractAuthToken } from '../../utils';
 
 export class AuthRoutesController {
   #fastify: FastifyInstance;
@@ -221,6 +222,7 @@ export class AuthRoutesController {
             if (!currentSession) throw new ErrorUnauthorized();
 
             await this.#tokenStore.deleteAllSessions({ userId: payload.userId });
+            await this.#tryBlacklistAccessToken(request);
             this.#removeRefreshTokenFromCookie(reply);
 
             reply.status(200).send();
@@ -247,6 +249,7 @@ export class AuthRoutesController {
               userId: payload.userId,
               refreshJti: payload.jti,
             });
+            await this.#tryBlacklistAccessToken(request);
             this.#removeRefreshTokenFromCookie(reply);
 
             reply.status(200).send();
@@ -293,6 +296,7 @@ export class AuthRoutesController {
               refreshJti: newRefreshPayload.jti,
             });
 
+            await this.#tryBlacklistAccessToken(request);
             this.#setAccessTokenToHeaders(reply, tokens.access);
             this.#setRefreshTokenToCookie(reply, tokens.refresh);
 
@@ -352,5 +356,30 @@ export class AuthRoutesController {
     }
 
     return { userId, sid: payload.sid, jti: payload.jti, exp: payload.exp };
+  }
+
+  async #tryBlacklistAccessToken(request: FastifyRequest): Promise<void> {
+    const token = extractAuthToken(request);
+    if (!token) return;
+
+    let payload;
+    try {
+      payload = this.#fastify.jwt.verify<{
+        typ?: 'access' | 'refresh';
+        jti?: string;
+        exp?: number;
+      }>(token);
+    } catch {
+      return;
+    }
+
+    if (payload.typ !== 'access' || !payload.jti || !payload.exp) {
+      return;
+    }
+
+    await this.#tokenStore.blacklistAccessJti({
+      accessJti: payload.jti,
+      expiresAt: payload.exp * 1000,
+    });
   }
 }
