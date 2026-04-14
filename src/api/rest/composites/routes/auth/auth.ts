@@ -3,6 +3,8 @@ import { FastifyInstance } from 'fastify';
 import { Pool } from 'pg';
 import { AuthRoutesController } from '../../../routes/auth';
 import { createDependencies } from './utils';
+import { TokensSessionsGenerator } from '@/services';
+import { CONFIG } from '@/config';
 
 export class AuthComposite {
   #fastifyInstance: FastifyInstance;
@@ -19,10 +21,16 @@ export class AuthComposite {
 
   #register() {
     const dependencies = createDependencies({ redis: this.#redis, postgres: this.#postgres });
+    const tokensSessionsGenerator = new TokensSessionsGenerator({
+      fastify: this.#fastifyInstance,
+      expiresInAccess: CONFIG.jwt.access.expiry / 1000,
+      expiresInRefresh: CONFIG.jwt.refresh.expiry / 1000,
+    });
 
     new AuthRoutesController({
       fastify: this.#fastifyInstance,
       useCases: dependencies.authUseCases,
+      tokensSessionsGenerator,
       tokensSessionsStore: dependencies.tokensSessionsStore,
       tokensSessionsBlacklistStore: dependencies.tokensSessionsBlacklistStore,
     }).register();

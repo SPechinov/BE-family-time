@@ -13,32 +13,28 @@ import { CONFIG, isDev } from '@/config';
 import { ACCESS_TOKEN_COOKIE_CONFIG, HEADER_NAME, REFRESH_TOKEN_COOKIE_CONFIG } from '../../constants';
 import { ErrorInvalidUserAgent, ErrorSessionNotExists, ErrorUnauthorized, ErrorUserNotExists } from '@/pkg';
 import { PREFIX, ROUTES } from './constants';
-import { TokenGenerator } from '../../services';
+import { ITokensSessionsGenerator } from '@/domains/services';
 import { ITokensSessionsBlacklistStore, ITokensSessionsStore } from '@/domains/repositories/stores';
 
 export class AuthRoutesController {
   #fastify: FastifyInstance;
   #useCases: IAuthUseCases;
-  #tokenGenerator: TokenGenerator;
+  #tokensSessionsGenerator: ITokensSessionsGenerator;
   #tokensSessionsStore: ITokensSessionsStore;
   #tokensSessionsBlacklistStore: ITokensSessionsBlacklistStore;
 
   constructor(props: {
     fastify: FastifyInstance;
     useCases: IAuthUseCases;
+    tokensSessionsGenerator: ITokensSessionsGenerator;
     tokensSessionsStore: ITokensSessionsStore;
     tokensSessionsBlacklistStore: ITokensSessionsBlacklistStore;
   }) {
     this.#fastify = props.fastify;
     this.#useCases = props.useCases;
+    this.#tokensSessionsGenerator = props.tokensSessionsGenerator;
     this.#tokensSessionsStore = props.tokensSessionsStore;
     this.#tokensSessionsBlacklistStore = props.tokensSessionsBlacklistStore;
-
-    this.#tokenGenerator = new TokenGenerator({
-      fastify: this.#fastify,
-      expiresInAccess: CONFIG.jwt.access.expiry / 1000,
-      expiresInRefresh: CONFIG.jwt.refresh.expiry / 1000,
-    });
   }
 
   register() {
@@ -63,7 +59,7 @@ export class AuthRoutesController {
               jwtPayload: { userAgent },
             });
 
-            const tokens = this.#tokenGenerator.generateTokens({
+            const tokens = this.#tokensSessionsGenerator.generateTokens({
               userId: user.id,
               userAgent,
             });
@@ -313,7 +309,7 @@ export class AuthRoutesController {
               throw new ErrorUnauthorized();
             }
 
-            const tokens = this.#tokenGenerator.generateTokens({
+            const tokens = this.#tokensSessionsGenerator.generateTokens({
               userId: payload.userId,
               userAgent,
             });

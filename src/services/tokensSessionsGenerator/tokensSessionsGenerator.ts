@@ -1,10 +1,11 @@
 import { UserId } from '@/entities';
+import { ITokensSessionsGenerator } from '@/domains/services';
 import { FastifyInstance } from 'fastify';
 import { randomUUID } from 'node:crypto';
 
 type TokenType = 'access' | 'refresh';
 
-export class TokenGenerator {
+export class TokensSessionsGenerator implements ITokensSessionsGenerator {
   readonly #fastify: FastifyInstance;
   readonly #accessExpiresIn: number;
   readonly #refreshExpiresIn: number;

@@ -4,3 +4,4 @@ export * from './groupsUsers';
 export * from './calendarEvents';
 export * from './crypto';
 export * from './rateLimiter';
+export * from './tokensSessionsGenerator';
