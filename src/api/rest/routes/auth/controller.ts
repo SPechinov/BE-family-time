@@ -10,7 +10,7 @@ import {
   UserId,
 } from '@/entities';
 import { CONFIG, isDev } from '@/config';
-import { HEADER_NAME, REFRESH_TOKEN_COOKIE_CONFIG } from '../../constants';
+import { ACCESS_TOKEN_COOKIE_CONFIG, HEADER_NAME, REFRESH_TOKEN_COOKIE_CONFIG } from '../../constants';
 import {
   ErrorInvalidUserAgent,
   ErrorSessionNotExists,
@@ -20,7 +20,6 @@ import {
 } from '@/pkg';
 import { PREFIX, ROUTES } from './constants';
 import { TokenGenerator, TokenStore } from '../../services';
-import { extractAuthToken } from '../../utils';
 
 export class AuthRoutesController {
   #fastify: FastifyInstance;
@@ -79,7 +78,7 @@ export class AuthRoutesController {
               refreshJti: refreshPayload.jti,
             });
 
-            this.#setAccessTokenToHeaders(reply, tokens.access);
+            this.#setAccessTokenToCookie(reply, tokens.access);
             this.#setRefreshTokenToCookie(reply, tokens.refresh);
 
             reply.status(200).send();
@@ -232,6 +231,7 @@ export class AuthRoutesController {
 
             await this.#tokenStore.deleteAllSessions({ userId: payload.userId });
             await this.#tryBlacklistAccessToken(request);
+            this.#removeAccessTokenFromCookie(reply);
             this.#removeRefreshTokenFromCookie(reply);
 
             reply.status(200).send();
@@ -259,6 +259,7 @@ export class AuthRoutesController {
               refreshJti: payload.jti,
             });
             await this.#tryBlacklistAccessToken(request);
+            this.#removeAccessTokenFromCookie(reply);
             this.#removeRefreshTokenFromCookie(reply);
 
             reply.status(200).send();
@@ -320,7 +321,7 @@ export class AuthRoutesController {
             });
 
             await this.#tryBlacklistAccessToken(request);
-            this.#setAccessTokenToHeaders(reply, tokens.access);
+            this.#setAccessTokenToCookie(reply, tokens.access);
             this.#setRefreshTokenToCookie(reply, tokens.refresh);
 
             reply.status(200).send();
@@ -345,8 +346,16 @@ export class AuthRoutesController {
     return request.cookies?.[CONFIG.jwt.refresh.cookieName] || null;
   }
 
-  #setAccessTokenToHeaders(reply: FastifyReply, accessToken: string) {
-    return reply.header(HEADER_NAME.authorization, accessToken);
+  #getAccessToken(request: FastifyRequest): string | null {
+    return request.cookies?.[CONFIG.jwt.access.cookieName] || null;
+  }
+
+  #setAccessTokenToCookie(reply: FastifyReply, accessToken: string) {
+    return reply.setCookie(CONFIG.jwt.access.cookieName, accessToken, ACCESS_TOKEN_COOKIE_CONFIG);
+  }
+
+  #removeAccessTokenFromCookie(reply: FastifyReply) {
+    return reply.setCookie(CONFIG.jwt.access.cookieName, '', { ...ACCESS_TOKEN_COOKIE_CONFIG, maxAge: 0 });
   }
 
   #setRefreshTokenToCookie(reply: FastifyReply, refreshToken: string) {
@@ -381,7 +390,7 @@ export class AuthRoutesController {
   }
 
   async #tryBlacklistAccessToken(request: FastifyRequest): Promise<void> {
-    const token = extractAuthToken(request);
+    const token = this.#getAccessToken(request);
     if (!token) return;
 
     let payload;
@@ -428,6 +437,7 @@ export class AuthRoutesController {
 
     if (props.sessionId === payload.sid) {
       await this.#tryBlacklistAccessToken(props.request);
+      this.#removeAccessTokenFromCookie(props.reply);
       this.#removeRefreshTokenFromCookie(props.reply);
     }
 

@@ -12,13 +12,7 @@ export const JwtConfig: FastifyJWTOptions = Object.freeze({
   sign: { expiresIn: CONFIG.jwt.access.expiry / 1000, iss: CONFIG.jwt.issuer, algorithm: 'HS256' },
   verify: {
     extractToken: (request: FastifyRequest) => {
-      const authHeader = request.headers.authorization;
-      if (!authHeader) return;
-
-      if (authHeader.startsWith('Bearer ')) {
-        return authHeader.slice(7);
-      }
-      return authHeader;
+      return request.cookies?.[CONFIG.jwt.access.cookieName];
     },
   },
 } as const);
