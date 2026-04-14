@@ -92,6 +92,16 @@ const SCHEMA_LOGOUT_SESSION = {
   }),
 };
 
+const SCHEMA_LOGOUT_SESSION_BY_ID = {
+  tags: ['Auth'],
+  body: z.object({
+    sessionId: z.uuidv4(),
+  }),
+  response: createResponseSchema({
+    200: z.void(),
+  }),
+};
+
 const SCHEMA_REFRESH_TOKENS = {
   tags: ['Auth'],
   security: [],
@@ -112,5 +122,6 @@ export const AUTH_SCHEMAS = Object.freeze({
   getAllSession: SCHEMA_GET_ALL_SESSIONS,
   logoutAllSession: SCHEMA_LOGOUT_ALL_SESSIONS,
   logoutSession: SCHEMA_LOGOUT_SESSION,
+  logoutSessionById: SCHEMA_LOGOUT_SESSION_BY_ID,
   refreshTokens: SCHEMA_REFRESH_TOKENS,
 });

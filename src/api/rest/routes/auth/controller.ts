@@ -257,6 +257,41 @@ export class AuthRoutesController {
         );
 
         router.post(
+          ROUTES.logoutSessionById,
+          {
+            schema: AUTH_SCHEMAS.logoutSessionById,
+          },
+          async (request, reply) => {
+            const refreshToken = this.#getRefreshToken(request);
+            if (!refreshToken) throw new ErrorUnauthorized();
+
+            const payload = this.#verifyRefreshTokenOrThrow(refreshToken);
+            const currentSession = await this.#tokenStore.getSessionByRefreshJti({
+              userId: payload.userId,
+              refreshJti: payload.jti,
+            });
+            if (!currentSession) throw new ErrorUnauthorized();
+
+            const session = await this.#tokenStore.getSessionById({ sessionId: request.body.sessionId });
+            if (!session || session.userId !== payload.userId) {
+              throw new ErrorUnauthorized();
+            }
+
+            await this.#tokenStore.deleteSessionById({
+              userId: payload.userId,
+              sessionId: request.body.sessionId,
+            });
+
+            if (request.body.sessionId === payload.sid) {
+              await this.#tryBlacklistAccessToken(request);
+              this.#removeRefreshTokenFromCookie(reply);
+            }
+
+            reply.status(200).send();
+          },
+        );
+
+        router.post(
           ROUTES.refreshTokens,
           {
             schema: AUTH_SCHEMAS.refreshTokens,
@@ -350,12 +385,11 @@ export class AuthRoutesController {
       throw new ErrorUnauthorized();
     }
 
-    const userId = payload.userId ?? payload.id;
-    if (!userId || payload.typ !== 'refresh' || !payload.sid || !payload.jti) {
+    if (!payload.userId || payload.typ !== 'refresh' || !payload.sid || !payload.jti) {
       throw new ErrorUnauthorized();
     }
 
-    return { userId, sid: payload.sid, jti: payload.jti, exp: payload.exp };
+    return { userId: payload.userId, sid: payload.sid, jti: payload.jti, exp: payload.exp };
   }
 
   async #tryBlacklistAccessToken(request: FastifyRequest): Promise<void> {
