@@ -7,16 +7,13 @@ meta {
 post {
   url: {{url}}/groups/:groupId/excludeUser
   body: formUrlEncoded
-  auth: bearer
+  auth: inherit
 }
 
 params:path {
   groupId: 89003197-1724-44b4-b674-d033ed157d77
 }
 
-auth:bearer {
-  token: {{authToken}}
-}
 
 body:json {
   {

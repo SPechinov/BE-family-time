@@ -1,0 +1,20 @@
+meta {
+  name: logoutSessionById
+  type: http
+  seq: 9
+}
+
+delete {
+  url: {{url}}/auth/sessions/:sessionId
+  body: formUrlEncoded
+  auth: inherit
+}
+
+params:path {
+  sessionId: 722dd0cb-1e89-41f7-8b3c-540149686969
+}
+
+settings {
+  encodeUrl: true
+  timeout: 0
+}

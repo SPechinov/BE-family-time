@@ -7,16 +7,13 @@ meta {
 patch {
   url: {{url}}/groups/:groupId
   body: formUrlEncoded
-  auth: bearer
+  auth: inherit
 }
 
 params:path {
   groupId: 12921cf6-9e6f-4d03-bda2-7e1e5285c03f
 }
 
-auth:bearer {
-  token: {{authToken}}
-}
 
 body:json {
   {

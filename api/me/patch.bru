@@ -7,12 +7,9 @@ meta {
 patch {
   url: {{url}}/me
   body: formUrlEncoded
-  auth: bearer
+  auth: inherit
 }
 
-auth:bearer {
-  token: {{authToken}}
-}
 
 body:json {
   {

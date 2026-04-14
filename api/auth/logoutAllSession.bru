@@ -7,16 +7,7 @@ meta {
 post {
   url: {{url}}/auth/logout-all-sessions
   body: formUrlEncoded
-  auth: bearer
-}
-
-auth:bearer {
-  token: {{authToken}}
-}
-
-script:post-response {
-  bru.setVar("authToken", undefined)
-  
+  auth: inherit
 }
 
 settings {

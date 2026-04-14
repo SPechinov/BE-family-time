@@ -7,16 +7,13 @@ meta {
 delete {
   url: {{url}}/groups/:groupId
   body: formUrlEncoded
-  auth: bearer
+  auth: inherit
 }
 
 params:path {
   groupId: 49e875ba-0275-4924-9cdc-e5156c2f7a05
 }
 
-auth:bearer {
-  token: {{authToken}}
-}
 
 body:json {
   {

@@ -7,12 +7,9 @@ meta {
 get {
   url: {{url}}/groups
   body: formUrlEncoded
-  auth: bearer
+  auth: inherit
 }
 
-auth:bearer {
-  token: {{authToken}}
-}
 
 settings {
   encodeUrl: true

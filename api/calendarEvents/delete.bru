@@ -7,7 +7,7 @@ meta {
 delete {
   url: {{url}}/groups/:groupId/calendar-events/:calendarEventId
   body: formUrlEncoded
-  auth: bearer
+  auth: inherit
 }
 
 params:path {
@@ -15,9 +15,6 @@ params:path {
   calendarEventId: 630c1f93-29e3-4c70-b033-c69388c090b9
 }
 
-auth:bearer {
-  token: {{authToken}}
-}
 
 settings {
   encodeUrl: true

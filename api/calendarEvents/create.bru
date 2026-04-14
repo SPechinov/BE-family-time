@@ -7,16 +7,13 @@ meta {
 post {
   url: {{url}}/groups/:groupId/calendar-events
   body: formUrlEncoded
-  auth: bearer
+  auth: inherit
 }
 
 params:path {
   groupId: 3c0a6eeb-1a21-417e-9d2f-ebc1d47b594e
 }
 
-auth:bearer {
-  token: {{authToken}}
-}
 
 body:json {
   {

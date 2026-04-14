@@ -7,12 +7,9 @@ meta {
 post {
   url: {{url}}/groups
   body: formUrlEncoded
-  auth: bearer
+  auth: inherit
 }
 
-auth:bearer {
-  token: {{authToken}}
-}
 
 body:form-urlencoded {
   name: My family

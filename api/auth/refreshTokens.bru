@@ -1,22 +1,13 @@
 meta {
   name: refreshTokens
   type: http
-  seq: 9
+  seq: 10
 }
 
 post {
   url: {{url}}/auth/refresh-tokens
   body: formUrlEncoded
-  auth: bearer
-}
-
-auth:bearer {
-  token: {{authToken}}
-}
-
-script:post-response {
-  bru.setVar("authToken", res.headers.authorization)
-  
+  auth: inherit
 }
 
 settings {

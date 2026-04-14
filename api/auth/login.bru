@@ -15,11 +15,6 @@ body:form-urlencoded {
   password: 123123123
 }
 
-script:post-response {
-  bru.setVar("authToken", res.headers.authorization)
-  
-}
-
 settings {
   encodeUrl: true
   timeout: 0

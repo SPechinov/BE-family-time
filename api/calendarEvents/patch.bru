@@ -7,7 +7,7 @@ meta {
 patch {
   url: {{url}}/groups/:groupId/calendar-events/:calendarEventId
   body: json
-  auth: bearer
+  auth: inherit
 }
 
 params:path {
@@ -15,9 +15,6 @@ params:path {
   calendarEventId: 0ec9ef72-a1bd-492a-a172-2b17723a5c32
 }
 
-auth:bearer {
-  token: {{authToken}}
-}
 
 body:json {
   {
