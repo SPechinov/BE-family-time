@@ -11,7 +11,7 @@ export const ACCESS_TOKEN_COOKIE_CONFIG: CookieSerializeOptions = Object.freeze(
   sameSite: isProd() ? 'strict' : false,
   maxAge: CONFIG.jwt.access.expiry / 1000,
   path: '/',
-});
+} as const);
 
 export const REFRESH_TOKEN_COOKIE_CONFIG: CookieSerializeOptions = Object.freeze({
   httpOnly: true,
@@ -19,4 +19,4 @@ export const REFRESH_TOKEN_COOKIE_CONFIG: CookieSerializeOptions = Object.freeze
   sameSite: isProd() ? 'strict' : false,
   maxAge: CONFIG.jwt.refresh.expiry / 1000,
   path: '/',
-});
+} as const);
