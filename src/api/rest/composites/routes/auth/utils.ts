@@ -1,7 +1,7 @@
 import { Pool } from 'pg';
 import { RedisClient, TIMES } from '@/pkg';
 import { AuthUseCases } from '@/useCases';
-import { OtpCodesStore } from '@/repositories/stores';
+import { OtpCodesStore, TokensSessionsBlacklistStore, TokensSessionsStore } from '@/repositories/stores';
 import { RateLimiterService } from '@/services';
 import { CONFIG } from '@/config';
 
@@ -40,8 +40,18 @@ export const createDependencies = ({ redis, postgres }: Props) => {
     forgotPasswordOtpCodesStore,
     rateLimiter,
   });
+  const tokensSessionsStore = new TokensSessionsStore({
+    redis,
+    sessionsIndexTtlSec: CONFIG.jwt.refresh.expiry / 1000,
+  });
+  const tokensSessionsBlacklistStore = new TokensSessionsBlacklistStore({
+    redis,
+    sessionsIndexTtlSec: CONFIG.jwt.refresh.expiry / 1000,
+  });
 
   return {
     authUseCases,
+    tokensSessionsStore,
+    tokensSessionsBlacklistStore,
   };
 };

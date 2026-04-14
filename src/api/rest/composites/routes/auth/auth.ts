@@ -23,7 +23,8 @@ export class AuthComposite {
     new AuthRoutesController({
       fastify: this.#fastifyInstance,
       useCases: dependencies.authUseCases,
-      redis: this.#redis,
+      tokensSessionsStore: dependencies.tokensSessionsStore,
+      tokensSessionsBlacklistStore: dependencies.tokensSessionsBlacklistStore,
     }).register();
   }
 }

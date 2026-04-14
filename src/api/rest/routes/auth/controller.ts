@@ -16,29 +16,33 @@ import {
   ErrorSessionNotExists,
   ErrorUnauthorized,
   ErrorUserNotExists,
-  RedisClient,
 } from '@/pkg';
 import { PREFIX, ROUTES } from './constants';
-import { TokenGenerator, TokenStore } from '../../services';
+import { TokenGenerator } from '../../services';
+import { ITokensSessionsBlacklistStore, ITokensSessionsStore } from '@/domains/repositories/stores';
 
 export class AuthRoutesController {
   #fastify: FastifyInstance;
   #useCases: IAuthUseCases;
   #tokenGenerator: TokenGenerator;
-  #tokenStore: TokenStore;
+  #tokensSessionsStore: ITokensSessionsStore;
+  #tokensSessionsBlacklistStore: ITokensSessionsBlacklistStore;
 
-  constructor(props: { fastify: FastifyInstance; useCases: IAuthUseCases; redis: RedisClient }) {
+  constructor(props: {
+    fastify: FastifyInstance;
+    useCases: IAuthUseCases;
+    tokensSessionsStore: ITokensSessionsStore;
+    tokensSessionsBlacklistStore: ITokensSessionsBlacklistStore;
+  }) {
     this.#fastify = props.fastify;
     this.#useCases = props.useCases;
+    this.#tokensSessionsStore = props.tokensSessionsStore;
+    this.#tokensSessionsBlacklistStore = props.tokensSessionsBlacklistStore;
 
     this.#tokenGenerator = new TokenGenerator({
       fastify: this.#fastify,
       expiresInAccess: CONFIG.jwt.access.expiry / 1000,
       expiresInRefresh: CONFIG.jwt.refresh.expiry / 1000,
-    });
-    this.#tokenStore = new TokenStore({
-      redis: props.redis,
-      sessionsIndexTtlSec: CONFIG.jwt.refresh.expiry / 1000,
     });
   }
 
@@ -71,7 +75,7 @@ export class AuthRoutesController {
             const refreshPayload = this.#verifyRefreshTokenOrThrow(tokens.refresh);
             const accessPayload = this.#verifyAccessTokenOrThrow(tokens.access);
 
-            await this.#tokenStore.createSession({
+            await this.#tokensSessionsStore.createSession({
               userId: refreshPayload.userId,
               sessionId: refreshPayload.sid,
               userAgent,
@@ -168,7 +172,8 @@ export class AuthRoutesController {
                 password: new UserPasswordPlainEntity(request.body.password),
               });
 
-              await this.#tokenStore.deleteAllSessions({ userId: user.id });
+              await this.#blacklistAllUserSessionsAccessTokens(user.id);
+              await this.#tokensSessionsStore.deleteAllSessions({ userId: user.id });
               this.#removeAccessTokenFromCookie(reply);
               this.#removeRefreshTokenFromCookie(reply);
               reply.status(200).send();
@@ -192,7 +197,7 @@ export class AuthRoutesController {
             if (!refreshToken) throw new ErrorUnauthorized();
 
             const payload = this.#verifyRefreshTokenOrThrow(refreshToken);
-            const currentSession = await this.#tokenStore.getSessionByRefreshJti({
+            const currentSession = await this.#tokensSessionsStore.getSessionByRefreshJti({
               userId: payload.userId,
               refreshJti: payload.jti,
             });
@@ -201,7 +206,7 @@ export class AuthRoutesController {
               throw new ErrorUnauthorized();
             }
 
-            const sessions = await this.#tokenStore.getUserSessions({
+            const sessions = await this.#tokensSessionsStore.getUserSessions({
               userId: payload.userId,
               currentSessionId: payload.sid,
             });
@@ -229,13 +234,14 @@ export class AuthRoutesController {
             if (!refreshToken) throw new ErrorUnauthorized();
 
             const payload = this.#verifyRefreshTokenOrThrow(refreshToken);
-            const currentSession = await this.#tokenStore.getSessionByRefreshJti({
+            const currentSession = await this.#tokensSessionsStore.getSessionByRefreshJti({
               userId: payload.userId,
               refreshJti: payload.jti,
             });
             if (!currentSession) throw new ErrorUnauthorized();
 
-            await this.#tokenStore.deleteAllSessions({ userId: payload.userId });
+            await this.#blacklistAllUserSessionsAccessTokens(payload.userId);
+            await this.#tokensSessionsStore.deleteAllSessions({ userId: payload.userId });
             await this.#tryBlacklistAccessToken(request);
             this.#removeAccessTokenFromCookie(reply);
             this.#removeRefreshTokenFromCookie(reply);
@@ -254,13 +260,17 @@ export class AuthRoutesController {
             if (!refreshToken) throw new ErrorUnauthorized();
 
             const payload = this.#verifyRefreshTokenOrThrow(refreshToken);
-            const currentSession = await this.#tokenStore.getSessionByRefreshJti({
+            const currentSession = await this.#tokensSessionsStore.getSessionByRefreshJti({
               userId: payload.userId,
               refreshJti: payload.jti,
             });
             if (!currentSession) throw new ErrorUnauthorized();
 
-            await this.#tokenStore.deleteSessionByRefreshJti({
+            await this.#tokensSessionsBlacklistStore.addHashedAccessJtiToBlacklist({
+              accessJtiHash: currentSession.accessJtiHash,
+              expiresAt: currentSession.accessExpiresAt,
+            });
+            await this.#tokensSessionsStore.deleteSessionByRefreshJti({
               userId: payload.userId,
               refreshJti: payload.jti,
             });
@@ -298,7 +308,7 @@ export class AuthRoutesController {
             const userAgent = this.#extractUserAgentOrThrow(request);
             const payload = this.#verifyRefreshTokenOrThrow(refreshToken);
 
-            const currentSession = await this.#tokenStore.getSessionByRefreshJti({
+            const currentSession = await this.#tokensSessionsStore.getSessionByRefreshJti({
               userId: payload.userId,
               refreshJti: payload.jti,
             });
@@ -315,11 +325,15 @@ export class AuthRoutesController {
             const newRefreshPayload = this.#verifyRefreshTokenOrThrow(tokens.refresh);
             const newAccessPayload = this.#verifyAccessTokenOrThrow(tokens.access);
 
-            await this.#tokenStore.deleteSessionByRefreshJti({
+            await this.#tokensSessionsBlacklistStore.addHashedAccessJtiToBlacklist({
+              accessJtiHash: currentSession.accessJtiHash,
+              expiresAt: currentSession.accessExpiresAt,
+            });
+            await this.#tokensSessionsStore.deleteSessionByRefreshJti({
               userId: payload.userId,
               refreshJti: payload.jti,
             });
-            await this.#tokenStore.createSession({
+            await this.#tokensSessionsStore.createSession({
               userId: newRefreshPayload.userId,
               sessionId: newRefreshPayload.sid,
               userAgent,
@@ -438,7 +452,7 @@ export class AuthRoutesController {
       return;
     }
 
-    await this.#tokenStore.blacklistAccessJti({
+    await this.#tokensSessionsBlacklistStore.addAccessJtiToBlacklist({
       accessJti: payload.jti,
       expiresAt: payload.exp * 1000,
     });
@@ -449,18 +463,22 @@ export class AuthRoutesController {
     if (!refreshToken) throw new ErrorUnauthorized();
 
     const payload = this.#verifyRefreshTokenOrThrow(refreshToken);
-    const currentSession = await this.#tokenStore.getSessionByRefreshJti({
+    const currentSession = await this.#tokensSessionsStore.getSessionByRefreshJti({
       userId: payload.userId,
       refreshJti: payload.jti,
     });
     if (!currentSession) throw new ErrorUnauthorized();
 
-    const session = await this.#tokenStore.getSessionById({ sessionId: props.sessionId });
+    const session = await this.#tokensSessionsStore.getSessionById({ sessionId: props.sessionId });
     if (!session || session.userId !== payload.userId) {
       throw new ErrorSessionNotExists();
     }
 
-    await this.#tokenStore.deleteSessionById({
+    await this.#tokensSessionsBlacklistStore.addHashedAccessJtiToBlacklist({
+      accessJtiHash: session.accessJtiHash,
+      expiresAt: session.accessExpiresAt,
+    });
+    await this.#tokensSessionsStore.deleteSessionById({
       userId: payload.userId,
       sessionId: props.sessionId,
     });
@@ -472,5 +490,18 @@ export class AuthRoutesController {
     }
 
     props.reply.status(200).send();
+  }
+
+  async #blacklistAllUserSessionsAccessTokens(userId: UserId): Promise<void> {
+    const userSessions = await this.#tokensSessionsStore.getUserSessions({ userId });
+    for (const userSession of userSessions) {
+      const session = await this.#tokensSessionsStore.getSessionById({ sessionId: userSession.sessionId });
+      if (!session || session.userId !== userId) continue;
+
+      await this.#tokensSessionsBlacklistStore.addHashedAccessJtiToBlacklist({
+        accessJtiHash: session.accessJtiHash,
+        expiresAt: session.accessExpiresAt,
+      });
+    }
   }
 }

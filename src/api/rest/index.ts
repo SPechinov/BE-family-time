@@ -4,7 +4,7 @@ import { Pool } from 'pg';
 import { globalErrorHandler, authenticate } from './utils';
 import { AuthComposite, GroupsComposite, MeComposite, CalendarEventsComposite } from './composites';
 import { FastifyRequest } from 'fastify';
-import { TokenStore } from './services';
+import { TokensSessionsBlacklistStore } from '@/repositories/stores';
 
 interface Props {
   redis: RedisClient;
@@ -17,13 +17,13 @@ export const newApiRest = async (props: Props) => {
     errorHandler: globalErrorHandler,
     logger: props.logger,
   });
-  const tokenStore = new TokenStore({
+  const tokensSessionsBlacklistStore = new TokensSessionsBlacklistStore({
     redis: props.redis,
     sessionsIndexTtlSec: CONFIG.jwt.refresh.expiry / 1000,
   });
 
   fastify.decorate('authenticate', (request: FastifyRequest) => {
-    return authenticate(request, { tokenStore });
+    return authenticate(request, { tokensSessionsBlacklistStore });
   });
 
   fastify.register(
