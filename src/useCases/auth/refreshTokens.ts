@@ -62,7 +62,7 @@ export class RefreshTokensUseCase implements IRefreshTokensUseCase {
     });
 
     if (props.currentAccessToken) {
-      const accessPayload = this.#tryVerifyAccessToken(props.currentAccessToken);
+      const accessPayload = this.#verifyAccessToken(props.currentAccessToken);
       if (accessPayload) {
         await this.#tokensSessionsBlacklistStore.addAccessJtiToBlacklist({
           accessJti: accessPayload.jti,
@@ -78,27 +78,68 @@ export class RefreshTokensUseCase implements IRefreshTokensUseCase {
   }
 
   #verifyRefreshTokenOrThrow(token: string): { userId: UserId; sid: SessionId; jti: string; exp?: number } {
-    let payload;
-    try {
-      payload = this.#jwtVerifier.verify<{
-        userId?: UserId;
-        sid?: string;
-        jti?: string;
-        typ?: 'access' | 'refresh';
-        exp?: number;
-      }>(token);
-    } catch {
-      throw new ErrorUnauthorized();
-    }
-
-    if (!payload.userId || payload.typ !== 'refresh' || !payload.sid || !payload.jti) {
-      throw new ErrorUnauthorized();
-    }
+    const payload = this.#verifyTokenOrThrow(token, {
+      type: 'refresh',
+      requireUserId: true,
+      requireSid: true,
+      requireExp: false,
+    });
 
     return { userId: payload.userId, sid: toSessionId(payload.sid), jti: payload.jti, exp: payload.exp };
   }
 
   #verifyAccessTokenOrThrow(token: string): { userId: UserId; sid: SessionId; jti: string; exp: number } {
+    const payload = this.#verifyTokenOrThrow(token, {
+      type: 'access',
+      requireUserId: true,
+      requireSid: true,
+      requireExp: true,
+    });
+    if (payload.exp === undefined) throw new ErrorUnauthorized();
+
+    return { userId: payload.userId, sid: toSessionId(payload.sid), jti: payload.jti, exp: payload.exp };
+  }
+
+  #verifyAccessToken(token: string): { jti: string; exp: number } | null {
+    const payload = this.#verifyToken(token, {
+      type: 'access',
+      requireUserId: false,
+      requireSid: false,
+      requireExp: true,
+    });
+    if (!payload) return null;
+    if (payload.exp === undefined) return null;
+    return { jti: payload.jti, exp: payload.exp };
+  }
+
+  #verifyTokenOrThrow(
+    token: string,
+    props: {
+      type: 'access' | 'refresh';
+      requireUserId: boolean;
+      requireSid: boolean;
+      requireExp: boolean;
+    },
+  ):
+    | { userId: UserId; sid: string; jti: string; exp: number }
+    | { userId: UserId; sid: string; jti: string; exp?: number } {
+    const payload = this.#verifyToken(token, props);
+    if (!payload) throw new ErrorUnauthorized();
+    return payload;
+  }
+
+  #verifyToken(
+    token: string,
+    props: {
+      type: 'access' | 'refresh';
+      requireUserId: boolean;
+      requireSid: boolean;
+      requireExp: boolean;
+    },
+  ):
+    | { userId: UserId; sid: string; jti: string; exp: number }
+    | { userId: UserId; sid: string; jti: string; exp?: number }
+    | null {
     let payload;
     try {
       payload = this.#jwtVerifier.verify<{
@@ -109,32 +150,19 @@ export class RefreshTokensUseCase implements IRefreshTokensUseCase {
         exp?: number;
       }>(token);
     } catch {
-      throw new ErrorUnauthorized();
-    }
-
-    if (!payload.userId || payload.typ !== 'access' || !payload.sid || !payload.jti || !payload.exp) {
-      throw new ErrorUnauthorized();
-    }
-
-    return { userId: payload.userId, sid: toSessionId(payload.sid), jti: payload.jti, exp: payload.exp };
-  }
-
-  #tryVerifyAccessToken(token: string): { jti: string; exp: number } | null {
-    let payload;
-    try {
-      payload = this.#jwtVerifier.verify<{
-        typ?: 'access' | 'refresh';
-        jti?: string;
-        exp?: number;
-      }>(token);
-    } catch {
       return null;
     }
 
-    if (payload.typ !== 'access' || !payload.jti || !payload.exp) {
-      return null;
-    }
+    if (payload.typ !== props.type || !payload.jti) return null;
+    if (props.requireUserId && !payload.userId) return null;
+    if (props.requireSid && !payload.sid) return null;
+    if (props.requireExp && !payload.exp) return null;
 
-    return { jti: payload.jti, exp: payload.exp };
+    return {
+      userId: payload.userId as UserId,
+      sid: payload.sid as string,
+      jti: payload.jti,
+      exp: payload.exp,
+    };
   }
 }
