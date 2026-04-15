@@ -1,4 +1,4 @@
-import { FastifyInstance, FastifyReply, FastifyRequest } from 'fastify';
+import { FastifyInstance, FastifyRequest } from 'fastify';
 import { ZodTypeProvider } from 'fastify-type-provider-zod';
 import { AUTH_SCHEMAS } from './schemas';
 import {
@@ -10,8 +10,8 @@ import {
   SessionRefreshTokenPayload,
   toSessionId,
 } from '@/entities';
-import { CONFIG, isDev } from '@/config';
-import { ACCESS_TOKEN_COOKIE_CONFIG, HEADER_NAME, REFRESH_TOKEN_COOKIE_CONFIG } from '../../constants';
+import { isDev } from '@/config';
+import { HEADER_NAME } from '../../constants';
 import { ErrorInvalidUserAgent, ErrorUnauthorized, ErrorUserNotExists } from '@/pkg';
 import { PREFIX, ROUTES } from './constants';
 import { ITokensSessionsPayloadVerifier } from '@/domains/services';
@@ -27,6 +27,7 @@ import {
   IRegistrationStartUseCase,
   IRefreshTokensUseCase,
 } from '@/domains/useCases';
+import { AuthCookiesService } from './authCookiesService';
 
 export class AuthRoutesController {
   #fastify: FastifyInstance;
@@ -41,6 +42,7 @@ export class AuthRoutesController {
   #logoutAllSessionsUseCase: ILogoutAllSessionsUseCase;
   #logoutSessionByIdUseCase: ILogoutSessionByIdUseCase;
   #tokensSessionsPayloadVerifier: ITokensSessionsPayloadVerifier;
+  #authCookiesService: AuthCookiesService;
 
   constructor(props: {
     fastify: FastifyInstance;
@@ -68,6 +70,7 @@ export class AuthRoutesController {
     this.#logoutAllSessionsUseCase = props.logoutAllSessionsUseCase;
     this.#logoutSessionByIdUseCase = props.logoutSessionByIdUseCase;
     this.#tokensSessionsPayloadVerifier = props.tokensSessionsPayloadVerifier;
+    this.#authCookiesService = new AuthCookiesService();
   }
 
   register() {
@@ -91,8 +94,8 @@ export class AuthRoutesController {
               userAgent,
             });
 
-            this.#setAccessTokenToCookie(reply, tokens.accessToken);
-            this.#setRefreshTokenToCookie(reply, tokens.refreshToken);
+            this.#authCookiesService.setAccessToken(reply, tokens.accessToken);
+            this.#authCookiesService.setRefreshToken(reply, tokens.refreshToken);
 
             reply.status(200).send();
           },
@@ -178,8 +181,8 @@ export class AuthRoutesController {
                 password: new UserPasswordPlainEntity(request.body.password),
               });
 
-              this.#removeAccessTokenFromCookie(reply);
-              this.#removeRefreshTokenFromCookie(reply);
+              this.#authCookiesService.clearAccessToken(reply);
+              this.#authCookiesService.clearRefreshToken(reply);
               reply.status(200).send();
             } catch (error: unknown) {
               if (error instanceof ErrorUserNotExists) {
@@ -229,8 +232,8 @@ export class AuthRoutesController {
               refreshJti: payload.jti,
               currentAccessToken: this.#getCurrentAccessTokenPayload(request) ?? undefined,
             });
-            this.#removeAccessTokenFromCookie(reply);
-            this.#removeRefreshTokenFromCookie(reply);
+            this.#authCookiesService.clearAccessToken(reply);
+            this.#authCookiesService.clearRefreshToken(reply);
 
             reply.status(200).send();
           },
@@ -249,8 +252,8 @@ export class AuthRoutesController {
               refreshJti: payload.jti,
               currentAccessToken: this.#getCurrentAccessTokenPayload(request) ?? undefined,
             });
-            this.#removeAccessTokenFromCookie(reply);
-            this.#removeRefreshTokenFromCookie(reply);
+            this.#authCookiesService.clearAccessToken(reply);
+            this.#authCookiesService.clearRefreshToken(reply);
 
             reply.status(200).send();
           },
@@ -274,8 +277,8 @@ export class AuthRoutesController {
             });
 
             if (isCurrentSession) {
-              this.#removeAccessTokenFromCookie(reply);
-              this.#removeRefreshTokenFromCookie(reply);
+              this.#authCookiesService.clearAccessToken(reply);
+              this.#authCookiesService.clearRefreshToken(reply);
             }
 
             reply.status(200).send();
@@ -296,10 +299,10 @@ export class AuthRoutesController {
               logger: request.log,
               refreshToken,
               userAgent,
-              currentAccessToken: this.#getAccessToken(request) ?? undefined,
+              currentAccessToken: this.#authCookiesService.getAccessToken(request) ?? undefined,
             });
-            this.#setAccessTokenToCookie(reply, tokens.accessToken);
-            this.#setRefreshTokenToCookie(reply, tokens.refreshToken);
+            this.#authCookiesService.setAccessToken(reply, tokens.accessToken);
+            this.#authCookiesService.setRefreshToken(reply, tokens.refreshToken);
 
             reply.status(200).send();
           },
@@ -319,42 +322,18 @@ export class AuthRoutesController {
     return userAgent;
   }
 
-  #getRefreshToken(request: FastifyRequest): string | null {
-    return request.cookies?.[CONFIG.jwt.refresh.cookieName] || null;
-  }
-
   #getRefreshTokenOrThrow(request: FastifyRequest): string {
-    const refreshToken = this.#getRefreshToken(request);
+    const refreshToken = this.#authCookiesService.getRefreshToken(request);
     if (!refreshToken) throw new ErrorUnauthorized();
     return refreshToken;
-  }
-
-  #getAccessToken(request: FastifyRequest): string | null {
-    return request.cookies?.[CONFIG.jwt.access.cookieName] || null;
   }
 
   #getVerifiedRefreshPayloadOrThrow(request: FastifyRequest): SessionRefreshTokenPayload {
     return this.#tokensSessionsPayloadVerifier.verifyRefreshTokenOrThrow(this.#getRefreshTokenOrThrow(request));
   }
 
-  #setAccessTokenToCookie(reply: FastifyReply, accessToken: string) {
-    return reply.setCookie(CONFIG.jwt.access.cookieName, accessToken, ACCESS_TOKEN_COOKIE_CONFIG);
-  }
-
-  #removeAccessTokenFromCookie(reply: FastifyReply) {
-    return reply.setCookie(CONFIG.jwt.access.cookieName, '', { ...ACCESS_TOKEN_COOKIE_CONFIG, maxAge: 0 });
-  }
-
-  #setRefreshTokenToCookie(reply: FastifyReply, refreshToken: string) {
-    return reply.setCookie(CONFIG.jwt.refresh.cookieName, refreshToken, REFRESH_TOKEN_COOKIE_CONFIG);
-  }
-
-  #removeRefreshTokenFromCookie(reply: FastifyReply) {
-    return reply.setCookie(CONFIG.jwt.refresh.cookieName, '', { ...REFRESH_TOKEN_COOKIE_CONFIG, maxAge: 0 });
-  }
-
   #getCurrentAccessTokenPayload(request: FastifyRequest): SessionAccessTokenMeta | null {
-    const token = this.#getAccessToken(request);
+    const token = this.#authCookiesService.getAccessToken(request);
     if (!token) return null;
 
     const payload = this.#tokensSessionsPayloadVerifier.verifyAccessToken(token);
