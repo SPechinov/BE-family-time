@@ -4,29 +4,29 @@ import { UserId } from './user';
 export type SessionId = UUID & { readonly __brand: 'SessionId' };
 export const toSessionId = (value: string): SessionId => value as SessionId;
 
-export type SessionAccessTokenMeta = {
+export interface SessionAccessTokenMeta {
   jti: string;
   expiresAt: number;
-};
+}
 
-export type SessionAccessTokenVerificationPayload = {
+export interface SessionAccessTokenVerificationPayload {
   jti: string;
   exp: number;
-};
+}
 
-export type SessionRefreshTokenPayload = {
+export interface SessionRefreshTokenPayload {
   userId: UserId;
   sid: SessionId;
   jti: string;
   exp?: number;
-};
+}
 
-export type SessionAccessTokenPayload = {
+export interface SessionAccessTokenPayload {
   userId: UserId;
   sid: SessionId;
   jti: string;
   exp: number;
-};
+}
 
 export class SessionEntity {
   readonly #userId: UserId;
