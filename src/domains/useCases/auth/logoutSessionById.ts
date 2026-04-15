@@ -8,6 +8,10 @@ export interface ILogoutSessionByIdUseCase {
       refreshJti: string;
       sessionId: SessionId;
       currentSessionId: SessionId;
+      currentAccessToken?: {
+        jti: string;
+        expiresAt: number;
+      };
     }>,
   ): Promise<{ isCurrentSession: boolean }>;
 }

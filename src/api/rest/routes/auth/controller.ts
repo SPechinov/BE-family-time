@@ -15,7 +15,6 @@ import { ACCESS_TOKEN_COOKIE_CONFIG, HEADER_NAME, REFRESH_TOKEN_COOKIE_CONFIG } 
 import { ErrorInvalidUserAgent, ErrorUnauthorized, ErrorUserNotExists } from '@/pkg';
 import { PREFIX, ROUTES } from './constants';
 import { ITokensSessionsPayloadVerifier } from '@/domains/services';
-import { ITokensSessionsBlacklistStore } from '@/domains/repositories/stores';
 import {
   IForgotPasswordEndUseCase,
   IForgotPasswordStartUseCase,
@@ -42,7 +41,6 @@ export class AuthRoutesController {
   #logoutAllSessionsUseCase: ILogoutAllSessionsUseCase;
   #logoutSessionByIdUseCase: ILogoutSessionByIdUseCase;
   #tokensSessionsPayloadVerifier: ITokensSessionsPayloadVerifier;
-  #tokensSessionsBlacklistStore: ITokensSessionsBlacklistStore;
 
   constructor(props: {
     fastify: FastifyInstance;
@@ -57,7 +55,6 @@ export class AuthRoutesController {
     logoutAllSessionsUseCase: ILogoutAllSessionsUseCase;
     logoutSessionByIdUseCase: ILogoutSessionByIdUseCase;
     tokensSessionsPayloadVerifier: ITokensSessionsPayloadVerifier;
-    tokensSessionsBlacklistStore: ITokensSessionsBlacklistStore;
   }) {
     this.#fastify = props.fastify;
     this.#loginUseCase = props.loginUseCase;
@@ -71,7 +68,6 @@ export class AuthRoutesController {
     this.#logoutAllSessionsUseCase = props.logoutAllSessionsUseCase;
     this.#logoutSessionByIdUseCase = props.logoutSessionByIdUseCase;
     this.#tokensSessionsPayloadVerifier = props.tokensSessionsPayloadVerifier;
-    this.#tokensSessionsBlacklistStore = props.tokensSessionsBlacklistStore;
   }
 
   register() {
@@ -233,8 +229,8 @@ export class AuthRoutesController {
               logger: request.log,
               userId: payload.userId,
               refreshJti: payload.jti,
+              currentAccessToken: this.#getCurrentAccessTokenPayload(request) ?? undefined,
             });
-            await this.#addAccessTokenToBlacklist(request);
             this.#removeAccessTokenFromCookie(reply);
             this.#removeRefreshTokenFromCookie(reply);
 
@@ -253,8 +249,8 @@ export class AuthRoutesController {
               logger: request.log,
               userId: payload.userId,
               refreshJti: payload.jti,
+              currentAccessToken: this.#getCurrentAccessTokenPayload(request) ?? undefined,
             });
-            await this.#addAccessTokenToBlacklist(request);
             this.#removeAccessTokenFromCookie(reply);
             this.#removeRefreshTokenFromCookie(reply);
 
@@ -276,10 +272,10 @@ export class AuthRoutesController {
               refreshJti: payload.jti,
               sessionId: toSessionId(request.params.sessionId),
               currentSessionId: payload.sid,
+              currentAccessToken: this.#getCurrentAccessTokenPayload(request) ?? undefined,
             });
 
             if (isCurrentSession) {
-              await this.#addAccessTokenToBlacklist(request);
               this.#removeAccessTokenFromCookie(reply);
               this.#removeRefreshTokenFromCookie(reply);
             }
@@ -361,19 +357,10 @@ export class AuthRoutesController {
     return reply.setCookie(CONFIG.jwt.refresh.cookieName, '', { ...REFRESH_TOKEN_COOKIE_CONFIG, maxAge: 0 });
   }
 
-  async #addAccessTokenToBlacklist(request: FastifyRequest): Promise<void> {
-    const payload = await this.#getCurrentAccessTokenPayload(request);
-    if (!payload) return;
-
-    await this.#tokensSessionsBlacklistStore.addAccessJtiToBlacklist({
-      accessJti: payload.jti,
-      expiresAt: payload.expiresAt,
-    });
-  }
-
-  async #getCurrentAccessTokenPayload(request: FastifyRequest): Promise<{ jti: string; expiresAt: number } | null> {
+  #getCurrentAccessTokenPayload(request: FastifyRequest): { jti: string; expiresAt: number } | null {
     const token = this.#getAccessToken(request);
     if (!token) return null;
+
     const payload = this.#tokensSessionsPayloadVerifier.verifyAccessToken(token);
     if (!payload) return null;
 

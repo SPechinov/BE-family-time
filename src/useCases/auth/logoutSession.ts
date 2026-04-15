@@ -29,5 +29,12 @@ export class LogoutSessionUseCase implements ILogoutSessionUseCase {
       userId: props.userId,
       refreshJti: props.refreshJti,
     });
+
+    if (props.currentAccessToken) {
+      await this.#tokensSessionsBlacklistStore.addAccessJtiToBlacklist({
+        accessJti: props.currentAccessToken.jti,
+        expiresAt: props.currentAccessToken.expiresAt,
+      });
+    }
   }
 }
