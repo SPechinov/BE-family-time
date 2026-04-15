@@ -1,5 +1,5 @@
 import { UserId } from '@/entities';
-import { DefaultProps } from './types';
+import { DefaultProps } from '../types';
 
 export interface IRefreshTokensUseCase {
   execute(

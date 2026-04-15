@@ -1,5 +1,5 @@
 import { UserContactsPlainEntity, UserCreatePlainEntity, UserEntity, UserPasswordPlainEntity } from '@/entities';
-import { DefaultProps } from './types';
+import { DefaultProps } from '../types';
 
 export interface IAuthUseCases {
   login(
