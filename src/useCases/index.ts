@@ -9,3 +9,6 @@ export * from './auth/logoutAllSessions';
 export * from './auth/logoutSessionById';
 export * from './auth/login';
 export * from './auth/forgotPasswordEnd';
+export * from './auth/registrationStart';
+export * from './auth/registrationEnd';
+export * from './auth/forgotPasswordStart';

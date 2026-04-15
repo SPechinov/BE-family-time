@@ -1,4 +1,7 @@
 export { AuthUseCases } from './auth';
+export { RegistrationStartUseCase } from './registrationStart';
+export { RegistrationEndUseCase } from './registrationEnd';
+export { ForgotPasswordStartUseCase } from './forgotPasswordStart';
 export { RefreshTokensUseCase } from './refreshTokens';
 export { GetSessionsUseCase } from './getSessions';
 export { LogoutSessionUseCase } from './logoutSession';

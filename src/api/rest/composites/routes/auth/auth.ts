@@ -6,7 +6,13 @@ import { createDependencies } from './utils';
 import { TokensSessionsGenerator } from '@/services';
 import { CONFIG } from '@/config';
 import { FastifyJwtSigner, FastifyJwtVerifier } from '../../../adapters';
-import { ForgotPasswordEndUseCase, LoginUseCase } from '@/useCases';
+import {
+  ForgotPasswordEndUseCase,
+  ForgotPasswordStartUseCase,
+  LoginUseCase,
+  RegistrationEndUseCase,
+  RegistrationStartUseCase,
+} from '@/useCases';
 
 export class AuthComposite {
   readonly #fastifyInstance: FastifyInstance;
@@ -40,11 +46,22 @@ export class AuthComposite {
       tokensSessionsStore: dependencies.tokensSessionsStore,
       tokensSessionsBlacklistStore: dependencies.tokensSessionsBlacklistStore,
     });
+    const registrationStartUseCase = new RegistrationStartUseCase({
+      authUseCases: dependencies.authUseCases,
+    });
+    const registrationEndUseCase = new RegistrationEndUseCase({
+      authUseCases: dependencies.authUseCases,
+    });
+    const forgotPasswordStartUseCase = new ForgotPasswordStartUseCase({
+      authUseCases: dependencies.authUseCases,
+    });
 
     new AuthRoutesController({
       fastify: this.#fastifyInstance,
-      useCases: dependencies.authUseCases,
       loginUseCase,
+      registrationStartUseCase,
+      registrationEndUseCase,
+      forgotPasswordStartUseCase,
       forgotPasswordEndUseCase,
       refreshTokensUseCase: dependencies.refreshTokensUseCase,
       getSessionsUseCase: dependencies.getSessionsUseCase,

@@ -1,7 +1,6 @@
 import { FastifyInstance, FastifyReply, FastifyRequest } from 'fastify';
 import { ZodTypeProvider } from 'fastify-type-provider-zod';
 import { AUTH_SCHEMAS } from './schemas';
-import { IAuthUseCases } from '@/domains/useCases';
 import {
   UserContactsPlainEntity,
   UserCreatePlainEntity,
@@ -19,18 +18,23 @@ import { ITokensSessionsGenerator } from '@/domains/services';
 import { ITokensSessionsBlacklistStore, ITokensSessionsStore } from '@/domains/repositories/stores';
 import {
   IForgotPasswordEndUseCase,
+  IForgotPasswordStartUseCase,
   IGetSessionsUseCase,
   ILoginUseCase,
   ILogoutAllSessionsUseCase,
   ILogoutSessionByIdUseCase,
   ILogoutSessionUseCase,
+  IRegistrationEndUseCase,
+  IRegistrationStartUseCase,
   IRefreshTokensUseCase,
 } from '@/domains/useCases';
 
 export class AuthRoutesController {
   #fastify: FastifyInstance;
-  #useCases: IAuthUseCases;
   #loginUseCase: ILoginUseCase;
+  #registrationStartUseCase: IRegistrationStartUseCase;
+  #registrationEndUseCase: IRegistrationEndUseCase;
+  #forgotPasswordStartUseCase: IForgotPasswordStartUseCase;
   #forgotPasswordEndUseCase: IForgotPasswordEndUseCase;
   #refreshTokensUseCase: IRefreshTokensUseCase;
   #getSessionsUseCase: IGetSessionsUseCase;
@@ -43,8 +47,10 @@ export class AuthRoutesController {
 
   constructor(props: {
     fastify: FastifyInstance;
-    useCases: IAuthUseCases;
     loginUseCase: ILoginUseCase;
+    registrationStartUseCase: IRegistrationStartUseCase;
+    registrationEndUseCase: IRegistrationEndUseCase;
+    forgotPasswordStartUseCase: IForgotPasswordStartUseCase;
     forgotPasswordEndUseCase: IForgotPasswordEndUseCase;
     refreshTokensUseCase: IRefreshTokensUseCase;
     getSessionsUseCase: IGetSessionsUseCase;
@@ -56,8 +62,10 @@ export class AuthRoutesController {
     tokensSessionsBlacklistStore: ITokensSessionsBlacklistStore;
   }) {
     this.#fastify = props.fastify;
-    this.#useCases = props.useCases;
     this.#loginUseCase = props.loginUseCase;
+    this.#registrationStartUseCase = props.registrationStartUseCase;
+    this.#registrationEndUseCase = props.registrationEndUseCase;
+    this.#forgotPasswordStartUseCase = props.forgotPasswordStartUseCase;
     this.#forgotPasswordEndUseCase = props.forgotPasswordEndUseCase;
     this.#refreshTokensUseCase = props.refreshTokensUseCase;
     this.#getSessionsUseCase = props.getSessionsUseCase;
@@ -103,7 +111,7 @@ export class AuthRoutesController {
             schema: AUTH_SCHEMAS.registrationStart,
           },
           async (request, reply) => {
-            const result = await this.#useCases.registrationStart({
+            const result = await this.#registrationStartUseCase.execute({
               logger: request.log,
               userContactsPlainEntity: new UserContactsPlainEntity({ email: request.body.email }),
             });
@@ -120,7 +128,7 @@ export class AuthRoutesController {
             schema: AUTH_SCHEMAS.registrationEnd,
           },
           async (request, reply) => {
-            await this.#useCases.registrationEnd({
+            await this.#registrationEndUseCase.execute({
               logger: request.log,
               otpCode: request.body.otpCode,
               userCreatePlainEntity: new UserCreatePlainEntity({
@@ -144,7 +152,7 @@ export class AuthRoutesController {
           },
           async (request, reply) => {
             try {
-              const { otpCode } = await this.#useCases.forgotPasswordStart({
+              const { otpCode } = await this.#forgotPasswordStartUseCase.execute({
                 logger: request.log,
                 userContactsPlainEntity: new UserContactsPlainEntity({ email: request.body.email }),
               });
