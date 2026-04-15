@@ -19,9 +19,8 @@ export class RefreshTokensUseCase implements IRefreshTokensUseCase {
       userId: props.userId,
       refreshJti: props.refreshJti,
     });
-    if (!currentSession) throw new ErrorUnauthorized();
 
-    if (currentSession.userAgent !== props.userAgent) {
+    if (!currentSession || currentSession.userAgent !== props.userAgent) {
       throw new ErrorUnauthorized();
     }
 
