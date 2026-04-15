@@ -10,6 +10,7 @@ import {
   ForgotPasswordEndUseCase,
   ForgotPasswordStartUseCase,
   LoginUseCase,
+  RefreshTokensUseCase,
   RegistrationEndUseCase,
   RegistrationStartUseCase,
 } from '@/useCases';
@@ -55,6 +56,12 @@ export class AuthComposite {
     const forgotPasswordStartUseCase = new ForgotPasswordStartUseCase({
       authUseCases: dependencies.authUseCases,
     });
+    const refreshTokensUseCase = new RefreshTokensUseCase({
+      tokensSessionsStore: dependencies.tokensSessionsStore,
+      tokensSessionsBlacklistStore: dependencies.tokensSessionsBlacklistStore,
+      tokensSessionsGenerator,
+      jwtVerifier,
+    });
 
     new AuthRoutesController({
       fastify: this.#fastifyInstance,
@@ -63,13 +70,12 @@ export class AuthComposite {
       registrationEndUseCase,
       forgotPasswordStartUseCase,
       forgotPasswordEndUseCase,
-      refreshTokensUseCase: dependencies.refreshTokensUseCase,
+      refreshTokensUseCase,
       getSessionsUseCase: dependencies.getSessionsUseCase,
       logoutSessionUseCase: dependencies.logoutSessionUseCase,
       logoutAllSessionsUseCase: dependencies.logoutAllSessionsUseCase,
       logoutSessionByIdUseCase: dependencies.logoutSessionByIdUseCase,
-      tokensSessionsGenerator,
-      tokensSessionsStore: dependencies.tokensSessionsStore,
+      jwtVerifier,
       tokensSessionsBlacklistStore: dependencies.tokensSessionsBlacklistStore,
     }).register();
   }

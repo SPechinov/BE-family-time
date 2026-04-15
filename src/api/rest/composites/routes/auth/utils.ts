@@ -6,7 +6,6 @@ import {
   LogoutAllSessionsUseCase,
   LogoutSessionByIdUseCase,
   LogoutSessionUseCase,
-  RefreshTokensUseCase,
 } from '@/useCases';
 import { OtpCodesStore, TokensSessionsBlacklistStore, TokensSessions } from '@/repositories/stores';
 import { RateLimiterService } from '@/services';
@@ -55,10 +54,6 @@ export const createDependencies = ({ redis, postgres }: Props) => {
     redis,
     sessionsIndexTtlSec: CONFIG.jwt.refresh.expiry / 1000,
   });
-  const refreshTokensUseCase = new RefreshTokensUseCase({
-    tokensSessionsStore,
-    tokensSessionsBlacklistStore,
-  });
   const getSessionsUseCase = new GetSessionsUseCase({ tokensSessionsStore });
   const logoutSessionUseCase = new LogoutSessionUseCase({
     tokensSessionsStore,
@@ -75,7 +70,6 @@ export const createDependencies = ({ redis, postgres }: Props) => {
 
   return {
     authUseCases,
-    refreshTokensUseCase,
     getSessionsUseCase,
     logoutSessionUseCase,
     logoutAllSessionsUseCase,

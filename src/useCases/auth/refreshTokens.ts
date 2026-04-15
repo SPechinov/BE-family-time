@@ -1,52 +1,140 @@
 import { ITokensSessionsBlacklistStore, ITokensSessionsStore } from '@/domains/repositories/stores';
+import { IJwtVerifier, ITokensSessionsGenerator } from '@/domains/services';
 import { IRefreshTokensUseCase } from '@/domains/useCases';
+import { SessionId, toSessionId, UserId } from '@/entities';
 import { ErrorUnauthorized } from '@/pkg';
 
 export class RefreshTokensUseCase implements IRefreshTokensUseCase {
   readonly #tokensSessionsStore: ITokensSessionsStore;
   readonly #tokensSessionsBlacklistStore: ITokensSessionsBlacklistStore;
+  readonly #tokensSessionsGenerator: ITokensSessionsGenerator;
+  readonly #jwtVerifier: IJwtVerifier;
 
   constructor(props: {
     tokensSessionsStore: ITokensSessionsStore;
     tokensSessionsBlacklistStore: ITokensSessionsBlacklistStore;
+    tokensSessionsGenerator: ITokensSessionsGenerator;
+    jwtVerifier: IJwtVerifier;
   }) {
     this.#tokensSessionsStore = props.tokensSessionsStore;
     this.#tokensSessionsBlacklistStore = props.tokensSessionsBlacklistStore;
+    this.#tokensSessionsGenerator = props.tokensSessionsGenerator;
+    this.#jwtVerifier = props.jwtVerifier;
   }
 
-  async execute(props: Parameters<IRefreshTokensUseCase['execute']>[0]): Promise<void> {
+  async execute(
+    props: Parameters<IRefreshTokensUseCase['execute']>[0],
+  ): Promise<{ accessToken: string; refreshToken: string }> {
+    const refreshPayload = this.#verifyRefreshTokenOrThrow(props.refreshToken);
+
     const currentSession = await this.#tokensSessionsStore.getSessionByRefreshJti({
-      userId: props.userId,
-      refreshJti: props.refreshJti,
+      userId: refreshPayload.userId,
+      refreshJti: refreshPayload.jti,
     });
 
     if (!currentSession || currentSession.userAgent !== props.userAgent) {
       throw new ErrorUnauthorized();
     }
 
+    const tokens = this.#tokensSessionsGenerator.generateTokens({
+      userId: refreshPayload.userId,
+      userAgent: props.userAgent,
+    });
+    const newRefreshPayload = this.#verifyRefreshTokenOrThrow(tokens.refresh);
+    const newAccessPayload = this.#verifyAccessTokenOrThrow(tokens.access);
+
     await this.#tokensSessionsBlacklistStore.addHashedAccessJtiToBlacklist({
       accessJtiHash: currentSession.accessJtiHash,
       expiresAt: currentSession.accessExpiresAt,
     });
     await this.#tokensSessionsStore.deleteSessionByRefreshJti({
-      userId: props.userId,
-      refreshJti: props.refreshJti,
+      userId: refreshPayload.userId,
+      refreshJti: refreshPayload.jti,
     });
     await this.#tokensSessionsStore.addSession({
-      userId: props.newSession.userId,
-      sessionId: props.newSession.sessionId,
+      userId: newRefreshPayload.userId,
+      sessionId: newRefreshPayload.sid,
       userAgent: props.userAgent,
-      expiresAt: props.newSession.refreshExpiresAt,
-      refreshJti: props.newSession.refreshJti,
-      accessJti: props.newSession.accessJti,
-      accessExpiresAt: props.newSession.accessExpiresAt,
+      expiresAt: (newRefreshPayload.exp ?? Math.floor(Date.now() / 1000)) * 1000,
+      refreshJti: newRefreshPayload.jti,
+      accessJti: newAccessPayload.jti,
+      accessExpiresAt: newAccessPayload.exp * 1000,
     });
 
     if (props.currentAccessToken) {
-      await this.#tokensSessionsBlacklistStore.addAccessJtiToBlacklist({
-        accessJti: props.currentAccessToken.jti,
-        expiresAt: props.currentAccessToken.expiresAt,
-      });
+      const accessPayload = this.#tryVerifyAccessToken(props.currentAccessToken);
+      if (accessPayload) {
+        await this.#tokensSessionsBlacklistStore.addAccessJtiToBlacklist({
+          accessJti: accessPayload.jti,
+          expiresAt: accessPayload.exp * 1000,
+        });
+      }
     }
+
+    return {
+      accessToken: tokens.access,
+      refreshToken: tokens.refresh,
+    };
+  }
+
+  #verifyRefreshTokenOrThrow(token: string): { userId: UserId; sid: SessionId; jti: string; exp?: number } {
+    let payload;
+    try {
+      payload = this.#jwtVerifier.verify<{
+        userId?: UserId;
+        sid?: string;
+        jti?: string;
+        typ?: 'access' | 'refresh';
+        exp?: number;
+      }>(token);
+    } catch {
+      throw new ErrorUnauthorized();
+    }
+
+    if (!payload.userId || payload.typ !== 'refresh' || !payload.sid || !payload.jti) {
+      throw new ErrorUnauthorized();
+    }
+
+    return { userId: payload.userId, sid: toSessionId(payload.sid), jti: payload.jti, exp: payload.exp };
+  }
+
+  #verifyAccessTokenOrThrow(token: string): { userId: UserId; sid: SessionId; jti: string; exp: number } {
+    let payload;
+    try {
+      payload = this.#jwtVerifier.verify<{
+        userId?: UserId;
+        sid?: string;
+        jti?: string;
+        typ?: 'access' | 'refresh';
+        exp?: number;
+      }>(token);
+    } catch {
+      throw new ErrorUnauthorized();
+    }
+
+    if (!payload.userId || payload.typ !== 'access' || !payload.sid || !payload.jti || !payload.exp) {
+      throw new ErrorUnauthorized();
+    }
+
+    return { userId: payload.userId, sid: toSessionId(payload.sid), jti: payload.jti, exp: payload.exp };
+  }
+
+  #tryVerifyAccessToken(token: string): { jti: string; exp: number } | null {
+    let payload;
+    try {
+      payload = this.#jwtVerifier.verify<{
+        typ?: 'access' | 'refresh';
+        jti?: string;
+        exp?: number;
+      }>(token);
+    } catch {
+      return null;
+    }
+
+    if (payload.typ !== 'access' || !payload.jti || !payload.exp) {
+      return null;
+    }
+
+    return { jti: payload.jti, exp: payload.exp };
   }
 }

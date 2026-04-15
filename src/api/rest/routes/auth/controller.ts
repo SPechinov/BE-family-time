@@ -14,8 +14,8 @@ import { CONFIG, isDev } from '@/config';
 import { ACCESS_TOKEN_COOKIE_CONFIG, HEADER_NAME, REFRESH_TOKEN_COOKIE_CONFIG } from '../../constants';
 import { ErrorInvalidUserAgent, ErrorUnauthorized, ErrorUserNotExists } from '@/pkg';
 import { PREFIX, ROUTES } from './constants';
-import { ITokensSessionsGenerator } from '@/domains/services';
-import { ITokensSessionsBlacklistStore, ITokensSessionsStore } from '@/domains/repositories/stores';
+import { IJwtVerifier } from '@/domains/services';
+import { ITokensSessionsBlacklistStore } from '@/domains/repositories/stores';
 import {
   IForgotPasswordEndUseCase,
   IForgotPasswordStartUseCase,
@@ -41,8 +41,7 @@ export class AuthRoutesController {
   #logoutSessionUseCase: ILogoutSessionUseCase;
   #logoutAllSessionsUseCase: ILogoutAllSessionsUseCase;
   #logoutSessionByIdUseCase: ILogoutSessionByIdUseCase;
-  #tokensSessionsGenerator: ITokensSessionsGenerator;
-  #tokensSessionsStore: ITokensSessionsStore;
+  #jwtVerifier: IJwtVerifier;
   #tokensSessionsBlacklistStore: ITokensSessionsBlacklistStore;
 
   constructor(props: {
@@ -57,8 +56,7 @@ export class AuthRoutesController {
     logoutSessionUseCase: ILogoutSessionUseCase;
     logoutAllSessionsUseCase: ILogoutAllSessionsUseCase;
     logoutSessionByIdUseCase: ILogoutSessionByIdUseCase;
-    tokensSessionsGenerator: ITokensSessionsGenerator;
-    tokensSessionsStore: ITokensSessionsStore;
+    jwtVerifier: IJwtVerifier;
     tokensSessionsBlacklistStore: ITokensSessionsBlacklistStore;
   }) {
     this.#fastify = props.fastify;
@@ -72,8 +70,7 @@ export class AuthRoutesController {
     this.#logoutSessionUseCase = props.logoutSessionUseCase;
     this.#logoutAllSessionsUseCase = props.logoutAllSessionsUseCase;
     this.#logoutSessionByIdUseCase = props.logoutSessionByIdUseCase;
-    this.#tokensSessionsGenerator = props.tokensSessionsGenerator;
-    this.#tokensSessionsStore = props.tokensSessionsStore;
+    this.#jwtVerifier = props.jwtVerifier;
     this.#tokensSessionsBlacklistStore = props.tokensSessionsBlacklistStore;
   }
 
@@ -312,32 +309,14 @@ export class AuthRoutesController {
             if (!refreshToken) throw new ErrorUnauthorized();
 
             const userAgent = this.#extractUserAgentOrThrow(request);
-            const payload = this.#verifyRefreshTokenOrThrow(refreshToken);
-
-            const tokens = this.#tokensSessionsGenerator.generateTokens({
-              userId: payload.userId,
-              userAgent,
-            });
-            const newRefreshPayload = this.#verifyRefreshTokenOrThrow(tokens.refresh);
-            const newAccessPayload = this.#verifyAccessTokenOrThrow(tokens.access);
-
-            await this.#refreshTokensUseCase.execute({
+            const tokens = await this.#refreshTokensUseCase.execute({
               logger: request.log,
-              userId: payload.userId,
-              refreshJti: payload.jti,
+              refreshToken,
               userAgent,
-              newSession: {
-                userId: newRefreshPayload.userId,
-                sessionId: newRefreshPayload.sid,
-                refreshJti: newRefreshPayload.jti,
-                refreshExpiresAt: (newRefreshPayload.exp ?? Math.floor(Date.now() / 1000)) * 1000,
-                accessJti: newAccessPayload.jti,
-                accessExpiresAt: newAccessPayload.exp * 1000,
-              },
-              currentAccessToken: (await this.#getCurrentAccessTokenPayload(request)) ?? undefined,
+              currentAccessToken: this.#getAccessToken(request) ?? undefined,
             });
-            this.#setAccessTokenToCookie(reply, tokens.access);
-            this.#setRefreshTokenToCookie(reply, tokens.refresh);
+            this.#setAccessTokenToCookie(reply, tokens.accessToken);
+            this.#setRefreshTokenToCookie(reply, tokens.refreshToken);
 
             reply.status(200).send();
           },
@@ -384,7 +363,7 @@ export class AuthRoutesController {
   #verifyRefreshTokenOrThrow(token: string): { userId: UserId; sid: SessionId; jti: string; exp?: number } {
     let payload;
     try {
-      payload = this.#fastify.jwt.verify<{
+      payload = this.#jwtVerifier.verify<{
         userId?: UserId;
         id?: UserId;
         sid?: string;
@@ -398,27 +377,6 @@ export class AuthRoutesController {
     }
 
     if (!payload.userId || payload.typ !== 'refresh' || !payload.sid || !payload.jti) {
-      throw new ErrorUnauthorized();
-    }
-
-    return { userId: payload.userId, sid: toSessionId(payload.sid), jti: payload.jti, exp: payload.exp };
-  }
-
-  #verifyAccessTokenOrThrow(token: string): { userId: UserId; sid: SessionId; jti: string; exp: number } {
-    let payload;
-    try {
-      payload = this.#fastify.jwt.verify<{
-        userId?: UserId;
-        sid?: string;
-        jti?: string;
-        typ?: 'access' | 'refresh';
-        exp?: number;
-      }>(token);
-    } catch {
-      throw new ErrorUnauthorized();
-    }
-
-    if (!payload.userId || payload.typ !== 'access' || !payload.sid || !payload.jti || !payload.exp) {
       throw new ErrorUnauthorized();
     }
 
@@ -441,7 +399,7 @@ export class AuthRoutesController {
 
     let payload;
     try {
-      payload = this.#fastify.jwt.verify<{
+      payload = this.#jwtVerifier.verify<{
         typ?: 'access' | 'refresh';
         jti?: string;
         exp?: number;
