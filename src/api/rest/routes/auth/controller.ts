@@ -8,6 +8,7 @@ import {
   UserPersonalInfoPlainEntity,
   SessionId,
   toSessionId,
+  UserId,
 } from '@/entities';
 import { CONFIG, isDev } from '@/config';
 import { ACCESS_TOKEN_COOKIE_CONFIG, HEADER_NAME, REFRESH_TOKEN_COOKIE_CONFIG } from '../../constants';
@@ -200,10 +201,7 @@ export class AuthRoutesController {
             schema: AUTH_SCHEMAS.getAllSession,
           },
           async (request, reply) => {
-            const refreshToken = this.#getRefreshToken(request);
-            if (!refreshToken) throw new ErrorUnauthorized();
-
-            const payload = this.#tokensSessionsPayloadVerifier.verifyRefreshTokenOrThrow(refreshToken);
+            const payload = this.#getVerifiedRefreshPayloadOrThrow(request);
             const sessions = await this.#getSessionsUseCase.execute({
               logger: request.log,
               userId: payload.userId,
@@ -230,10 +228,7 @@ export class AuthRoutesController {
             schema: AUTH_SCHEMAS.logoutAllSession,
           },
           async (request, reply) => {
-            const refreshToken = this.#getRefreshToken(request);
-            if (!refreshToken) throw new ErrorUnauthorized();
-
-            const payload = this.#tokensSessionsPayloadVerifier.verifyRefreshTokenOrThrow(refreshToken);
+            const payload = this.#getVerifiedRefreshPayloadOrThrow(request);
             await this.#logoutAllSessionsUseCase.execute({
               logger: request.log,
               userId: payload.userId,
@@ -253,10 +248,7 @@ export class AuthRoutesController {
             schema: AUTH_SCHEMAS.logoutSession,
           },
           async (request, reply) => {
-            const refreshToken = this.#getRefreshToken(request);
-            if (!refreshToken) throw new ErrorUnauthorized();
-
-            const payload = this.#tokensSessionsPayloadVerifier.verifyRefreshTokenOrThrow(refreshToken);
+            const payload = this.#getVerifiedRefreshPayloadOrThrow(request);
             await this.#logoutSessionUseCase.execute({
               logger: request.log,
               userId: payload.userId,
@@ -276,9 +268,7 @@ export class AuthRoutesController {
             schema: AUTH_SCHEMAS.logoutSessionById,
           },
           async (request, reply) => {
-            const refreshToken = this.#getRefreshToken(request);
-            if (!refreshToken) throw new ErrorUnauthorized();
-            const payload = this.#tokensSessionsPayloadVerifier.verifyRefreshTokenOrThrow(refreshToken);
+            const payload = this.#getVerifiedRefreshPayloadOrThrow(request);
 
             const { isCurrentSession } = await this.#logoutSessionByIdUseCase.execute({
               logger: request.log,
@@ -341,6 +331,18 @@ export class AuthRoutesController {
 
   #getAccessToken(request: FastifyRequest): string | null {
     return request.cookies?.[CONFIG.jwt.access.cookieName] || null;
+  }
+
+  #getVerifiedRefreshPayloadOrThrow(request: FastifyRequest): {
+    userId: UserId;
+    sid: SessionId;
+    jti: string;
+    exp?: number;
+  } {
+    const refreshToken = this.#getRefreshToken(request);
+    if (!refreshToken) throw new ErrorUnauthorized();
+
+    return this.#tokensSessionsPayloadVerifier.verifyRefreshTokenOrThrow(refreshToken);
   }
 
   #setAccessTokenToCookie(reply: FastifyReply, accessToken: string) {
