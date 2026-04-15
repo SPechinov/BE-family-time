@@ -10,7 +10,7 @@ export interface SessionData {
   accessExpiresAt: number;
 }
 
-export interface CreateSessionParams {
+export interface AddSessionParams {
   userId: UserId;
   sessionId: string;
   userAgent: string;
@@ -29,7 +29,7 @@ export interface UserSession {
 }
 
 export interface ITokensSessionsStore {
-  createSession(params: CreateSessionParams): Promise<void>;
+  addSession(params: AddSessionParams): Promise<void>;
   getSessionByRefreshJti(props: { userId: UserId; refreshJti: string }): Promise<SessionData | null>;
   getSessionById(props: { sessionId: string }): Promise<SessionData | null>;
   getUserSessions(props: { userId: UserId; currentSessionId?: string }): Promise<UserSession[]>;

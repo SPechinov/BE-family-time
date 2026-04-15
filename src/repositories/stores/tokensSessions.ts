@@ -1,7 +1,7 @@
 import { UserId } from '@/entities';
 import { RedisClient } from '@/pkg';
 import { createHash } from 'node:crypto';
-import { CreateSessionParams, ITokensSessionsStore, SessionData, UserSession } from '@/domains/repositories/stores';
+import { AddSessionParams, ITokensSessionsStore, SessionData, UserSession } from '@/domains/repositories/stores';
 
 export class TokensSessions implements ITokensSessionsStore {
   readonly #redis: RedisClient;
@@ -16,7 +16,7 @@ export class TokensSessions implements ITokensSessionsStore {
     this.#sessionsIndexTtlSec = props.sessionsIndexTtlSec;
   }
 
-  async createSession(props: CreateSessionParams): Promise<void> {
+  async addSession(props: AddSessionParams): Promise<void> {
     const refreshJtiHash = this.#fingerprint(props.refreshJti);
     const accessJtiHash = this.#fingerprint(props.accessJti);
     const sessionKey = this.#buildSessionKey(props.sessionId);

@@ -15,10 +15,12 @@ import { ErrorInvalidUserAgent, ErrorSessionNotExists, ErrorUnauthorized, ErrorU
 import { PREFIX, ROUTES } from './constants';
 import { ITokensSessionsGenerator } from '@/domains/services';
 import { ITokensSessionsBlacklistStore, ITokensSessionsStore } from '@/domains/repositories/stores';
+import { IRefreshTokensUseCase } from '@/domains/useCases';
 
 export class AuthRoutesController {
   #fastify: FastifyInstance;
   #useCases: IAuthUseCases;
+  #refreshTokensUseCase: IRefreshTokensUseCase;
   #tokensSessionsGenerator: ITokensSessionsGenerator;
   #tokensSessionsStore: ITokensSessionsStore;
   #tokensSessionsBlacklistStore: ITokensSessionsBlacklistStore;
@@ -26,12 +28,14 @@ export class AuthRoutesController {
   constructor(props: {
     fastify: FastifyInstance;
     useCases: IAuthUseCases;
+    refreshTokensUseCase: IRefreshTokensUseCase;
     tokensSessionsGenerator: ITokensSessionsGenerator;
     tokensSessionsStore: ITokensSessionsStore;
     tokensSessionsBlacklistStore: ITokensSessionsBlacklistStore;
   }) {
     this.#fastify = props.fastify;
     this.#useCases = props.useCases;
+    this.#refreshTokensUseCase = props.refreshTokensUseCase;
     this.#tokensSessionsGenerator = props.tokensSessionsGenerator;
     this.#tokensSessionsStore = props.tokensSessionsStore;
     this.#tokensSessionsBlacklistStore = props.tokensSessionsBlacklistStore;
@@ -66,7 +70,7 @@ export class AuthRoutesController {
             const refreshPayload = this.#verifyRefreshTokenOrThrow(tokens.refresh);
             const accessPayload = this.#verifyAccessTokenOrThrow(tokens.access);
 
-            await this.#tokensSessionsStore.createSession({
+            await this.#tokensSessionsStore.addSession({
               userId: refreshPayload.userId,
               sessionId: refreshPayload.sid,
               userAgent,
@@ -299,16 +303,6 @@ export class AuthRoutesController {
             const userAgent = this.#extractUserAgentOrThrow(request);
             const payload = this.#verifyRefreshTokenOrThrow(refreshToken);
 
-            const currentSession = await this.#tokensSessionsStore.getSessionByRefreshJti({
-              userId: payload.userId,
-              refreshJti: payload.jti,
-            });
-            if (!currentSession) throw new ErrorUnauthorized();
-
-            if (currentSession.userAgent !== userAgent) {
-              throw new ErrorUnauthorized();
-            }
-
             const tokens = this.#tokensSessionsGenerator.generateTokens({
               userId: payload.userId,
               userAgent,
@@ -316,25 +310,21 @@ export class AuthRoutesController {
             const newRefreshPayload = this.#verifyRefreshTokenOrThrow(tokens.refresh);
             const newAccessPayload = this.#verifyAccessTokenOrThrow(tokens.access);
 
-            await this.#tokensSessionsBlacklistStore.addHashedAccessJtiToBlacklist({
-              accessJtiHash: currentSession.accessJtiHash,
-              expiresAt: currentSession.accessExpiresAt,
-            });
-            await this.#tokensSessionsStore.deleteSessionByRefreshJti({
+            await this.#refreshTokensUseCase.execute({
+              logger: request.log,
               userId: payload.userId,
               refreshJti: payload.jti,
-            });
-            await this.#tokensSessionsStore.createSession({
-              userId: newRefreshPayload.userId,
-              sessionId: newRefreshPayload.sid,
               userAgent,
-              expiresAt: (newRefreshPayload.exp ?? Math.floor(Date.now() / 1000)) * 1000,
-              refreshJti: newRefreshPayload.jti,
-              accessJti: newAccessPayload.jti,
-              accessExpiresAt: newAccessPayload.exp * 1000,
+              newSession: {
+                userId: newRefreshPayload.userId,
+                sessionId: newRefreshPayload.sid,
+                refreshJti: newRefreshPayload.jti,
+                refreshExpiresAt: (newRefreshPayload.exp ?? Math.floor(Date.now() / 1000)) * 1000,
+                accessJti: newAccessPayload.jti,
+                accessExpiresAt: newAccessPayload.exp * 1000,
+              },
+              currentAccessToken: (await this.#getCurrentAccessTokenPayload(request)) ?? undefined,
             });
-
-            await this.#tryBlacklistAccessToken(request);
             this.#setAccessTokenToCookie(reply, tokens.access);
             this.#setRefreshTokenToCookie(reply, tokens.refresh);
 
@@ -425,8 +415,18 @@ export class AuthRoutesController {
   }
 
   async #tryBlacklistAccessToken(request: FastifyRequest): Promise<void> {
+    const payload = await this.#getCurrentAccessTokenPayload(request);
+    if (!payload) return;
+
+    await this.#tokensSessionsBlacklistStore.addAccessJtiToBlacklist({
+      accessJti: payload.jti,
+      expiresAt: payload.expiresAt,
+    });
+  }
+
+  async #getCurrentAccessTokenPayload(request: FastifyRequest): Promise<{ jti: string; expiresAt: number } | null> {
     const token = this.#getAccessToken(request);
-    if (!token) return;
+    if (!token) return null;
 
     let payload;
     try {
@@ -436,17 +436,17 @@ export class AuthRoutesController {
         exp?: number;
       }>(token);
     } catch {
-      return;
+      return null;
     }
 
     if (payload.typ !== 'access' || !payload.jti || !payload.exp) {
-      return;
+      return null;
     }
 
-    await this.#tokensSessionsBlacklistStore.addAccessJtiToBlacklist({
-      accessJti: payload.jti,
+    return {
+      jti: payload.jti,
       expiresAt: payload.exp * 1000,
-    });
+    };
   }
 
   async #logoutSessionById(props: { request: FastifyRequest; reply: FastifyReply; sessionId: string }): Promise<void> {

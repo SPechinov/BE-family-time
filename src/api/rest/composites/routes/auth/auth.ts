@@ -31,6 +31,7 @@ export class AuthComposite {
     new AuthRoutesController({
       fastify: this.#fastifyInstance,
       useCases: dependencies.authUseCases,
+      refreshTokensUseCase: dependencies.refreshTokensUseCase,
       tokensSessionsGenerator,
       tokensSessionsStore: dependencies.tokensSessionsStore,
       tokensSessionsBlacklistStore: dependencies.tokensSessionsBlacklistStore,
