@@ -288,8 +288,8 @@ export class AuthRoutesController {
             schema: AUTH_SCHEMAS.refreshTokens,
           },
           async (request, reply) => {
-            const refreshToken = this.#getRefreshToken(request);
-            if (!refreshToken) throw new ErrorUnauthorized();
+            this.#getVerifiedRefreshPayloadOrThrow(request);
+            const refreshToken = this.#getRefreshTokenOrThrow(request);
 
             const userAgent = this.#extractUserAgentOrThrow(request);
             const tokens = await this.#refreshTokensUseCase.execute({
@@ -323,15 +323,18 @@ export class AuthRoutesController {
     return request.cookies?.[CONFIG.jwt.refresh.cookieName] || null;
   }
 
+  #getRefreshTokenOrThrow(request: FastifyRequest): string {
+    const refreshToken = this.#getRefreshToken(request);
+    if (!refreshToken) throw new ErrorUnauthorized();
+    return refreshToken;
+  }
+
   #getAccessToken(request: FastifyRequest): string | null {
     return request.cookies?.[CONFIG.jwt.access.cookieName] || null;
   }
 
   #getVerifiedRefreshPayloadOrThrow(request: FastifyRequest): SessionRefreshTokenPayload {
-    const refreshToken = this.#getRefreshToken(request);
-    if (!refreshToken) throw new ErrorUnauthorized();
-
-    return this.#tokensSessionsPayloadVerifier.verifyRefreshTokenOrThrow(refreshToken);
+    return this.#tokensSessionsPayloadVerifier.verifyRefreshTokenOrThrow(this.#getRefreshTokenOrThrow(request));
   }
 
   #setAccessTokenToCookie(reply: FastifyReply, accessToken: string) {
