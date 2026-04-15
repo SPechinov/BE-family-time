@@ -18,7 +18,9 @@ import { PREFIX, ROUTES } from './constants';
 import { ITokensSessionsGenerator } from '@/domains/services';
 import { ITokensSessionsBlacklistStore, ITokensSessionsStore } from '@/domains/repositories/stores';
 import {
+  IForgotPasswordEndUseCase,
   IGetSessionsUseCase,
+  ILoginUseCase,
   ILogoutAllSessionsUseCase,
   ILogoutSessionByIdUseCase,
   ILogoutSessionUseCase,
@@ -28,6 +30,8 @@ import {
 export class AuthRoutesController {
   #fastify: FastifyInstance;
   #useCases: IAuthUseCases;
+  #loginUseCase: ILoginUseCase;
+  #forgotPasswordEndUseCase: IForgotPasswordEndUseCase;
   #refreshTokensUseCase: IRefreshTokensUseCase;
   #getSessionsUseCase: IGetSessionsUseCase;
   #logoutSessionUseCase: ILogoutSessionUseCase;
@@ -40,6 +44,8 @@ export class AuthRoutesController {
   constructor(props: {
     fastify: FastifyInstance;
     useCases: IAuthUseCases;
+    loginUseCase: ILoginUseCase;
+    forgotPasswordEndUseCase: IForgotPasswordEndUseCase;
     refreshTokensUseCase: IRefreshTokensUseCase;
     getSessionsUseCase: IGetSessionsUseCase;
     logoutSessionUseCase: ILogoutSessionUseCase;
@@ -51,6 +57,8 @@ export class AuthRoutesController {
   }) {
     this.#fastify = props.fastify;
     this.#useCases = props.useCases;
+    this.#loginUseCase = props.loginUseCase;
+    this.#forgotPasswordEndUseCase = props.forgotPasswordEndUseCase;
     this.#refreshTokensUseCase = props.refreshTokensUseCase;
     this.#getSessionsUseCase = props.getSessionsUseCase;
     this.#logoutSessionUseCase = props.logoutSessionUseCase;
@@ -73,35 +81,17 @@ export class AuthRoutesController {
           },
           async (request, reply) => {
             const userAgent = this.#extractUserAgentOrThrow(request);
-
-            const { user } = await this.#useCases.login({
+            const tokens = await this.#loginUseCase.execute({
               logger: request.log,
               userContactsPlainEntity: new UserContactsPlainEntity({
                 email: request.body.email,
               }),
               userPasswordPlainEntity: new UserPasswordPlainEntity(request.body.password),
-              jwtPayload: { userAgent },
-            });
-
-            const tokens = this.#tokensSessionsGenerator.generateTokens({
-              userId: user.id,
               userAgent,
             });
-            const refreshPayload = this.#verifyRefreshTokenOrThrow(tokens.refresh);
-            const accessPayload = this.#verifyAccessTokenOrThrow(tokens.access);
 
-            await this.#tokensSessionsStore.addSession({
-              userId: refreshPayload.userId,
-              sessionId: refreshPayload.sid,
-              userAgent,
-              expiresAt: (refreshPayload.exp ?? Math.floor(Date.now() / 1000)) * 1000,
-              refreshJti: refreshPayload.jti,
-              accessJti: accessPayload.jti,
-              accessExpiresAt: accessPayload.exp * 1000,
-            });
-
-            this.#setAccessTokenToCookie(reply, tokens.access);
-            this.#setRefreshTokenToCookie(reply, tokens.refresh);
+            this.#setAccessTokenToCookie(reply, tokens.accessToken);
+            this.#setRefreshTokenToCookie(reply, tokens.refreshToken);
 
             reply.status(200).send();
           },
@@ -180,15 +170,13 @@ export class AuthRoutesController {
           },
           async (request, reply) => {
             try {
-              const user = await this.#useCases.forgotPasswordEnd({
+              await this.#forgotPasswordEndUseCase.execute({
                 logger: request.log,
                 userContactsPlainEntity: new UserContactsPlainEntity({ email: request.body.email }),
                 otpCode: request.body.otpCode,
                 password: new UserPasswordPlainEntity(request.body.password),
               });
 
-              await this.#blacklistAllUserSessionsAccessTokens(user.id);
-              await this.#tokensSessionsStore.deleteAllSessions({ userId: user.id });
               this.#removeAccessTokenFromCookie(reply);
               this.#removeRefreshTokenFromCookie(reply);
               reply.status(200).send();
@@ -464,16 +452,4 @@ export class AuthRoutesController {
     };
   }
 
-  async #blacklistAllUserSessionsAccessTokens(userId: UserId): Promise<void> {
-    const userSessions = await this.#tokensSessionsStore.getUserSessions({ userId });
-    for (const userSession of userSessions) {
-      const session = await this.#tokensSessionsStore.getSessionById({ sessionId: userSession.sessionId });
-      if (!session || session.userId !== userId) continue;
-
-      await this.#tokensSessionsBlacklistStore.addHashedAccessJtiToBlacklist({
-        accessJtiHash: session.accessJtiHash,
-        expiresAt: session.accessExpiresAt,
-      });
-    }
-  }
 }

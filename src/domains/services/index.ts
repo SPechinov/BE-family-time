@@ -8,3 +8,4 @@ export * from './hashPassword';
 export * from './crypto';
 export * from './tokensSessionsGenerator';
 export * from './jwtSigner';
+export * from './jwtVerifier';
