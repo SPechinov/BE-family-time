@@ -1,18 +1,8 @@
-import { UserId } from '@/entities';
-
-export interface SessionData {
-  userId: UserId;
-  sessionId: string;
-  userAgent: string;
-  expiresAt: number;
-  refreshJtiHash: string;
-  accessJtiHash: string;
-  accessExpiresAt: number;
-}
+import { SessionEntity, SessionId, UserId, UserSessionEntity } from '@/entities';
 
 export interface AddSessionParams {
   userId: UserId;
-  sessionId: string;
+  sessionId: SessionId;
   userAgent: string;
   expiresAt: number;
   refreshJti: string;
@@ -20,20 +10,12 @@ export interface AddSessionParams {
   accessExpiresAt: number;
 }
 
-export interface UserSession {
-  userId: UserId;
-  sessionId: string;
-  userAgent: string;
-  expiresAt: number;
-  isCurrent: boolean;
-}
-
 export interface ITokensSessionsStore {
   addSession(params: AddSessionParams): Promise<void>;
-  getSessionByRefreshJti(props: { userId: UserId; refreshJti: string }): Promise<SessionData | null>;
-  getSessionById(props: { sessionId: string }): Promise<SessionData | null>;
-  getUserSessions(props: { userId: UserId; currentSessionId?: string }): Promise<UserSession[]>;
-  deleteSessionById(props: { userId: UserId; sessionId: string }): Promise<void>;
+  getSessionByRefreshJti(props: { userId: UserId; refreshJti: string }): Promise<SessionEntity | null>;
+  getSessionById(props: { sessionId: SessionId }): Promise<SessionEntity | null>;
+  getUserSessions(props: { userId: UserId; currentSessionId?: SessionId }): Promise<UserSessionEntity[]>;
+  deleteSessionById(props: { userId: UserId; sessionId: SessionId }): Promise<void>;
   deleteSessionByRefreshJti(props: { userId: UserId; refreshJti: string }): Promise<void>;
   deleteAllSessions(props: { userId: UserId }): Promise<void>;
 }

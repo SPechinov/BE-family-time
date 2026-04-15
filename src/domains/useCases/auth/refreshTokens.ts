@@ -1,4 +1,4 @@
-import { UserId } from '@/entities';
+import { SessionId, UserId } from '@/entities';
 import { DefaultProps } from '../types';
 
 export interface IRefreshTokensUseCase {
@@ -9,7 +9,7 @@ export interface IRefreshTokensUseCase {
       userAgent: string;
       newSession: {
         userId: UserId;
-        sessionId: string;
+        sessionId: SessionId;
         refreshJti: string;
         refreshExpiresAt: number;
         accessJti: string;

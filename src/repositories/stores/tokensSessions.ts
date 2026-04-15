@@ -1,7 +1,7 @@
-import { UserId } from '@/entities';
+import { SessionEntity, SessionId, toSessionId, UserId, UserSessionEntity } from '@/entities';
 import { RedisClient } from '@/pkg';
 import { createHash } from 'node:crypto';
-import { AddSessionParams, ITokensSessionsStore, SessionData, UserSession } from '@/domains/repositories/stores';
+import { AddSessionParams, ITokensSessionsStore } from '@/domains/repositories/stores';
 
 export class TokensSessions implements ITokensSessionsStore {
   readonly #redis: RedisClient;
@@ -45,11 +45,12 @@ export class TokensSessions implements ITokensSessionsStore {
     await this.#pruneUserSessions(props.userId);
   }
 
-  async getSessionByRefreshJti(props: { userId: UserId; refreshJti: string }): Promise<SessionData | null> {
+  async getSessionByRefreshJti(props: { userId: UserId; refreshJti: string }): Promise<SessionEntity | null> {
     const refreshJtiHash = this.#fingerprint(props.refreshJti);
     const refreshMapKey = this.#buildRefreshMapKey(refreshJtiHash);
-    const sessionId = await this.#redis.get(refreshMapKey);
-    if (!sessionId) return null;
+    const rawSessionId = await this.#redis.get(refreshMapKey);
+    if (!rawSessionId) return null;
+    const sessionId = toSessionId(rawSessionId);
 
     const session = await this.getSessionById({ sessionId });
     if (!session) return null;
@@ -58,7 +59,7 @@ export class TokensSessions implements ITokensSessionsStore {
     return session;
   }
 
-  async getSessionById(props: { sessionId: string }): Promise<SessionData | null> {
+  async getSessionById(props: { sessionId: SessionId }): Promise<SessionEntity | null> {
     const sessionKey = this.#buildSessionKey(props.sessionId);
     const sessionData = await this.#redis.hGetAll(sessionKey);
 
@@ -66,25 +67,26 @@ export class TokensSessions implements ITokensSessionsStore {
       return null;
     }
 
-    return {
+    return new SessionEntity({
       userId: sessionData.userId as UserId,
-      sessionId: sessionData.sessionId ?? props.sessionId,
+      sessionId: toSessionId(sessionData.sessionId ?? props.sessionId),
       userAgent: sessionData.userAgent ?? '',
       expiresAt: parseInt(sessionData.expiresAt ?? '0', 10),
       refreshJtiHash: sessionData.refreshJtiHash ?? '',
       accessJtiHash: sessionData.accessJtiHash ?? '',
       accessExpiresAt: parseInt(sessionData.accessExpiresAt ?? '0', 10),
-    };
+    });
   }
 
-  async getUserSessions(props: { userId: UserId; currentSessionId?: string }) {
+  async getUserSessions(props: { userId: UserId; currentSessionId?: SessionId }) {
     const userSessionsKey = this.#buildUserSessionsKey(props.userId);
     const sessionIds = await this.#redis.sMembers(userSessionsKey);
     if (sessionIds.length === 0) return [];
 
-    const result: UserSession[] = [];
+    const result: UserSessionEntity[] = [];
 
-    for (const sessionId of sessionIds) {
+    for (const rawSessionId of sessionIds) {
+      const sessionId = toSessionId(rawSessionId);
       const session = await this.getSessionById({ sessionId });
       if (!session) {
         await this.#redis.sRem(userSessionsKey, sessionId);
@@ -95,19 +97,21 @@ export class TokensSessions implements ITokensSessionsStore {
         continue;
       }
 
-      result.push({
-        userId: session.userId,
-        sessionId: session.sessionId,
-        userAgent: session.userAgent,
-        expiresAt: session.expiresAt,
-        isCurrent: props.currentSessionId === session.sessionId,
-      });
+      result.push(
+        new UserSessionEntity({
+          userId: session.userId,
+          sessionId: session.sessionId,
+          userAgent: session.userAgent,
+          expiresAt: session.expiresAt,
+          isCurrent: props.currentSessionId === session.sessionId,
+        }),
+      );
     }
 
     return result;
   }
 
-  async deleteSessionById(props: { userId: UserId; sessionId: string }): Promise<void> {
+  async deleteSessionById(props: { userId: UserId; sessionId: SessionId }): Promise<void> {
     const session = await this.getSessionById({ sessionId: props.sessionId });
     const userSessionsKey = this.#buildUserSessionsKey(props.userId);
 
@@ -137,7 +141,8 @@ export class TokensSessions implements ITokensSessionsStore {
     }
 
     const pipeline = this.#redis.multi();
-    for (const sessionId of sessionIds) {
+    for (const rawSessionId of sessionIds) {
+      const sessionId = toSessionId(rawSessionId);
       const session = await this.getSessionById({ sessionId });
       pipeline.del(this.#buildSessionKey(sessionId));
       if (session?.refreshJtiHash) {
@@ -149,7 +154,7 @@ export class TokensSessions implements ITokensSessionsStore {
     await pipeline.exec();
   }
 
-  #buildSessionKey(sessionId: string): string {
+  #buildSessionKey(sessionId: SessionId): string {
     return `${this.#SESSION_KEY_PREFIX}:${sessionId}`;
   }
 
@@ -175,7 +180,8 @@ export class TokensSessions implements ITokensSessionsStore {
     const sessionIds = await this.#redis.sMembers(userSessionsKey);
     if (sessionIds.length === 0) return;
 
-    for (const sessionId of sessionIds) {
+    for (const rawSessionId of sessionIds) {
+      const sessionId = toSessionId(rawSessionId);
       const session = await this.getSessionById({ sessionId });
       if (!session || session.userId !== userId || session.expiresAt <= Date.now()) {
         await this.#redis.sRem(userSessionsKey, sessionId);

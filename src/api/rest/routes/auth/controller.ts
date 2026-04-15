@@ -7,6 +7,8 @@ import {
   UserCreatePlainEntity,
   UserPasswordPlainEntity,
   UserPersonalInfoPlainEntity,
+  SessionId,
+  toSessionId,
   UserId,
 } from '@/entities';
 import { CONFIG, isDev } from '@/config';
@@ -208,7 +210,7 @@ export class AuthRoutesController {
 
             reply.status(200).send({
               sessions: sessions.map(
-                (session: { sessionId: string; expiresAt: number; userAgent: string; isCurrent: boolean }) => ({
+                (session: { sessionId: SessionId; expiresAt: number; userAgent: string; isCurrent: boolean }) => ({
                   sessionId: session.sessionId,
                   expiresAt: session.expiresAt,
                   userAgent: session.userAgent,
@@ -286,7 +288,7 @@ export class AuthRoutesController {
             await this.#logoutSessionById({
               request,
               reply,
-              sessionId: request.params.sessionId,
+              sessionId: toSessionId(request.params.sessionId),
             });
           },
         );
@@ -370,7 +372,7 @@ export class AuthRoutesController {
     return reply.setCookie(CONFIG.jwt.refresh.cookieName, '', { ...REFRESH_TOKEN_COOKIE_CONFIG, maxAge: 0 });
   }
 
-  #verifyRefreshTokenOrThrow(token: string): { userId: UserId; sid: string; jti: string; exp?: number } {
+  #verifyRefreshTokenOrThrow(token: string): { userId: UserId; sid: SessionId; jti: string; exp?: number } {
     let payload;
     try {
       payload = this.#fastify.jwt.verify<{
@@ -390,10 +392,10 @@ export class AuthRoutesController {
       throw new ErrorUnauthorized();
     }
 
-    return { userId: payload.userId, sid: payload.sid, jti: payload.jti, exp: payload.exp };
+    return { userId: payload.userId, sid: toSessionId(payload.sid), jti: payload.jti, exp: payload.exp };
   }
 
-  #verifyAccessTokenOrThrow(token: string): { userId: UserId; sid: string; jti: string; exp: number } {
+  #verifyAccessTokenOrThrow(token: string): { userId: UserId; sid: SessionId; jti: string; exp: number } {
     let payload;
     try {
       payload = this.#fastify.jwt.verify<{
@@ -411,7 +413,7 @@ export class AuthRoutesController {
       throw new ErrorUnauthorized();
     }
 
-    return { userId: payload.userId, sid: payload.sid, jti: payload.jti, exp: payload.exp };
+    return { userId: payload.userId, sid: toSessionId(payload.sid), jti: payload.jti, exp: payload.exp };
   }
 
   async #tryBlacklistAccessToken(request: FastifyRequest): Promise<void> {
@@ -449,7 +451,11 @@ export class AuthRoutesController {
     };
   }
 
-  async #logoutSessionById(props: { request: FastifyRequest; reply: FastifyReply; sessionId: string }): Promise<void> {
+  async #logoutSessionById(props: {
+    request: FastifyRequest;
+    reply: FastifyReply;
+    sessionId: SessionId;
+  }): Promise<void> {
     const refreshToken = this.#getRefreshToken(props.request);
     if (!refreshToken) throw new ErrorUnauthorized();
 

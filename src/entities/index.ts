@@ -2,3 +2,4 @@ export * from './user';
 export * from './group';
 export * from './groupsUsers';
 export * from './calendarEvents';
+export * from './sessions';
