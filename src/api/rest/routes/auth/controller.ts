@@ -417,5 +417,4 @@ export class AuthRoutesController {
       expiresAt: payload.exp * 1000,
     };
   }
-
 }
