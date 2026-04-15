@@ -1,4 +1,4 @@
-import { UserId } from '@/entities';
+import { SessionAccessTokenMeta, UserId } from '@/entities';
 import { DefaultProps } from '../types';
 
 export interface ILogoutAllSessionsUseCase {
@@ -6,10 +6,7 @@ export interface ILogoutAllSessionsUseCase {
     props: DefaultProps<{
       userId: UserId;
       refreshJti: string;
-      currentAccessToken?: {
-        jti: string;
-        expiresAt: number;
-      };
+      currentAccessToken?: SessionAccessTokenMeta;
     }>,
   ): Promise<void>;
 }

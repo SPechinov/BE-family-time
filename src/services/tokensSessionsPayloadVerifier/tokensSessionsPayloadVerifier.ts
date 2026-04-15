@@ -1,5 +1,12 @@
 import { IJwtVerifier, ITokensSessionsPayloadVerifier } from '@/domains/services';
-import { SessionId, toSessionId, UserId } from '@/entities';
+import {
+  SessionAccessTokenMeta,
+  SessionAccessTokenPayload,
+  SessionAccessTokenVerificationPayload,
+  SessionRefreshTokenPayload,
+  toSessionId,
+  UserId,
+} from '@/entities';
 import { ErrorUnauthorized } from '@/pkg';
 
 export class TokensSessionsPayloadVerifier implements ITokensSessionsPayloadVerifier {
@@ -9,7 +16,7 @@ export class TokensSessionsPayloadVerifier implements ITokensSessionsPayloadVeri
     this.#jwtVerifier = props.jwtVerifier;
   }
 
-  verifyRefreshToken(token: string): { userId: UserId; sid: SessionId; jti: string; exp?: number } | null {
+  verifyRefreshToken(token: string): SessionRefreshTokenPayload | null {
     const payload = this.#verifyToken(token, {
       type: 'refresh',
       requireUserId: true,
@@ -21,13 +28,13 @@ export class TokensSessionsPayloadVerifier implements ITokensSessionsPayloadVeri
     return { userId: payload.userId, sid: toSessionId(payload.sid), jti: payload.jti, exp: payload.exp };
   }
 
-  verifyRefreshTokenOrThrow(token: string): { userId: UserId; sid: SessionId; jti: string; exp?: number } {
+  verifyRefreshTokenOrThrow(token: string): SessionRefreshTokenPayload {
     const payload = this.verifyRefreshToken(token);
     if (!payload) throw new ErrorUnauthorized();
     return payload;
   }
 
-  verifyAccessToken(token: string): { jti: string; exp: number } | null {
+  verifyAccessToken(token: string): SessionAccessTokenVerificationPayload | null {
     const payload = this.#verifyToken(token, {
       type: 'access',
       requireUserId: false,
@@ -39,7 +46,7 @@ export class TokensSessionsPayloadVerifier implements ITokensSessionsPayloadVeri
     return { jti: payload.jti, exp: payload.exp };
   }
 
-  verifyAccessTokenOrThrow(token: string): { userId: UserId; sid: SessionId; jti: string; exp: number } {
+  verifyAccessTokenOrThrow(token: string): SessionAccessTokenPayload {
     const payload = this.#verifyToken(token, {
       type: 'access',
       requireUserId: true,
@@ -49,6 +56,13 @@ export class TokensSessionsPayloadVerifier implements ITokensSessionsPayloadVeri
     if (!payload || payload.exp === undefined) throw new ErrorUnauthorized();
 
     return { userId: payload.userId, sid: toSessionId(payload.sid), jti: payload.jti, exp: payload.exp };
+  }
+
+  toSessionAccessTokenMeta(payload: SessionAccessTokenVerificationPayload): SessionAccessTokenMeta {
+    return {
+      jti: payload.jti,
+      expiresAt: payload.exp * 1000,
+    };
   }
 
   #verifyToken(

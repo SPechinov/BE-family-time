@@ -4,6 +4,30 @@ import { UserId } from './user';
 export type SessionId = UUID & { readonly __brand: 'SessionId' };
 export const toSessionId = (value: string): SessionId => value as SessionId;
 
+export type SessionAccessTokenMeta = {
+  jti: string;
+  expiresAt: number;
+};
+
+export type SessionAccessTokenVerificationPayload = {
+  jti: string;
+  exp: number;
+};
+
+export type SessionRefreshTokenPayload = {
+  userId: UserId;
+  sid: SessionId;
+  jti: string;
+  exp?: number;
+};
+
+export type SessionAccessTokenPayload = {
+  userId: UserId;
+  sid: SessionId;
+  jti: string;
+  exp: number;
+};
+
 export class SessionEntity {
   readonly #userId: UserId;
   readonly #sessionId: SessionId;

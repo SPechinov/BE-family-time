@@ -2,13 +2,13 @@ import { FastifyInstance, FastifyReply, FastifyRequest } from 'fastify';
 import { ZodTypeProvider } from 'fastify-type-provider-zod';
 import { AUTH_SCHEMAS } from './schemas';
 import {
+  SessionAccessTokenMeta,
   UserContactsPlainEntity,
   UserCreatePlainEntity,
   UserPasswordPlainEntity,
   UserPersonalInfoPlainEntity,
-  SessionId,
+  SessionRefreshTokenPayload,
   toSessionId,
-  UserId,
 } from '@/entities';
 import { CONFIG, isDev } from '@/config';
 import { ACCESS_TOKEN_COOKIE_CONFIG, HEADER_NAME, REFRESH_TOKEN_COOKIE_CONFIG } from '../../constants';
@@ -206,14 +206,12 @@ export class AuthRoutesController {
             });
 
             reply.status(200).send({
-              sessions: sessions.map(
-                (session: { sessionId: SessionId; expiresAt: number; userAgent: string; isCurrent: boolean }) => ({
-                  sessionId: session.sessionId,
-                  expiresAt: session.expiresAt,
-                  userAgent: session.userAgent,
-                  isCurrent: session.isCurrent,
-                }),
-              ),
+              sessions: sessions.map((session) => ({
+                sessionId: session.sessionId,
+                expiresAt: session.expiresAt,
+                userAgent: session.userAgent,
+                isCurrent: session.isCurrent,
+              })),
             });
           },
         );
@@ -329,12 +327,7 @@ export class AuthRoutesController {
     return request.cookies?.[CONFIG.jwt.access.cookieName] || null;
   }
 
-  #getVerifiedRefreshPayloadOrThrow(request: FastifyRequest): {
-    userId: UserId;
-    sid: SessionId;
-    jti: string;
-    exp?: number;
-  } {
+  #getVerifiedRefreshPayloadOrThrow(request: FastifyRequest): SessionRefreshTokenPayload {
     const refreshToken = this.#getRefreshToken(request);
     if (!refreshToken) throw new ErrorUnauthorized();
 
@@ -357,16 +350,13 @@ export class AuthRoutesController {
     return reply.setCookie(CONFIG.jwt.refresh.cookieName, '', { ...REFRESH_TOKEN_COOKIE_CONFIG, maxAge: 0 });
   }
 
-  #getCurrentAccessTokenPayload(request: FastifyRequest): { jti: string; expiresAt: number } | null {
+  #getCurrentAccessTokenPayload(request: FastifyRequest): SessionAccessTokenMeta | null {
     const token = this.#getAccessToken(request);
     if (!token) return null;
 
     const payload = this.#tokensSessionsPayloadVerifier.verifyAccessToken(token);
     if (!payload) return null;
 
-    return {
-      jti: payload.jti,
-      expiresAt: payload.exp * 1000,
-    };
+    return this.#tokensSessionsPayloadVerifier.toSessionAccessTokenMeta(payload);
   }
 }
