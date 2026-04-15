@@ -8,13 +8,12 @@ import {
   UserPersonalInfoPlainEntity,
   SessionId,
   toSessionId,
-  UserId,
 } from '@/entities';
 import { CONFIG, isDev } from '@/config';
 import { ACCESS_TOKEN_COOKIE_CONFIG, HEADER_NAME, REFRESH_TOKEN_COOKIE_CONFIG } from '../../constants';
 import { ErrorInvalidUserAgent, ErrorUnauthorized, ErrorUserNotExists } from '@/pkg';
 import { PREFIX, ROUTES } from './constants';
-import { IJwtVerifier } from '@/domains/services';
+import { ITokensSessionsPayloadVerifier } from '@/domains/services';
 import { ITokensSessionsBlacklistStore } from '@/domains/repositories/stores';
 import {
   IForgotPasswordEndUseCase,
@@ -41,7 +40,7 @@ export class AuthRoutesController {
   #logoutSessionUseCase: ILogoutSessionUseCase;
   #logoutAllSessionsUseCase: ILogoutAllSessionsUseCase;
   #logoutSessionByIdUseCase: ILogoutSessionByIdUseCase;
-  #jwtVerifier: IJwtVerifier;
+  #tokensSessionsPayloadVerifier: ITokensSessionsPayloadVerifier;
   #tokensSessionsBlacklistStore: ITokensSessionsBlacklistStore;
 
   constructor(props: {
@@ -56,7 +55,7 @@ export class AuthRoutesController {
     logoutSessionUseCase: ILogoutSessionUseCase;
     logoutAllSessionsUseCase: ILogoutAllSessionsUseCase;
     logoutSessionByIdUseCase: ILogoutSessionByIdUseCase;
-    jwtVerifier: IJwtVerifier;
+    tokensSessionsPayloadVerifier: ITokensSessionsPayloadVerifier;
     tokensSessionsBlacklistStore: ITokensSessionsBlacklistStore;
   }) {
     this.#fastify = props.fastify;
@@ -70,7 +69,7 @@ export class AuthRoutesController {
     this.#logoutSessionUseCase = props.logoutSessionUseCase;
     this.#logoutAllSessionsUseCase = props.logoutAllSessionsUseCase;
     this.#logoutSessionByIdUseCase = props.logoutSessionByIdUseCase;
-    this.#jwtVerifier = props.jwtVerifier;
+    this.#tokensSessionsPayloadVerifier = props.tokensSessionsPayloadVerifier;
     this.#tokensSessionsBlacklistStore = props.tokensSessionsBlacklistStore;
   }
 
@@ -204,7 +203,7 @@ export class AuthRoutesController {
             const refreshToken = this.#getRefreshToken(request);
             if (!refreshToken) throw new ErrorUnauthorized();
 
-            const payload = this.#verifyRefreshTokenOrThrow(refreshToken);
+            const payload = this.#tokensSessionsPayloadVerifier.verifyRefreshTokenOrThrow(refreshToken);
             const sessions = await this.#getSessionsUseCase.execute({
               logger: request.log,
               userId: payload.userId,
@@ -234,13 +233,13 @@ export class AuthRoutesController {
             const refreshToken = this.#getRefreshToken(request);
             if (!refreshToken) throw new ErrorUnauthorized();
 
-            const payload = this.#verifyRefreshTokenOrThrow(refreshToken);
+            const payload = this.#tokensSessionsPayloadVerifier.verifyRefreshTokenOrThrow(refreshToken);
             await this.#logoutAllSessionsUseCase.execute({
               logger: request.log,
               userId: payload.userId,
               refreshJti: payload.jti,
             });
-            await this.#tryBlacklistAccessToken(request);
+            await this.#addAccessTokenToBlacklist(request);
             this.#removeAccessTokenFromCookie(reply);
             this.#removeRefreshTokenFromCookie(reply);
 
@@ -257,13 +256,13 @@ export class AuthRoutesController {
             const refreshToken = this.#getRefreshToken(request);
             if (!refreshToken) throw new ErrorUnauthorized();
 
-            const payload = this.#verifyRefreshTokenOrThrow(refreshToken);
+            const payload = this.#tokensSessionsPayloadVerifier.verifyRefreshTokenOrThrow(refreshToken);
             await this.#logoutSessionUseCase.execute({
               logger: request.log,
               userId: payload.userId,
               refreshJti: payload.jti,
             });
-            await this.#tryBlacklistAccessToken(request);
+            await this.#addAccessTokenToBlacklist(request);
             this.#removeAccessTokenFromCookie(reply);
             this.#removeRefreshTokenFromCookie(reply);
 
@@ -279,7 +278,7 @@ export class AuthRoutesController {
           async (request, reply) => {
             const refreshToken = this.#getRefreshToken(request);
             if (!refreshToken) throw new ErrorUnauthorized();
-            const payload = this.#verifyRefreshTokenOrThrow(refreshToken);
+            const payload = this.#tokensSessionsPayloadVerifier.verifyRefreshTokenOrThrow(refreshToken);
 
             const { isCurrentSession } = await this.#logoutSessionByIdUseCase.execute({
               logger: request.log,
@@ -290,7 +289,7 @@ export class AuthRoutesController {
             });
 
             if (isCurrentSession) {
-              await this.#tryBlacklistAccessToken(request);
+              await this.#addAccessTokenToBlacklist(request);
               this.#removeAccessTokenFromCookie(reply);
               this.#removeRefreshTokenFromCookie(reply);
             }
@@ -360,30 +359,7 @@ export class AuthRoutesController {
     return reply.setCookie(CONFIG.jwt.refresh.cookieName, '', { ...REFRESH_TOKEN_COOKIE_CONFIG, maxAge: 0 });
   }
 
-  #verifyRefreshTokenOrThrow(token: string): { userId: UserId; sid: SessionId; jti: string; exp?: number } {
-    let payload;
-    try {
-      payload = this.#jwtVerifier.verify<{
-        userId?: UserId;
-        id?: UserId;
-        sid?: string;
-        jti?: string;
-        typ?: 'access' | 'refresh';
-        userAgent?: string;
-        exp?: number;
-      }>(token);
-    } catch {
-      throw new ErrorUnauthorized();
-    }
-
-    if (!payload.userId || payload.typ !== 'refresh' || !payload.sid || !payload.jti) {
-      throw new ErrorUnauthorized();
-    }
-
-    return { userId: payload.userId, sid: toSessionId(payload.sid), jti: payload.jti, exp: payload.exp };
-  }
-
-  async #tryBlacklistAccessToken(request: FastifyRequest): Promise<void> {
+  async #addAccessTokenToBlacklist(request: FastifyRequest): Promise<void> {
     const payload = await this.#getCurrentAccessTokenPayload(request);
     if (!payload) return;
 
@@ -396,21 +372,8 @@ export class AuthRoutesController {
   async #getCurrentAccessTokenPayload(request: FastifyRequest): Promise<{ jti: string; expiresAt: number } | null> {
     const token = this.#getAccessToken(request);
     if (!token) return null;
-
-    let payload;
-    try {
-      payload = this.#jwtVerifier.verify<{
-        typ?: 'access' | 'refresh';
-        jti?: string;
-        exp?: number;
-      }>(token);
-    } catch {
-      return null;
-    }
-
-    if (payload.typ !== 'access' || !payload.jti || !payload.exp) {
-      return null;
-    }
+    const payload = this.#tokensSessionsPayloadVerifier.verifyAccessToken(token);
+    if (!payload) return null;
 
     return {
       jti: payload.jti,

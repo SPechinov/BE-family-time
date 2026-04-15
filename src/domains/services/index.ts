@@ -7,5 +7,6 @@ export * from './hash';
 export * from './hashPassword';
 export * from './crypto';
 export * from './tokensSessionsGenerator';
+export * from './tokensSessionsPayloadVerifier';
 export * from './jwtSigner';
 export * from './jwtVerifier';

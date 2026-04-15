@@ -3,7 +3,7 @@ import { FastifyInstance } from 'fastify';
 import { Pool } from 'pg';
 import { AuthRoutesController } from '../../../routes/auth';
 import { createDependencies } from './utils';
-import { TokensSessionsGenerator } from '@/services';
+import { TokensSessionsPayloadVerifier, TokensSessionsGenerator } from '@/services';
 import { CONFIG } from '@/config';
 import { FastifyJwtSigner, FastifyJwtVerifier } from '../../../adapters';
 import {
@@ -31,6 +31,7 @@ export class AuthComposite {
   #register() {
     const dependencies = createDependencies({ redis: this.#redis, postgres: this.#postgres });
     const jwtVerifier = new FastifyJwtVerifier({ fastify: this.#fastifyInstance });
+    const tokensSessionsPayloadVerifier = new TokensSessionsPayloadVerifier({ jwtVerifier });
     const tokensSessionsGenerator = new TokensSessionsGenerator({
       jwtSigner: new FastifyJwtSigner({ fastify: this.#fastifyInstance }),
       expiresInAccess: CONFIG.jwt.access.expiry / 1000,
@@ -40,7 +41,7 @@ export class AuthComposite {
       authUseCases: dependencies.authUseCases,
       tokensSessionsGenerator,
       tokensSessionsStore: dependencies.tokensSessionsStore,
-      jwtVerifier,
+      tokensSessionsPayloadVerifier,
     });
     const forgotPasswordEndUseCase = new ForgotPasswordEndUseCase({
       authUseCases: dependencies.authUseCases,
@@ -60,7 +61,7 @@ export class AuthComposite {
       tokensSessionsStore: dependencies.tokensSessionsStore,
       tokensSessionsBlacklistStore: dependencies.tokensSessionsBlacklistStore,
       tokensSessionsGenerator,
-      jwtVerifier,
+      tokensSessionsPayloadVerifier,
     });
 
     new AuthRoutesController({
@@ -75,7 +76,7 @@ export class AuthComposite {
       logoutSessionUseCase: dependencies.logoutSessionUseCase,
       logoutAllSessionsUseCase: dependencies.logoutAllSessionsUseCase,
       logoutSessionByIdUseCase: dependencies.logoutSessionByIdUseCase,
-      jwtVerifier,
+      tokensSessionsPayloadVerifier,
       tokensSessionsBlacklistStore: dependencies.tokensSessionsBlacklistStore,
     }).register();
   }
