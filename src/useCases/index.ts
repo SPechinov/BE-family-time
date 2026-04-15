@@ -3,3 +3,5 @@ export * from './me';
 export * from './groups';
 export * from './calendarEvents';
 export * from './auth/refreshTokens';
+export * from './auth/getSessions';
+export * from './auth/logoutSession';

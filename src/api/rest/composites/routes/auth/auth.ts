@@ -32,6 +32,8 @@ export class AuthComposite {
       fastify: this.#fastifyInstance,
       useCases: dependencies.authUseCases,
       refreshTokensUseCase: dependencies.refreshTokensUseCase,
+      getSessionsUseCase: dependencies.getSessionsUseCase,
+      logoutSessionUseCase: dependencies.logoutSessionUseCase,
       tokensSessionsGenerator,
       tokensSessionsStore: dependencies.tokensSessionsStore,
       tokensSessionsBlacklistStore: dependencies.tokensSessionsBlacklistStore,

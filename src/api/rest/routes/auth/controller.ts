@@ -17,12 +17,14 @@ import { ErrorInvalidUserAgent, ErrorSessionNotExists, ErrorUnauthorized, ErrorU
 import { PREFIX, ROUTES } from './constants';
 import { ITokensSessionsGenerator } from '@/domains/services';
 import { ITokensSessionsBlacklistStore, ITokensSessionsStore } from '@/domains/repositories/stores';
-import { IRefreshTokensUseCase } from '@/domains/useCases';
+import { IGetSessionsUseCase, ILogoutSessionUseCase, IRefreshTokensUseCase } from '@/domains/useCases';
 
 export class AuthRoutesController {
   #fastify: FastifyInstance;
   #useCases: IAuthUseCases;
   #refreshTokensUseCase: IRefreshTokensUseCase;
+  #getSessionsUseCase: IGetSessionsUseCase;
+  #logoutSessionUseCase: ILogoutSessionUseCase;
   #tokensSessionsGenerator: ITokensSessionsGenerator;
   #tokensSessionsStore: ITokensSessionsStore;
   #tokensSessionsBlacklistStore: ITokensSessionsBlacklistStore;
@@ -31,6 +33,8 @@ export class AuthRoutesController {
     fastify: FastifyInstance;
     useCases: IAuthUseCases;
     refreshTokensUseCase: IRefreshTokensUseCase;
+    getSessionsUseCase: IGetSessionsUseCase;
+    logoutSessionUseCase: ILogoutSessionUseCase;
     tokensSessionsGenerator: ITokensSessionsGenerator;
     tokensSessionsStore: ITokensSessionsStore;
     tokensSessionsBlacklistStore: ITokensSessionsBlacklistStore;
@@ -38,6 +42,8 @@ export class AuthRoutesController {
     this.#fastify = props.fastify;
     this.#useCases = props.useCases;
     this.#refreshTokensUseCase = props.refreshTokensUseCase;
+    this.#getSessionsUseCase = props.getSessionsUseCase;
+    this.#logoutSessionUseCase = props.logoutSessionUseCase;
     this.#tokensSessionsGenerator = props.tokensSessionsGenerator;
     this.#tokensSessionsStore = props.tokensSessionsStore;
     this.#tokensSessionsBlacklistStore = props.tokensSessionsBlacklistStore;
@@ -194,17 +200,10 @@ export class AuthRoutesController {
             if (!refreshToken) throw new ErrorUnauthorized();
 
             const payload = this.#verifyRefreshTokenOrThrow(refreshToken);
-            const currentSession = await this.#tokensSessionsStore.getSessionByRefreshJti({
+            const sessions = await this.#getSessionsUseCase.execute({
+              logger: request.log,
               userId: payload.userId,
               refreshJti: payload.jti,
-            });
-
-            if (!currentSession) {
-              throw new ErrorUnauthorized();
-            }
-
-            const sessions = await this.#tokensSessionsStore.getUserSessions({
-              userId: payload.userId,
               currentSessionId: payload.sid,
             });
 
@@ -257,17 +256,8 @@ export class AuthRoutesController {
             if (!refreshToken) throw new ErrorUnauthorized();
 
             const payload = this.#verifyRefreshTokenOrThrow(refreshToken);
-            const currentSession = await this.#tokensSessionsStore.getSessionByRefreshJti({
-              userId: payload.userId,
-              refreshJti: payload.jti,
-            });
-            if (!currentSession) throw new ErrorUnauthorized();
-
-            await this.#tokensSessionsBlacklistStore.addHashedAccessJtiToBlacklist({
-              accessJtiHash: currentSession.accessJtiHash,
-              expiresAt: currentSession.accessExpiresAt,
-            });
-            await this.#tokensSessionsStore.deleteSessionByRefreshJti({
+            await this.#logoutSessionUseCase.execute({
+              logger: request.log,
               userId: payload.userId,
               refreshJti: payload.jti,
             });
