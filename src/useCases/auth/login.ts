@@ -22,7 +22,9 @@ export class LoginUseCase implements ILoginUseCase {
     this.#jwtVerifier = props.jwtVerifier;
   }
 
-  async execute(props: Parameters<ILoginUseCase['execute']>[0]): Promise<{ accessToken: string; refreshToken: string }> {
+  async execute(
+    props: Parameters<ILoginUseCase['execute']>[0],
+  ): Promise<{ accessToken: string; refreshToken: string }> {
     const { user } = await this.#authUseCases.login({
       logger: props.logger,
       userContactsPlainEntity: props.userContactsPlainEntity,

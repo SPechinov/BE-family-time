@@ -14,9 +14,7 @@ export class LogoutSessionByIdUseCase implements ILogoutSessionByIdUseCase {
     this.#tokensSessionsBlacklistStore = props.tokensSessionsBlacklistStore;
   }
 
-  async execute(
-    props: Parameters<ILogoutSessionByIdUseCase['execute']>[0],
-  ): Promise<{ isCurrentSession: boolean }> {
+  async execute(props: Parameters<ILogoutSessionByIdUseCase['execute']>[0]): Promise<{ isCurrentSession: boolean }> {
     const currentSession = await this.#tokensSessionsStore.getSessionByRefreshJti({
       userId: props.userId,
       refreshJti: props.refreshJti,
