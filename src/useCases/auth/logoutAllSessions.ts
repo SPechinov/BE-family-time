@@ -33,5 +33,12 @@ export class LogoutAllSessionsUseCase implements ILogoutAllSessionsUseCase {
     }
 
     await this.#tokensSessionsStore.deleteAllSessions({ userId: props.userId });
+
+    if (props.currentAccessToken) {
+      await this.#tokensSessionsBlacklistStore.addAccessJtiToBlacklist({
+        accessJti: props.currentAccessToken.jti,
+        expiresAt: props.currentAccessToken.expiresAt,
+      });
+    }
   }
 }

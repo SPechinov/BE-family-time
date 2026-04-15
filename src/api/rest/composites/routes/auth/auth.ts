@@ -77,7 +77,6 @@ export class AuthComposite {
       logoutAllSessionsUseCase: dependencies.logoutAllSessionsUseCase,
       logoutSessionByIdUseCase: dependencies.logoutSessionByIdUseCase,
       tokensSessionsPayloadVerifier,
-      tokensSessionsBlacklistStore: dependencies.tokensSessionsBlacklistStore,
     }).register();
   }
 }

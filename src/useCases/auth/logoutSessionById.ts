@@ -35,6 +35,13 @@ export class LogoutSessionByIdUseCase implements ILogoutSessionByIdUseCase {
       sessionId: props.sessionId,
     });
 
+    if (props.sessionId === props.currentSessionId && props.currentAccessToken) {
+      await this.#tokensSessionsBlacklistStore.addAccessJtiToBlacklist({
+        accessJti: props.currentAccessToken.jti,
+        expiresAt: props.currentAccessToken.expiresAt,
+      });
+    }
+
     return {
       isCurrentSession: props.sessionId === props.currentSessionId,
     };
