@@ -1,6 +1,13 @@
 import { Pool } from 'pg';
 import { RedisClient, TIMES } from '@/pkg';
-import { AuthUseCases, GetSessionsUseCase, LogoutSessionUseCase, RefreshTokensUseCase } from '@/useCases';
+import {
+  AuthUseCases,
+  GetSessionsUseCase,
+  LogoutAllSessionsUseCase,
+  LogoutSessionByIdUseCase,
+  LogoutSessionUseCase,
+  RefreshTokensUseCase,
+} from '@/useCases';
 import { OtpCodesStore, TokensSessionsBlacklistStore, TokensSessions } from '@/repositories/stores';
 import { RateLimiterService } from '@/services';
 import { CONFIG } from '@/config';
@@ -57,12 +64,22 @@ export const createDependencies = ({ redis, postgres }: Props) => {
     tokensSessionsStore,
     tokensSessionsBlacklistStore,
   });
+  const logoutAllSessionsUseCase = new LogoutAllSessionsUseCase({
+    tokensSessionsStore,
+    tokensSessionsBlacklistStore,
+  });
+  const logoutSessionByIdUseCase = new LogoutSessionByIdUseCase({
+    tokensSessionsStore,
+    tokensSessionsBlacklistStore,
+  });
 
   return {
     authUseCases,
     refreshTokensUseCase,
     getSessionsUseCase,
     logoutSessionUseCase,
+    logoutAllSessionsUseCase,
+    logoutSessionByIdUseCase,
     tokensSessionsStore,
     tokensSessionsBlacklistStore,
   };

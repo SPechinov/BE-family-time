@@ -34,6 +34,8 @@ export class AuthComposite {
       refreshTokensUseCase: dependencies.refreshTokensUseCase,
       getSessionsUseCase: dependencies.getSessionsUseCase,
       logoutSessionUseCase: dependencies.logoutSessionUseCase,
+      logoutAllSessionsUseCase: dependencies.logoutAllSessionsUseCase,
+      logoutSessionByIdUseCase: dependencies.logoutSessionByIdUseCase,
       tokensSessionsGenerator,
       tokensSessionsStore: dependencies.tokensSessionsStore,
       tokensSessionsBlacklistStore: dependencies.tokensSessionsBlacklistStore,

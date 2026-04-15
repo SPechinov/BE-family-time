@@ -5,3 +5,5 @@ export * from './calendarEvents';
 export * from './auth/refreshTokens';
 export * from './auth/getSessions';
 export * from './auth/logoutSession';
+export * from './auth/logoutAllSessions';
+export * from './auth/logoutSessionById';

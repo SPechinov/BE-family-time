@@ -13,11 +13,17 @@ import {
 } from '@/entities';
 import { CONFIG, isDev } from '@/config';
 import { ACCESS_TOKEN_COOKIE_CONFIG, HEADER_NAME, REFRESH_TOKEN_COOKIE_CONFIG } from '../../constants';
-import { ErrorInvalidUserAgent, ErrorSessionNotExists, ErrorUnauthorized, ErrorUserNotExists } from '@/pkg';
+import { ErrorInvalidUserAgent, ErrorUnauthorized, ErrorUserNotExists } from '@/pkg';
 import { PREFIX, ROUTES } from './constants';
 import { ITokensSessionsGenerator } from '@/domains/services';
 import { ITokensSessionsBlacklistStore, ITokensSessionsStore } from '@/domains/repositories/stores';
-import { IGetSessionsUseCase, ILogoutSessionUseCase, IRefreshTokensUseCase } from '@/domains/useCases';
+import {
+  IGetSessionsUseCase,
+  ILogoutAllSessionsUseCase,
+  ILogoutSessionByIdUseCase,
+  ILogoutSessionUseCase,
+  IRefreshTokensUseCase,
+} from '@/domains/useCases';
 
 export class AuthRoutesController {
   #fastify: FastifyInstance;
@@ -25,6 +31,8 @@ export class AuthRoutesController {
   #refreshTokensUseCase: IRefreshTokensUseCase;
   #getSessionsUseCase: IGetSessionsUseCase;
   #logoutSessionUseCase: ILogoutSessionUseCase;
+  #logoutAllSessionsUseCase: ILogoutAllSessionsUseCase;
+  #logoutSessionByIdUseCase: ILogoutSessionByIdUseCase;
   #tokensSessionsGenerator: ITokensSessionsGenerator;
   #tokensSessionsStore: ITokensSessionsStore;
   #tokensSessionsBlacklistStore: ITokensSessionsBlacklistStore;
@@ -35,6 +43,8 @@ export class AuthRoutesController {
     refreshTokensUseCase: IRefreshTokensUseCase;
     getSessionsUseCase: IGetSessionsUseCase;
     logoutSessionUseCase: ILogoutSessionUseCase;
+    logoutAllSessionsUseCase: ILogoutAllSessionsUseCase;
+    logoutSessionByIdUseCase: ILogoutSessionByIdUseCase;
     tokensSessionsGenerator: ITokensSessionsGenerator;
     tokensSessionsStore: ITokensSessionsStore;
     tokensSessionsBlacklistStore: ITokensSessionsBlacklistStore;
@@ -44,6 +54,8 @@ export class AuthRoutesController {
     this.#refreshTokensUseCase = props.refreshTokensUseCase;
     this.#getSessionsUseCase = props.getSessionsUseCase;
     this.#logoutSessionUseCase = props.logoutSessionUseCase;
+    this.#logoutAllSessionsUseCase = props.logoutAllSessionsUseCase;
+    this.#logoutSessionByIdUseCase = props.logoutSessionByIdUseCase;
     this.#tokensSessionsGenerator = props.tokensSessionsGenerator;
     this.#tokensSessionsStore = props.tokensSessionsStore;
     this.#tokensSessionsBlacklistStore = props.tokensSessionsBlacklistStore;
@@ -230,14 +242,11 @@ export class AuthRoutesController {
             if (!refreshToken) throw new ErrorUnauthorized();
 
             const payload = this.#verifyRefreshTokenOrThrow(refreshToken);
-            const currentSession = await this.#tokensSessionsStore.getSessionByRefreshJti({
+            await this.#logoutAllSessionsUseCase.execute({
+              logger: request.log,
               userId: payload.userId,
               refreshJti: payload.jti,
             });
-            if (!currentSession) throw new ErrorUnauthorized();
-
-            await this.#blacklistAllUserSessionsAccessTokens(payload.userId);
-            await this.#tokensSessionsStore.deleteAllSessions({ userId: payload.userId });
             await this.#tryBlacklistAccessToken(request);
             this.#removeAccessTokenFromCookie(reply);
             this.#removeRefreshTokenFromCookie(reply);
@@ -275,11 +284,25 @@ export class AuthRoutesController {
             schema: AUTH_SCHEMAS.logoutSessionById,
           },
           async (request, reply) => {
-            await this.#logoutSessionById({
-              request,
-              reply,
+            const refreshToken = this.#getRefreshToken(request);
+            if (!refreshToken) throw new ErrorUnauthorized();
+            const payload = this.#verifyRefreshTokenOrThrow(refreshToken);
+
+            const { isCurrentSession } = await this.#logoutSessionByIdUseCase.execute({
+              logger: request.log,
+              userId: payload.userId,
+              refreshJti: payload.jti,
               sessionId: toSessionId(request.params.sessionId),
+              currentSessionId: payload.sid,
             });
+
+            if (isCurrentSession) {
+              await this.#tryBlacklistAccessToken(request);
+              this.#removeAccessTokenFromCookie(reply);
+              this.#removeRefreshTokenFromCookie(reply);
+            }
+
+            reply.status(200).send();
           },
         );
 
@@ -439,44 +462,6 @@ export class AuthRoutesController {
       jti: payload.jti,
       expiresAt: payload.exp * 1000,
     };
-  }
-
-  async #logoutSessionById(props: {
-    request: FastifyRequest;
-    reply: FastifyReply;
-    sessionId: SessionId;
-  }): Promise<void> {
-    const refreshToken = this.#getRefreshToken(props.request);
-    if (!refreshToken) throw new ErrorUnauthorized();
-
-    const payload = this.#verifyRefreshTokenOrThrow(refreshToken);
-    const currentSession = await this.#tokensSessionsStore.getSessionByRefreshJti({
-      userId: payload.userId,
-      refreshJti: payload.jti,
-    });
-    if (!currentSession) throw new ErrorUnauthorized();
-
-    const session = await this.#tokensSessionsStore.getSessionById({ sessionId: props.sessionId });
-    if (!session || session.userId !== payload.userId) {
-      throw new ErrorSessionNotExists();
-    }
-
-    await this.#tokensSessionsBlacklistStore.addHashedAccessJtiToBlacklist({
-      accessJtiHash: session.accessJtiHash,
-      expiresAt: session.accessExpiresAt,
-    });
-    await this.#tokensSessionsStore.deleteSessionById({
-      userId: payload.userId,
-      sessionId: props.sessionId,
-    });
-
-    if (props.sessionId === payload.sid) {
-      await this.#tryBlacklistAccessToken(props.request);
-      this.#removeAccessTokenFromCookie(props.reply);
-      this.#removeRefreshTokenFromCookie(props.reply);
-    }
-
-    props.reply.status(200).send();
   }
 
   async #blacklistAllUserSessionsAccessTokens(userId: UserId): Promise<void> {
