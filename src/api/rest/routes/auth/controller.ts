@@ -12,7 +12,7 @@ import {
 } from '@/entities';
 import { isDev } from '@/config';
 import { HEADER_NAME } from '../../constants';
-import { ErrorInvalidUserAgent, ErrorUnauthorized, ErrorUserNotExists } from '@/pkg';
+import { ErrorUnauthorized, ErrorUserNotExists } from '@/pkg';
 import { PREFIX, ROUTES } from './constants';
 import { ITokensSessionsPayloadVerifier } from '@/domains/services';
 import {
@@ -102,14 +102,13 @@ export class AuthRoutesController {
         schema: AUTH_SCHEMAS.login,
       },
       async (request, reply) => {
-        const userAgent = this.#extractUserAgentOrThrow(request);
         const tokens = await this.#loginUseCase.execute({
           logger: request.log,
           userContactsPlainEntity: new UserContactsPlainEntity({
             email: request.body.email,
           }),
           userPasswordPlainEntity: new UserPasswordPlainEntity(request.body.password),
-          userAgent,
+          userAgent: request.userAgent,
         });
 
         this.#authCookiesService.setAccessToken(reply, tokens.accessToken);
@@ -317,11 +316,10 @@ export class AuthRoutesController {
       async (request, reply) => {
         const { token: refreshToken } = this.#getVerifiedRefreshTokenOrThrow(request);
 
-        const userAgent = this.#extractUserAgentOrThrow(request);
         const tokens = await this.#refreshTokensUseCase.execute({
           logger: request.log,
           refreshToken,
-          userAgent,
+          userAgent: request.userAgent,
           currentAccessToken: this.#authCookiesService.getAccessToken(request) ?? undefined,
         });
         this.#authCookiesService.setAccessToken(reply, tokens.accessToken);
@@ -330,16 +328,6 @@ export class AuthRoutesController {
         reply.status(200).send();
       },
     );
-  }
-
-  #extractUserAgentOrThrow(request: FastifyRequest): string {
-    const userAgent = request.headers['user-agent'];
-    if (typeof userAgent !== 'string') {
-      request.log.warn('User agent not found');
-      throw new ErrorInvalidUserAgent();
-    }
-
-    return userAgent;
   }
 
   #getVerifiedRefreshPayloadOrThrow(request: FastifyRequest): SessionRefreshTokenPayload {

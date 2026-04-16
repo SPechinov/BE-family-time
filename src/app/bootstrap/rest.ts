@@ -4,6 +4,7 @@ import { CONFIG } from '@/config';
 import { RedisClient, TIMES } from '@/pkg';
 import { DbTransactionService } from '@/pkg/dbTransaction';
 import { authenticate } from '@/api/rest/utils';
+import { ErrorInvalidUserAgent } from '@/pkg';
 import { AuthRoutesController } from '@/api/rest/routes/auth';
 import { CalendarEventsRoutesController } from '@/api/rest/routes/calendarEvents';
 import { GroupsRoutesController } from '@/api/rest/routes/groups';
@@ -87,6 +88,15 @@ export const registerRestApi = (props: { fastify: FastifyInstance; redis: RedisC
 
   props.fastify.register(
     (instance) => {
+      instance.addHook('onRequest', async (request) => {
+        const userAgent = request.headers['user-agent'];
+        if (typeof userAgent !== 'string') {
+          request.log.warn('User agent not found');
+          throw new ErrorInvalidUserAgent();
+        }
+        request.userAgent = userAgent;
+      });
+
       const jwtVerifier = new FastifyJwtVerifier({ fastify: instance });
       const tokensSessionsPayloadVerifier = new TokensSessionsPayloadVerifier({ jwtVerifier });
       const tokensSessionsGenerator = new TokensSessionsGenerator({

@@ -4,6 +4,7 @@ import { UserId } from '@/entities';
 declare module 'fastify' {
   interface FastifyRequest {
     userId: UserId;
+    userAgent: string;
     startRequestTimestamp: number;
   }
 
