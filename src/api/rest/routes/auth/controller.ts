@@ -171,7 +171,7 @@ export class AuthRoutesController {
         schema: AUTH_SCHEMAS.forgotPasswordStart,
       },
       async (request, reply) => {
-        try {
+        await this.#runWithUserNotExistsAsOk(reply, async () => {
           const { otpCode } = await this.#forgotPasswordStartUseCase.execute({
             logger: request.log,
             userContactsPlainEntity: new UserContactsPlainEntity({ email: request.body.email }),
@@ -181,13 +181,7 @@ export class AuthRoutesController {
             reply.header(HEADER_NAME.devHeaderOtpCode, otpCode);
           }
           reply.status(200).send();
-        } catch (error: unknown) {
-          if (error instanceof ErrorUserNotExists) {
-            reply.status(200).send();
-            return;
-          }
-          throw error;
-        }
+        });
       },
     );
   }
@@ -199,7 +193,7 @@ export class AuthRoutesController {
         schema: AUTH_SCHEMAS.forgotPasswordEnd,
       },
       async (request, reply) => {
-        try {
+        await this.#runWithUserNotExistsAsOk(reply, async () => {
           await this.#forgotPasswordEndUseCase.execute({
             logger: request.log,
             userContactsPlainEntity: new UserContactsPlainEntity({ email: request.body.email }),
@@ -210,13 +204,7 @@ export class AuthRoutesController {
           this.#authCookiesService.clearAccessToken(reply);
           this.#authCookiesService.clearRefreshToken(reply);
           reply.status(200).send();
-        } catch (error: unknown) {
-          if (error instanceof ErrorUserNotExists) {
-            reply.status(200).send();
-            return;
-          }
-          throw error;
-        }
+        });
       },
     );
   }
@@ -381,5 +369,22 @@ export class AuthRoutesController {
     if (!payload) return null;
 
     return this.#tokensSessionsPayloadVerifier.toSessionAccessTokenMeta(payload);
+  }
+
+  async #runWithUserNotExistsAsOk(
+    reply: {
+      status(code: number): { send: () => void };
+    },
+    callback: () => Promise<void>,
+  ): Promise<void> {
+    try {
+      await callback();
+    } catch (error: unknown) {
+      if (error instanceof ErrorUserNotExists) {
+        reply.status(200).send();
+        return;
+      }
+      throw error;
+    }
   }
 }
