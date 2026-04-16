@@ -29,6 +29,8 @@ import {
 } from '@/domains/useCases';
 import { AuthCookiesService } from './authCookiesService';
 
+type ZodRouter = FastifyInstance<any, any, any, any, ZodTypeProvider>;
+
 export class AuthRoutesController {
   #fastify: FastifyInstance;
   #loginUseCase: ILoginUseCase;
@@ -76,23 +78,25 @@ export class AuthRoutesController {
   register() {
     this.#fastify.register(
       (instance: FastifyInstance) => {
-        this.#registerLogin(instance);
-        this.#registerRegistrationStart(instance);
-        this.#registerRegistrationEnd(instance);
-        this.#registerForgotPasswordStart(instance);
-        this.#registerForgotPasswordEnd(instance);
-        this.#registerGetAllSessions(instance);
-        this.#registerLogoutAllSessions(instance);
-        this.#registerLogoutSession(instance);
-        this.#registerLogoutSessionById(instance);
-        this.#registerRefreshTokens(instance);
+        const router = instance.withTypeProvider<ZodTypeProvider>();
+
+        this.#registerLogin(router);
+        this.#registerRegistrationStart(router);
+        this.#registerRegistrationEnd(router);
+        this.#registerForgotPasswordStart(router);
+        this.#registerForgotPasswordEnd(router);
+        this.#registerGetAllSessions(router);
+        this.#registerLogoutAllSessions(router);
+        this.#registerLogoutSession(router);
+        this.#registerLogoutSessionById(router);
+        this.#registerRefreshTokens(router);
       },
       { prefix: PREFIX },
     );
   }
 
-  #registerLogin(router: FastifyInstance): void {
-    router.withTypeProvider<ZodTypeProvider>().post(
+  #registerLogin(router: ZodRouter): void {
+    router.post(
       ROUTES.login,
       {
         schema: AUTH_SCHEMAS.login,
@@ -116,8 +120,8 @@ export class AuthRoutesController {
     );
   }
 
-  #registerRegistrationStart(router: FastifyInstance): void {
-    router.withTypeProvider<ZodTypeProvider>().post(
+  #registerRegistrationStart(router: ZodRouter): void {
+    router.post(
       ROUTES.registrationStart,
       {
         schema: AUTH_SCHEMAS.registrationStart,
@@ -135,8 +139,8 @@ export class AuthRoutesController {
     );
   }
 
-  #registerRegistrationEnd(router: FastifyInstance): void {
-    router.withTypeProvider<ZodTypeProvider>().post(
+  #registerRegistrationEnd(router: ZodRouter): void {
+    router.post(
       ROUTES.registrationEnd,
       {
         schema: AUTH_SCHEMAS.registrationEnd,
@@ -160,8 +164,8 @@ export class AuthRoutesController {
     );
   }
 
-  #registerForgotPasswordStart(router: FastifyInstance): void {
-    router.withTypeProvider<ZodTypeProvider>().post(
+  #registerForgotPasswordStart(router: ZodRouter): void {
+    router.post(
       ROUTES.forgotPasswordStart,
       {
         schema: AUTH_SCHEMAS.forgotPasswordStart,
@@ -188,8 +192,8 @@ export class AuthRoutesController {
     );
   }
 
-  #registerForgotPasswordEnd(router: FastifyInstance): void {
-    router.withTypeProvider<ZodTypeProvider>().post(
+  #registerForgotPasswordEnd(router: ZodRouter): void {
+    router.post(
       ROUTES.forgotPasswordEnd,
       {
         schema: AUTH_SCHEMAS.forgotPasswordEnd,
@@ -217,8 +221,8 @@ export class AuthRoutesController {
     );
   }
 
-  #registerGetAllSessions(router: FastifyInstance): void {
-    router.withTypeProvider<ZodTypeProvider>().get(
+  #registerGetAllSessions(router: ZodRouter): void {
+    router.get(
       ROUTES.getAllSessions,
       {
         schema: AUTH_SCHEMAS.getAllSession,
@@ -244,8 +248,8 @@ export class AuthRoutesController {
     );
   }
 
-  #registerLogoutAllSessions(router: FastifyInstance): void {
-    router.withTypeProvider<ZodTypeProvider>().post(
+  #registerLogoutAllSessions(router: ZodRouter): void {
+    router.post(
       ROUTES.logoutAllSessions,
       {
         schema: AUTH_SCHEMAS.logoutAllSession,
@@ -266,8 +270,8 @@ export class AuthRoutesController {
     );
   }
 
-  #registerLogoutSession(router: FastifyInstance): void {
-    router.withTypeProvider<ZodTypeProvider>().post(
+  #registerLogoutSession(router: ZodRouter): void {
+    router.post(
       ROUTES.logoutSession,
       {
         schema: AUTH_SCHEMAS.logoutSession,
@@ -288,8 +292,8 @@ export class AuthRoutesController {
     );
   }
 
-  #registerLogoutSessionById(router: FastifyInstance): void {
-    router.withTypeProvider<ZodTypeProvider>().delete(
+  #registerLogoutSessionById(router: ZodRouter): void {
+    router.delete(
       ROUTES.logoutSessionById,
       {
         schema: AUTH_SCHEMAS.logoutSessionById,
@@ -316,15 +320,14 @@ export class AuthRoutesController {
     );
   }
 
-  #registerRefreshTokens(router: FastifyInstance): void {
-    router.withTypeProvider<ZodTypeProvider>().post(
+  #registerRefreshTokens(router: ZodRouter): void {
+    router.post(
       ROUTES.refreshTokens,
       {
         schema: AUTH_SCHEMAS.refreshTokens,
       },
       async (request, reply) => {
-        this.#getVerifiedRefreshPayloadOrThrow(request);
-        const refreshToken = this.#getRefreshTokenOrThrow(request);
+        const { token: refreshToken } = this.#getVerifiedRefreshTokenOrThrow(request);
 
         const userAgent = this.#extractUserAgentOrThrow(request);
         const tokens = await this.#refreshTokensUseCase.execute({
@@ -358,7 +361,16 @@ export class AuthRoutesController {
   }
 
   #getVerifiedRefreshPayloadOrThrow(request: FastifyRequest): SessionRefreshTokenPayload {
-    return this.#tokensSessionsPayloadVerifier.verifyRefreshTokenOrThrow(this.#getRefreshTokenOrThrow(request));
+    return this.#getVerifiedRefreshTokenOrThrow(request).payload;
+  }
+
+  #getVerifiedRefreshTokenOrThrow(request: FastifyRequest): {
+    token: string;
+    payload: SessionRefreshTokenPayload;
+  } {
+    const token = this.#getRefreshTokenOrThrow(request);
+    const payload = this.#tokensSessionsPayloadVerifier.verifyRefreshTokenOrThrow(token);
+    return { token, payload };
   }
 
   #getCurrentAccessTokenPayload(request: FastifyRequest): SessionAccessTokenMeta | null {
