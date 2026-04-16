@@ -1,1 +1,0 @@
-export { CalendarEventsComposite } from './calendarEvents';
