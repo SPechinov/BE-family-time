@@ -2,7 +2,7 @@ import { ILogger, newFastify, RedisClient } from '@/pkg';
 import { isDev } from '@/config';
 import { Pool } from 'pg';
 import { globalErrorHandler } from './utils';
-import { registerRestApi } from '@/app/bootstrap/rest';
+import { registerRestApi } from './bootstrap';
 
 interface Props {
   redis: RedisClient;
@@ -15,6 +15,7 @@ export const newApiRest = async (props: Props) => {
     errorHandler: globalErrorHandler,
     logger: props.logger,
   });
+
   registerRestApi({ fastify, redis: props.redis, postgres: props.postgres });
 
   await fastify.ready();
