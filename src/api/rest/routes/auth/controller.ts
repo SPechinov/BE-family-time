@@ -354,12 +354,6 @@ export class AuthRoutesController {
     return userAgent;
   }
 
-  #getRefreshTokenOrThrow(request: FastifyRequest): string {
-    const refreshToken = this.#authCookiesService.getRefreshToken(request);
-    if (!refreshToken) throw new ErrorUnauthorized();
-    return refreshToken;
-  }
-
   #getVerifiedRefreshPayloadOrThrow(request: FastifyRequest): SessionRefreshTokenPayload {
     return this.#getVerifiedRefreshTokenOrThrow(request).payload;
   }
@@ -371,6 +365,12 @@ export class AuthRoutesController {
     const token = this.#getRefreshTokenOrThrow(request);
     const payload = this.#tokensSessionsPayloadVerifier.verifyRefreshTokenOrThrow(token);
     return { token, payload };
+  }
+
+  #getRefreshTokenOrThrow(request: FastifyRequest): string {
+    const refreshToken = this.#authCookiesService.getRefreshToken(request);
+    if (!refreshToken) throw new ErrorUnauthorized();
+    return refreshToken;
   }
 
   #getCurrentAccessTokenPayload(request: FastifyRequest): SessionAccessTokenMeta | null {
