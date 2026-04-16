@@ -8,10 +8,7 @@ export class RegistrationStartUseCase implements IRegistrationStartUseCase {
   readonly #registrationOtpCodesStore: IOtpCodesStore;
   readonly #rateLimiter: IRateLimiterService;
 
-  constructor(props: {
-    registrationOtpCodesStore: IOtpCodesStore;
-    rateLimiter: IRateLimiterService;
-  }) {
+  constructor(props: { registrationOtpCodesStore: IOtpCodesStore; rateLimiter: IRateLimiterService }) {
     this.#registrationOtpCodesStore = props.registrationOtpCodesStore;
     this.#rateLimiter = props.rateLimiter;
   }

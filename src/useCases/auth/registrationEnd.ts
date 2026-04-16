@@ -2,12 +2,7 @@ import { IOtpCodesStore } from '@/domains/repositories/stores';
 import { IRateLimiterService, IUsersService } from '@/domains/services';
 import { IRegistrationEndUseCase } from '@/domains/useCases';
 import { UserFindOnePlainEntity } from '@/entities';
-import {
-  ErrorDoubleRegistration,
-  ErrorInvalidCode,
-  ErrorInvalidContacts,
-  ErrorUserExists,
-} from '@/pkg';
+import { ErrorDoubleRegistration, ErrorInvalidCode, ErrorInvalidContacts, ErrorUserExists } from '@/pkg';
 
 export class RegistrationEndUseCase implements IRegistrationEndUseCase {
   readonly #usersService: IUsersService;
