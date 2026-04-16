@@ -1,20 +1,25 @@
 import { ITokensSessionsStore } from '@/domains/repositories/stores';
-import { ITokensSessionsPayloadVerifier, ITokensSessionsGenerator } from '@/domains/services';
-import { IAuthUseCases, ILoginUseCase } from '@/domains/useCases';
+import { IRateLimiterService, ITokensSessionsPayloadVerifier, ITokensSessionsGenerator, IUsersService } from '@/domains/services';
+import { ILoginUseCase } from '@/domains/useCases';
+import { UserFindOnePlainEntity } from '@/entities';
+import { ErrorInvalidContacts, ErrorInvalidLoginOrPassword } from '@/pkg';
 
 export class LoginUseCase implements ILoginUseCase {
-  readonly #authUseCases: IAuthUseCases;
+  readonly #usersService: IUsersService;
+  readonly #rateLimiter: IRateLimiterService;
   readonly #tokensSessionsGenerator: ITokensSessionsGenerator;
   readonly #tokensSessionsStore: ITokensSessionsStore;
   readonly #tokensSessionsPayloadVerifier: ITokensSessionsPayloadVerifier;
 
   constructor(props: {
-    authUseCases: IAuthUseCases;
+    usersService: IUsersService;
+    rateLimiter: IRateLimiterService;
     tokensSessionsGenerator: ITokensSessionsGenerator;
     tokensSessionsStore: ITokensSessionsStore;
     tokensSessionsPayloadVerifier: ITokensSessionsPayloadVerifier;
   }) {
-    this.#authUseCases = props.authUseCases;
+    this.#usersService = props.usersService;
+    this.#rateLimiter = props.rateLimiter;
     this.#tokensSessionsGenerator = props.tokensSessionsGenerator;
     this.#tokensSessionsStore = props.tokensSessionsStore;
     this.#tokensSessionsPayloadVerifier = props.tokensSessionsPayloadVerifier;
@@ -23,12 +28,26 @@ export class LoginUseCase implements ILoginUseCase {
   async execute(
     props: Parameters<ILoginUseCase['execute']>[0],
   ): Promise<{ accessToken: string; refreshToken: string }> {
-    const { user } = await this.#authUseCases.login({
-      logger: props.logger,
-      userContactsPlainEntity: props.userContactsPlainEntity,
-      userPasswordPlainEntity: props.userPasswordPlainEntity,
-      jwtPayload: { userAgent: props.userAgent },
-    });
+    const contact = props.userContactsPlainEntity.getContact();
+    if (!contact) throw new ErrorInvalidContacts();
+
+    await this.#rateLimiter.checkLimitOrThrow({ key: contact });
+
+    const user = await this.#usersService.findOne(
+      new UserFindOnePlainEntity({ contactsPlain: props.userContactsPlainEntity }),
+      { logger: props.logger },
+    );
+
+    if (!user || !user.passwordHashed) throw new ErrorInvalidLoginOrPassword();
+
+    const verified = await this.#usersService.verifyPassword(
+      {
+        password: props.userPasswordPlainEntity.password,
+        hash: user.passwordHashed.password,
+      },
+      { logger: props.logger },
+    );
+    if (!verified) throw new ErrorInvalidLoginOrPassword();
 
     const tokens = this.#tokensSessionsGenerator.generateTokens({
       userId: user.id,

@@ -1,4 +1,3 @@
-export { AuthUseCases } from './auth';
 export { RegistrationStartUseCase } from './registrationStart';
 export { RegistrationEndUseCase } from './registrationEnd';
 export { ForgotPasswordStartUseCase } from './forgotPasswordStart';

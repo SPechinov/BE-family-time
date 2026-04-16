@@ -38,24 +38,32 @@ export class AuthComposite {
       expiresInRefresh: CONFIG.jwt.refresh.expiry / 1000,
     });
     const loginUseCase = new LoginUseCase({
-      authUseCases: dependencies.authUseCases,
+      usersService: dependencies.usersService,
+      rateLimiter: dependencies.rateLimiter,
       tokensSessionsGenerator,
       tokensSessionsStore: dependencies.tokensSessionsStore,
       tokensSessionsPayloadVerifier,
     });
     const forgotPasswordEndUseCase = new ForgotPasswordEndUseCase({
-      authUseCases: dependencies.authUseCases,
+      usersService: dependencies.usersService,
+      forgotPasswordOtpCodesStore: dependencies.forgotPasswordOtpCodesStore,
+      rateLimiter: dependencies.rateLimiter,
       tokensSessionsStore: dependencies.tokensSessionsStore,
       tokensSessionsBlacklistStore: dependencies.tokensSessionsBlacklistStore,
     });
     const registrationStartUseCase = new RegistrationStartUseCase({
-      authUseCases: dependencies.authUseCases,
+      registrationOtpCodesStore: dependencies.registrationOtpCodesStore,
+      rateLimiter: dependencies.rateLimiter,
     });
     const registrationEndUseCase = new RegistrationEndUseCase({
-      authUseCases: dependencies.authUseCases,
+      usersService: dependencies.usersService,
+      registrationOtpCodesStore: dependencies.registrationOtpCodesStore,
+      rateLimiter: dependencies.rateLimiter,
     });
     const forgotPasswordStartUseCase = new ForgotPasswordStartUseCase({
-      authUseCases: dependencies.authUseCases,
+      usersService: dependencies.usersService,
+      forgotPasswordOtpCodesStore: dependencies.forgotPasswordOtpCodesStore,
+      rateLimiter: dependencies.rateLimiter,
     });
     const refreshTokensUseCase = new RefreshTokensUseCase({
       tokensSessionsStore: dependencies.tokensSessionsStore,

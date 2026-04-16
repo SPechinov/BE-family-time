@@ -1,7 +1,6 @@
 import { Pool } from 'pg';
 import { RedisClient, TIMES } from '@/pkg';
 import {
-  AuthUseCases,
   GetSessionsUseCase,
   LogoutAllSessionsUseCase,
   LogoutSessionByIdUseCase,
@@ -19,6 +18,7 @@ interface Props {
 }
 
 export const createDependencies = ({ redis, postgres }: Props) => {
+  const usersService = createUsersService({ postgres });
   const registrationOtpCodesStore = new OtpCodesStore({
     redis,
     prefix: 'auth-registration-otp',
@@ -40,12 +40,6 @@ export const createDependencies = ({ redis, postgres }: Props) => {
     keyPrefix: 'auth',
   });
 
-  const authUseCases = new AuthUseCases({
-    usersService: createUsersService({ postgres }),
-    registrationOtpCodesStore,
-    forgotPasswordOtpCodesStore,
-    rateLimiter,
-  });
   const tokensSessionsStore = new TokensSessions({
     redis,
     sessionsIndexTtlSec: CONFIG.jwt.refresh.expiry / 1000,
@@ -69,7 +63,10 @@ export const createDependencies = ({ redis, postgres }: Props) => {
   });
 
   return {
-    authUseCases,
+    usersService,
+    registrationOtpCodesStore,
+    forgotPasswordOtpCodesStore,
+    rateLimiter,
     getSessionsUseCase,
     logoutSessionUseCase,
     logoutAllSessionsUseCase,
