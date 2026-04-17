@@ -35,12 +35,10 @@ export class RefreshTokensUseCase implements IRefreshTokensUseCase {
       throw new ErrorUnauthorized();
     }
 
-    const tokens = this.#tokensSessionsGenerator.generateTokens({
+    const tokensPair = this.#tokensSessionsGenerator.generateTokens({
       userId: refreshPayload.userId,
       userAgent: props.userAgent,
     });
-    const newRefreshPayload = this.#tokensSessionsPayloadVerifier.verifyRefreshTokenOrThrow(tokens.refresh);
-    const newAccessPayload = this.#tokensSessionsPayloadVerifier.verifyAccessTokenOrThrow(tokens.access);
 
     await this.#tokensSessionsBlacklistStore.addHashedAccessJtiToBlacklist({
       accessJtiHash: currentSession.accessJtiHash,
@@ -51,13 +49,13 @@ export class RefreshTokensUseCase implements IRefreshTokensUseCase {
       refreshJti: refreshPayload.jti,
     });
     await this.#tokensSessionsStore.addSession({
-      userId: newRefreshPayload.userId,
-      sessionId: newRefreshPayload.sid,
+      userId: tokensPair.refreshTokenPayload.userId,
+      sessionId: tokensPair.refreshTokenPayload.sid,
       userAgent: props.userAgent,
-      expiresAt: (newRefreshPayload.exp ?? Math.floor(Date.now() / 1000)) * 1000,
-      refreshJti: newRefreshPayload.jti,
-      accessJti: newAccessPayload.jti,
-      accessExpiresAt: newAccessPayload.exp * 1000,
+      expiresAt: tokensPair.refreshTokenPayload.exp * 1000,
+      refreshJti: tokensPair.refreshTokenPayload.jti,
+      accessJti: tokensPair.accessTokenPayload.jti,
+      accessExpiresAt: tokensPair.accessTokenPayload.exp * 1000,
     });
 
     if (props.currentAccessToken) {
@@ -71,8 +69,8 @@ export class RefreshTokensUseCase implements IRefreshTokensUseCase {
     }
 
     return {
-      accessToken: tokens.access,
-      refreshToken: tokens.refresh,
+      accessToken: tokensPair.accessToken,
+      refreshToken: tokensPair.refreshToken,
     };
   }
 }

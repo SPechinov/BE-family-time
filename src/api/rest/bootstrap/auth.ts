@@ -36,7 +36,6 @@ export const registerAuthRoutes = (props: {
     rateLimiter: props.authInfra.rateLimiter,
     tokensSessionsGenerator,
     tokensSessionsStore: props.authInfra.tokensSessionsStore,
-    tokensSessionsPayloadVerifier,
   });
   const registrationStartUseCase = new RegistrationStartUseCase({
     registrationOtpCodesStore: props.authInfra.registrationOtpCodesStore,
