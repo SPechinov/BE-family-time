@@ -14,15 +14,19 @@ export class RegistrationStartUseCase implements IRegistrationStartUseCase {
   }
 
   async execute(props: Parameters<IRegistrationStartUseCase['execute']>[0]): Promise<{ otpCode: string }> {
-    const contact = props.userContactsPlainEntity.getContact();
-    if (!contact) throw new ErrorInvalidContacts();
+    const contact = this.#getContactOrThrow(props.userContactsPlainEntity.getContact());
 
     await this.#rateLimiter.checkLimitOrThrow({ key: contact });
 
     const otpCode = generateNumericCode(CONFIG.codesLength.registration);
     await this.#registrationOtpCodesStore.set({ key: contact, code: otpCode });
-    props.logger.debug({ otpCode, contact }, 'registration code saved');
+    props.logger.debug({ otpCode, contact }, 'registration otp saved');
 
     return { otpCode };
+  }
+
+  #getContactOrThrow(contact?: string | null): string {
+    if (!contact) throw new ErrorInvalidContacts();
+    return contact;
   }
 }
