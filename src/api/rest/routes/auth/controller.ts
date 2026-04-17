@@ -4,7 +4,7 @@ import { AUTH_SCHEMAS } from './schemas';
 import { SessionTokenMeta, SessionTokenPayload } from '@/entities';
 import { isDev } from '@/config';
 import { HEADER_NAME } from '../../constants';
-import { ErrorUnauthorized, ErrorUserNotExists } from '@/pkg';
+import { ErrorUnauthorized } from '@/pkg';
 import { PREFIX, ROUTES } from './constants';
 import { ITokensSessionsPayloadVerifier } from '@/domains/services';
 import {
@@ -171,19 +171,20 @@ export class AuthRoutesController {
       ROUTES.forgotPasswordStart,
       {
         schema: AUTH_SCHEMAS.forgotPasswordStart,
+        config: {
+          hideUserNotExistsAsOk: true,
+        },
       },
       async (request, reply) => {
-        await this.#runWithUserNotExistsAsOk(reply, async () => {
-          const { otpCode } = await this.#forgotPasswordStartUseCase.execute({
-            logger: request.log,
-            ...toForgotPasswordStartCommand({ email: request.body.email }),
-          });
-
-          if (isDev()) {
-            reply.header(HEADER_NAME.devHeaderOtpCode, otpCode);
-          }
-          reply.status(200).send();
+        const { otpCode } = await this.#forgotPasswordStartUseCase.execute({
+          logger: request.log,
+          ...toForgotPasswordStartCommand({ email: request.body.email }),
         });
+
+        if (isDev()) {
+          reply.header(HEADER_NAME.devHeaderOtpCode, otpCode);
+        }
+        reply.status(200).send();
       },
     );
   }
@@ -193,22 +194,23 @@ export class AuthRoutesController {
       ROUTES.forgotPasswordEnd,
       {
         schema: AUTH_SCHEMAS.forgotPasswordEnd,
+        config: {
+          hideUserNotExistsAsOk: true,
+        },
       },
       async (request, reply) => {
-        await this.#runWithUserNotExistsAsOk(reply, async () => {
-          await this.#forgotPasswordEndUseCase.execute({
-            logger: request.log,
-            ...toForgotPasswordEndCommand({
-              email: request.body.email,
-              otpCode: request.body.otpCode,
-              password: request.body.password,
-            }),
-          });
-
-          this.#authCookiesService.clearAccessToken(reply);
-          this.#authCookiesService.clearRefreshToken(reply);
-          reply.status(200).send();
+        await this.#forgotPasswordEndUseCase.execute({
+          logger: request.log,
+          ...toForgotPasswordEndCommand({
+            email: request.body.email,
+            otpCode: request.body.otpCode,
+            password: request.body.password,
+          }),
         });
+
+        this.#authCookiesService.clearAccessToken(reply);
+        this.#authCookiesService.clearRefreshToken(reply);
+        reply.status(200).send();
       },
     );
   }
@@ -357,22 +359,5 @@ export class AuthRoutesController {
     if (!payload) return null;
 
     return this.#tokensSessionsPayloadVerifier.toSessionAccessTokenMeta(payload);
-  }
-
-  async #runWithUserNotExistsAsOk(
-    reply: {
-      status(code: number): { send: () => void };
-    },
-    callback: () => Promise<void>,
-  ): Promise<void> {
-    try {
-      await callback();
-    } catch (error: unknown) {
-      if (error instanceof ErrorUserNotExists) {
-        reply.status(200).send();
-        return;
-      }
-      throw error;
-    }
   }
 }

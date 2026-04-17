@@ -1,9 +1,16 @@
 import { hasZodFastifySchemaValidationErrors } from 'fastify-type-provider-zod';
-import { BusinessError } from '@/pkg';
+import { BusinessError, ErrorUserNotExists } from '@/pkg';
 import { ApiErrorPayload } from './response';
 import { FastifyError, FastifyReply, FastifyRequest } from 'fastify';
 
 export const globalErrorHandler = (error: FastifyError, request: FastifyRequest, reply: FastifyReply) => {
+  const shouldHideUserNotExistsAsOk = Boolean(request.routeOptions.config.hideUserNotExistsAsOk);
+  if (error instanceof ErrorUserNotExists && shouldHideUserNotExistsAsOk) {
+    request.log.debug(error.message);
+    reply.code(200).send({});
+    return;
+  }
+
   const params: ApiErrorPayload = {
     statusCode: 500,
     originalUrl: request.originalUrl,
