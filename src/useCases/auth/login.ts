@@ -1,11 +1,7 @@
 import { ITokensSessionsStore } from '@/domains/repositories/stores';
-import {
-  IRateLimiterService,
-  ITokensSessionsGenerator,
-  IUsersService,
-} from '@/domains/services';
+import { IRateLimiterService, ITokensSessionsGenerator, IUsersService } from '@/domains/services';
 import { ILoginUseCase } from '@/domains/useCases';
-import { UserFindOnePlainEntity } from '@/entities';
+import { SessionTokenPayload, UserEntity, UserFindOnePlainEntity } from '@/entities';
 import { ErrorInvalidContacts, ErrorInvalidLoginOrPassword } from '@/pkg';
 
 export class LoginUseCase implements ILoginUseCase {
@@ -29,11 +25,35 @@ export class LoginUseCase implements ILoginUseCase {
   async execute(
     props: Parameters<ILoginUseCase['execute']>[0],
   ): Promise<{ accessToken: string; refreshToken: string }> {
-    const contact = props.userContactsPlainEntity.getContact();
-    if (!contact) throw new ErrorInvalidContacts();
+    const contact = this.#getContactOrThrow(props.userContactsPlainEntity.getContact());
 
     await this.#rateLimiter.checkLimitOrThrow({ key: contact });
 
+    const user = await this.#authenticateUserOrThrow(props);
+
+    const tokensPair = this.#tokensSessionsGenerator.generateTokens({
+      userId: user.id,
+      userAgent: props.userAgent,
+    });
+
+    await this.#persistSession({
+      refreshTokenPayload: tokensPair.refreshTokenPayload,
+      accessTokenPayload: tokensPair.accessTokenPayload,
+      userAgent: props.userAgent,
+    });
+
+    return {
+      accessToken: tokensPair.accessToken,
+      refreshToken: tokensPair.refreshToken,
+    };
+  }
+
+  #getContactOrThrow(contact?: string | null): string {
+    if (!contact) throw new ErrorInvalidContacts();
+    return contact;
+  }
+
+  async #authenticateUserOrThrow(props: Parameters<ILoginUseCase['execute']>[0]): Promise<UserEntity> {
     const user = await this.#usersService.findOne(
       new UserFindOnePlainEntity({ contactsPlain: props.userContactsPlainEntity }),
       { logger: props.logger },
@@ -50,24 +70,22 @@ export class LoginUseCase implements ILoginUseCase {
     );
     if (!verified) throw new ErrorInvalidLoginOrPassword();
 
-    const tokensPair = this.#tokensSessionsGenerator.generateTokens({
-      userId: user.id,
-      userAgent: props.userAgent,
-    });
+    return user;
+  }
 
-    await this.#tokensSessionsStore.addSession({
-      userId: tokensPair.refreshTokenPayload.userId,
-      sessionId: tokensPair.refreshTokenPayload.sid,
+  #persistSession(props: {
+    refreshTokenPayload: SessionTokenPayload;
+    accessTokenPayload: SessionTokenPayload;
+    userAgent: string;
+  }): Promise<void> {
+    return this.#tokensSessionsStore.addSession({
+      userId: props.refreshTokenPayload.userId,
+      sessionId: props.refreshTokenPayload.sid,
       userAgent: props.userAgent,
-      expiresAt: tokensPair.refreshTokenPayload.exp * 1000,
-      refreshJti: tokensPair.refreshTokenPayload.jti,
-      accessJti: tokensPair.accessTokenPayload.jti,
-      accessExpiresAt: tokensPair.accessTokenPayload.exp * 1000,
+      expiresAt: props.refreshTokenPayload.exp * 1000,
+      refreshJti: props.refreshTokenPayload.jti,
+      accessJti: props.accessTokenPayload.jti,
+      accessExpiresAt: props.accessTokenPayload.exp * 1000,
     });
-
-    return {
-      accessToken: tokensPair.accessToken,
-      refreshToken: tokensPair.refreshToken,
-    };
   }
 }
