@@ -10,15 +10,25 @@ export class GetSessionsUseCase implements IGetSessionsUseCase {
   }
 
   async execute(props: Parameters<IGetSessionsUseCase['execute']>[0]) {
-    const currentSession = await this.#tokensSessionsStore.getSessionByRefreshJti({
+    await this.#ensureCurrentSessionOrThrow({
       userId: props.userId,
       refreshJti: props.refreshJti,
     });
-    if (!currentSession) throw new ErrorUnauthorized();
 
     return this.#tokensSessionsStore.getUserSessions({
       userId: props.userId,
       currentSessionId: props.currentSessionId,
     });
+  }
+
+  async #ensureCurrentSessionOrThrow(props: {
+    userId: Parameters<IGetSessionsUseCase['execute']>[0]['userId'];
+    refreshJti: string;
+  }): Promise<void> {
+    const currentSession = await this.#tokensSessionsStore.getSessionByRefreshJti({
+      userId: props.userId,
+      refreshJti: props.refreshJti,
+    });
+    if (!currentSession) throw new ErrorUnauthorized();
   }
 }
