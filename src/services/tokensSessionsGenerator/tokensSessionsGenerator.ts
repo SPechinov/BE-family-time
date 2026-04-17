@@ -1,8 +1,6 @@
-import { UserId } from '@/entities';
+import { SessionTokenUnion, UserId } from '@/entities';
 import { IJwtSigner, ITokensSessionsGenerator } from '@/domains/services';
 import { randomUUID } from 'node:crypto';
-
-type TokenType = 'access' | 'refresh';
 
 export class TokensSessionsGenerator implements ITokensSessionsGenerator {
   readonly #jwtSigner: IJwtSigner;
@@ -36,14 +34,13 @@ export class TokensSessionsGenerator implements ITokensSessionsGenerator {
     userId: UserId;
     userAgent: string;
     expiresIn: number;
-    type: TokenType;
+    type: SessionTokenUnion;
     sessionId: string;
   }): string {
     return this.#jwtSigner.sign(
       {
         userId: options.userId,
         userAgent: options.userAgent,
-        createdAt: Date.now(),
         sid: options.sessionId,
         jti: randomUUID(),
         typ: options.type,

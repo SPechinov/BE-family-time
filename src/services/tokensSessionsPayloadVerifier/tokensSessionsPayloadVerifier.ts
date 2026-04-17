@@ -1,5 +1,5 @@
 import { IJwtVerifier, ITokensSessionsPayloadVerifier } from '@/domains/services';
-import { SessionTokenMeta, SessionTokenPayload, SessionUnion, toSessionId, UserId } from '@/entities';
+import { SessionTokenMeta, SessionTokenPayload, SessionTokenUnion, toSessionId, UserId } from '@/entities';
 import { ErrorUnauthorized } from '@/pkg';
 
 export class TokensSessionsPayloadVerifier implements ITokensSessionsPayloadVerifier {
@@ -41,7 +41,7 @@ export class TokensSessionsPayloadVerifier implements ITokensSessionsPayloadVeri
   #verifyToken(
     token: string,
     props: {
-      type: SessionUnion;
+      type: SessionTokenUnion;
     },
   ): SessionTokenPayload | null {
     let payload;

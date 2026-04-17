@@ -2,7 +2,7 @@ import { UUID } from 'node:crypto';
 import { UserId } from './user';
 
 export type SessionId = UUID & { readonly __brand: 'SessionId' };
-export type SessionUnion = 'access' | 'refresh';
+export type SessionTokenUnion = 'access' | 'refresh';
 export const toSessionId = (value: string): SessionId => value as SessionId;
 
 export interface SessionTokenMeta {
@@ -15,7 +15,7 @@ export interface SessionTokenPayload {
   sid: SessionId;
   jti: string;
   exp: number;
-  typ: SessionUnion;
+  typ: SessionTokenUnion;
 }
 
 export class SessionEntity {
