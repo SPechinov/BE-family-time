@@ -21,21 +21,29 @@ export class ForgotPasswordStartUseCase implements IForgotPasswordStartUseCase {
   }
 
   async execute(props: Parameters<IForgotPasswordStartUseCase['execute']>[0]): Promise<{ otpCode: string }> {
-    const contact = props.userContactsPlainEntity.getContact();
-    if (!contact) throw new ErrorInvalidContacts();
+    const contact = this.#getContactOrThrow(props.userContactsPlainEntity.getContact());
 
     await this.#rateLimiter.checkLimitOrThrow({ key: contact });
 
+    await this.#ensureUserExistsOrThrow(props);
+
+    const otpCode = generateNumericCode(CONFIG.codesLength.forgotPassword);
+    await this.#forgotPasswordOtpCodesStore.set({ key: contact, code: otpCode });
+    props.logger.debug({ otpCode, contact }, 'forgot-password otp saved');
+
+    return { otpCode };
+  }
+
+  #getContactOrThrow(contact?: string | null): string {
+    if (!contact) throw new ErrorInvalidContacts();
+    return contact;
+  }
+
+  async #ensureUserExistsOrThrow(props: Parameters<IForgotPasswordStartUseCase['execute']>[0]): Promise<void> {
     const foundUser = await this.#usersService.findOne(
       new UserFindOnePlainEntity({ contactsPlain: props.userContactsPlainEntity }),
       { logger: props.logger },
     );
     if (!foundUser) throw new ErrorUserNotExists();
-
-    const otpCode = generateNumericCode(CONFIG.codesLength.forgotPassword);
-    await this.#forgotPasswordOtpCodesStore.set({ key: contact, code: otpCode });
-    props.logger.debug({ otpCode, contact }, 'code saved');
-
-    return { otpCode };
   }
 }
