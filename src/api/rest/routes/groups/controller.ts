@@ -3,7 +3,7 @@ import { ZodTypeProvider } from 'fastify-type-provider-zod';
 import { PREFIX, ROUTES } from './constants';
 import { IGroupsUseCases } from '@/domains/useCases';
 import { SCHEMAS } from './schemas';
-import { GroupCreateEntity, GroupPatchOneEntity } from '@/entities';
+import { toCreateGroupCommand, toGroupResponse, toGroupsResponse, toPatchGroupCommand } from '@/api/rest/mappers';
 
 export class GroupsRoutesController {
   #fastify: FastifyInstance;
@@ -30,13 +30,7 @@ export class GroupsRoutesController {
               userId: request.userId,
               logger: request.log,
             });
-            reply.status(200).send(
-              groups.map((group) => ({
-                id: group.id,
-                name: group.name,
-                description: group.description ?? '',
-              })),
-            );
+            reply.status(200).send(toGroupsResponse(groups));
           },
         );
 
@@ -48,18 +42,11 @@ export class GroupsRoutesController {
           },
           async (request, reply) => {
             const group = await this.#groupsUseCases.createUserGroup({
-              groupCreateEntity: new GroupCreateEntity({
-                name: request.body.name,
-                description: request.body.description ?? undefined,
-              }),
+              groupCreateEntity: toCreateGroupCommand(request.body),
               userId: request.userId,
               logger: request.log,
             });
-            reply.status(201).send({
-              id: group.id,
-              name: group.name,
-              description: group.description ?? '',
-            });
+            reply.status(201).send(toGroupResponse(group));
           },
         );
 
@@ -76,11 +63,7 @@ export class GroupsRoutesController {
               logger: request.log,
             });
 
-            reply.status(200).send({
-              id: group.id,
-              name: group.name,
-              description: group.description ?? '',
-            });
+            reply.status(200).send(toGroupResponse(group));
           },
         );
 
@@ -94,17 +77,10 @@ export class GroupsRoutesController {
             const group = await this.#groupsUseCases.patchUserGroup({
               userId: request.userId,
               groupId: request.params.groupId,
-              groupPatchOneEntity: new GroupPatchOneEntity({
-                name: request.body.name,
-                description: request.body.description,
-              }),
+              groupPatchOneEntity: toPatchGroupCommand(request.body),
               logger: request.log,
             });
-            reply.status(200).send({
-              id: group.id,
-              name: group.name,
-              description: group.description ?? '',
-            });
+            reply.status(200).send(toGroupResponse(group));
           },
         );
 

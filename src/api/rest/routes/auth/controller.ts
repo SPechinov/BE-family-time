@@ -1,15 +1,7 @@
 import { FastifyInstance, FastifyRequest } from 'fastify';
 import { ZodTypeProvider } from 'fastify-type-provider-zod';
 import { AUTH_SCHEMAS } from './schemas';
-import {
-  SessionTokenMeta,
-  SessionTokenPayload,
-  UserContactsPlainEntity,
-  UserCreatePlainEntity,
-  UserPasswordPlainEntity,
-  UserPersonalInfoPlainEntity,
-  toSessionId,
-} from '@/entities';
+import { SessionTokenMeta, SessionTokenPayload } from '@/entities';
 import { isDev } from '@/config';
 import { HEADER_NAME } from '../../constants';
 import { ErrorUnauthorized, ErrorUserNotExists } from '@/pkg';
@@ -28,6 +20,19 @@ import {
   IRegistrationStartUseCase,
 } from '@/domains/useCases';
 import { AuthCookiesService } from './authCookiesService';
+import {
+  toForgotPasswordEndCommand,
+  toForgotPasswordStartCommand,
+  toGetAllSessionsCommand,
+  toGetAllSessionsResponse,
+  toLoginCommand,
+  toLogoutAllSessionsCommand,
+  toLogoutSessionByIdCommand,
+  toLogoutSessionCommand,
+  toRefreshTokensCommand,
+  toRegistrationEndCommand,
+  toRegistrationStartCommand,
+} from '@/api/rest/mappers';
 
 type ZodRouter = FastifyInstance<any, any, any, any, ZodTypeProvider>;
 
@@ -104,11 +109,11 @@ export class AuthRoutesController {
       async (request, reply) => {
         const tokens = await this.#loginUseCase.execute({
           logger: request.log,
-          userContactsPlainEntity: new UserContactsPlainEntity({
+          ...toLoginCommand({
             email: request.body.email,
+            password: request.body.password,
+            userAgent: request.userAgent,
           }),
-          userPasswordPlainEntity: new UserPasswordPlainEntity(request.body.password),
-          userAgent: request.userAgent,
         });
 
         this.#authCookiesService.setAccessToken(reply, tokens.accessToken);
@@ -128,7 +133,7 @@ export class AuthRoutesController {
       async (request, reply) => {
         const result = await this.#registrationStartUseCase.execute({
           logger: request.log,
-          userContactsPlainEntity: new UserContactsPlainEntity({ email: request.body.email }),
+          ...toRegistrationStartCommand({ email: request.body.email }),
         });
         if (isDev()) {
           reply.header(HEADER_NAME.devHeaderOtpCode, result.otpCode);
@@ -147,15 +152,13 @@ export class AuthRoutesController {
       async (request, reply) => {
         await this.#registrationEndUseCase.execute({
           logger: request.log,
-          otpCode: request.body.otpCode,
-          userCreatePlainEntity: new UserCreatePlainEntity({
+          ...toRegistrationEndCommand({
+            email: request.body.email,
+            otpCode: request.body.otpCode,
+            firstName: request.body.firstName,
+            password: request.body.password,
             timeZone: request.body.timeZone,
             language: request.body.language,
-            contactsPlain: new UserContactsPlainEntity({ email: request.body.email }),
-            personalInfoPlain: new UserPersonalInfoPlainEntity({
-              firstName: request.body.firstName,
-            }),
-            passwordPlain: new UserPasswordPlainEntity(request.body.password),
           }),
         });
         reply.status(201).send();
@@ -173,7 +176,7 @@ export class AuthRoutesController {
         await this.#runWithUserNotExistsAsOk(reply, async () => {
           const { otpCode } = await this.#forgotPasswordStartUseCase.execute({
             logger: request.log,
-            userContactsPlainEntity: new UserContactsPlainEntity({ email: request.body.email }),
+            ...toForgotPasswordStartCommand({ email: request.body.email }),
           });
 
           if (isDev()) {
@@ -195,9 +198,11 @@ export class AuthRoutesController {
         await this.#runWithUserNotExistsAsOk(reply, async () => {
           await this.#forgotPasswordEndUseCase.execute({
             logger: request.log,
-            userContactsPlainEntity: new UserContactsPlainEntity({ email: request.body.email }),
-            otpCode: request.body.otpCode,
-            password: new UserPasswordPlainEntity(request.body.password),
+            ...toForgotPasswordEndCommand({
+              email: request.body.email,
+              otpCode: request.body.otpCode,
+              password: request.body.password,
+            }),
           });
 
           this.#authCookiesService.clearAccessToken(reply);
@@ -218,19 +223,10 @@ export class AuthRoutesController {
         const payload = this.#getVerifiedRefreshPayloadOrThrow(request);
         const sessions = await this.#getSessionsUseCase.execute({
           logger: request.log,
-          userId: payload.userId,
-          refreshJti: payload.jti,
-          currentSessionId: payload.sid,
+          ...toGetAllSessionsCommand(payload),
         });
 
-        reply.status(200).send({
-          sessions: sessions.map((session) => ({
-            sessionId: session.sessionId,
-            expiresAt: session.expiresAt,
-            userAgent: session.userAgent,
-            isCurrent: session.isCurrent,
-          })),
-        });
+        reply.status(200).send(toGetAllSessionsResponse(sessions));
       },
     );
   }
@@ -245,9 +241,10 @@ export class AuthRoutesController {
         const payload = this.#getVerifiedRefreshPayloadOrThrow(request);
         await this.#logoutAllSessionsUseCase.execute({
           logger: request.log,
-          userId: payload.userId,
-          refreshJti: payload.jti,
-          currentAccessToken: this.#getCurrentAccessTokenPayload(request) ?? undefined,
+          ...toLogoutAllSessionsCommand({
+            payload,
+            currentAccessToken: this.#getCurrentAccessTokenPayload(request) ?? undefined,
+          }),
         });
         this.#authCookiesService.clearAccessToken(reply);
         this.#authCookiesService.clearRefreshToken(reply);
@@ -267,9 +264,10 @@ export class AuthRoutesController {
         const payload = this.#getVerifiedRefreshPayloadOrThrow(request);
         await this.#logoutSessionUseCase.execute({
           logger: request.log,
-          userId: payload.userId,
-          refreshJti: payload.jti,
-          currentAccessToken: this.#getCurrentAccessTokenPayload(request) ?? undefined,
+          ...toLogoutSessionCommand({
+            payload,
+            currentAccessToken: this.#getCurrentAccessTokenPayload(request) ?? undefined,
+          }),
         });
         this.#authCookiesService.clearAccessToken(reply);
         this.#authCookiesService.clearRefreshToken(reply);
@@ -290,11 +288,11 @@ export class AuthRoutesController {
 
         const { isCurrentSession } = await this.#logoutSessionByIdUseCase.execute({
           logger: request.log,
-          userId: payload.userId,
-          refreshJti: payload.jti,
-          sessionId: toSessionId(request.params.sessionId),
-          currentSessionId: payload.sid,
-          currentAccessToken: this.#getCurrentAccessTokenPayload(request) ?? undefined,
+          ...toLogoutSessionByIdCommand({
+            payload,
+            sessionId: request.params.sessionId,
+            currentAccessToken: this.#getCurrentAccessTokenPayload(request) ?? undefined,
+          }),
         });
 
         if (isCurrentSession) {
@@ -318,9 +316,11 @@ export class AuthRoutesController {
 
         const tokens = await this.#refreshTokensUseCase.execute({
           logger: request.log,
-          refreshToken,
-          userAgent: request.userAgent,
-          currentAccessToken: this.#authCookiesService.getAccessToken(request) ?? undefined,
+          ...toRefreshTokensCommand({
+            refreshToken,
+            userAgent: request.userAgent,
+            currentAccessToken: this.#authCookiesService.getAccessToken(request) ?? undefined,
+          }),
         });
         this.#authCookiesService.setAccessToken(reply, tokens.accessToken);
         this.#authCookiesService.setRefreshToken(reply, tokens.refreshToken);

@@ -3,7 +3,13 @@ import { ZodTypeProvider } from 'fastify-type-provider-zod';
 import { ICalendarEventsUseCases } from '@/domains/useCases';
 import { PREFIX, ROUTES } from './constants';
 import { SCHEMAS } from './schemas';
-import { CalendarEventCreateEntity, CalendarEventEntity, CalendarEventPatchOneEntity } from '@/entities';
+import {
+  toCalendarEventResponse,
+  toCalendarEventsListFilters,
+  toCalendarEventsResponse,
+  toCreateCalendarEventCommand,
+  toPatchCalendarEventCommand,
+} from '@/api/rest/mappers';
 
 export class CalendarEventsRoutesController {
   #fastify: FastifyInstance;
@@ -26,16 +32,17 @@ export class CalendarEventsRoutesController {
             preHandler: [instance.authenticate],
           },
           async (request, reply) => {
+            const listFilters = toCalendarEventsListFilters(request.query);
             const calendarEvents = await this.#calendarEventsUseCases.getCalendarEventsByGroupId({
               userId: request.userId,
               groupId: request.params.groupId,
-              eventType: request.query.eventType,
-              startDate: request.query.startDate ? new Date(request.query.startDate) : undefined,
-              endDate: request.query.endDate ? new Date(request.query.endDate) : undefined,
+              eventType: listFilters.eventType,
+              startDate: listFilters.startDate,
+              endDate: listFilters.endDate,
               logger: request.log,
             });
 
-            reply.status(200).send(calendarEvents.map(this.#serializeCalendarEvent));
+            reply.status(200).send(toCalendarEventsResponse(calendarEvents));
           },
         );
 
@@ -53,7 +60,7 @@ export class CalendarEventsRoutesController {
               logger: request.log,
             });
 
-            reply.status(200).send(this.#serializeCalendarEvent(calendarEvent));
+            reply.status(200).send(toCalendarEventResponse(calendarEvent));
           },
         );
 
@@ -70,20 +77,14 @@ export class CalendarEventsRoutesController {
             const calendarEvent = await this.#calendarEventsUseCases.createCalendarEvent({
               userId,
               groupId,
-              calendarEventCreateEntity: new CalendarEventCreateEntity({
+              calendarEventCreateEntity: toCreateCalendarEventCommand({
+                userId,
                 groupId,
-                creatorUserId: userId,
-                title: request.body.title,
-                description: request.body.description,
-                eventType: request.body.eventType,
-                iterationType: request.body.iterationType,
-                recurrencePattern: request.body.recurrencePattern,
-                startDate: new Date(request.body.startDate),
-                endDate: request.body.endDate ? new Date(request.body.endDate) : undefined,
+                body: request.body,
               }),
               logger: request.log,
             });
-            reply.status(201).send(this.#serializeCalendarEvent(calendarEvent));
+            reply.status(201).send(toCalendarEventResponse(calendarEvent));
           },
         );
 
@@ -98,14 +99,11 @@ export class CalendarEventsRoutesController {
               userId: request.userId,
               groupId: request.params.groupId,
               calendarEventId: request.params.calendarEventId,
-              calendarEventPatchOneEntity: new CalendarEventPatchOneEntity({
-                title: request.body.title,
-                description: request.body.description,
-              }),
+              calendarEventPatchOneEntity: toPatchCalendarEventCommand(request.body),
               logger: request.log,
             });
 
-            reply.status(200).send(this.#serializeCalendarEvent(calendarEvent));
+            reply.status(200).send(toCalendarEventResponse(calendarEvent));
           },
         );
 
@@ -131,18 +129,5 @@ export class CalendarEventsRoutesController {
         prefix: PREFIX,
       },
     );
-  }
-
-  #serializeCalendarEvent(calendarEvent: CalendarEventEntity) {
-    return {
-      id: calendarEvent.id,
-      title: calendarEvent.title,
-      description: calendarEvent.description,
-      eventType: calendarEvent.eventType ?? undefined,
-      iterationType: calendarEvent.iterationType,
-      startDate: calendarEvent.startDate.toISOString(),
-      endDate: calendarEvent.endDate?.toISOString(),
-      recurrencePattern: calendarEvent.recurrencePattern,
-    };
   }
 }
