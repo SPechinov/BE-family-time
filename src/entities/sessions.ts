@@ -2,30 +2,20 @@ import { UUID } from 'node:crypto';
 import { UserId } from './user';
 
 export type SessionId = UUID & { readonly __brand: 'SessionId' };
+export type SessionUnion = 'access' | 'refresh';
 export const toSessionId = (value: string): SessionId => value as SessionId;
 
-export interface SessionAccessTokenMeta {
+export interface SessionTokenMeta {
   jti: string;
   expiresAt: number;
 }
 
-export interface SessionAccessTokenVerificationPayload {
-  jti: string;
-  exp: number;
-}
-
-export interface SessionRefreshTokenPayload {
-  userId: UserId;
-  sid: SessionId;
-  jti: string;
-  exp?: number;
-}
-
-export interface SessionAccessTokenPayload {
+export interface SessionTokenPayload {
   userId: UserId;
   sid: SessionId;
   jti: string;
   exp: number;
+  typ: SessionUnion;
 }
 
 export class SessionEntity {

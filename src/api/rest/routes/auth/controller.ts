@@ -2,8 +2,8 @@ import { FastifyInstance, FastifyRequest } from 'fastify';
 import { ZodTypeProvider } from 'fastify-type-provider-zod';
 import { AUTH_SCHEMAS } from './schemas';
 import {
-  SessionAccessTokenMeta,
-  SessionRefreshTokenPayload,
+  SessionTokenMeta,
+  SessionTokenPayload,
   UserContactsPlainEntity,
   UserCreatePlainEntity,
   UserPasswordPlainEntity,
@@ -330,13 +330,13 @@ export class AuthRoutesController {
     );
   }
 
-  #getVerifiedRefreshPayloadOrThrow(request: FastifyRequest): SessionRefreshTokenPayload {
+  #getVerifiedRefreshPayloadOrThrow(request: FastifyRequest): SessionTokenPayload {
     return this.#getVerifiedRefreshTokenOrThrow(request).payload;
   }
 
   #getVerifiedRefreshTokenOrThrow(request: FastifyRequest): {
     token: string;
-    payload: SessionRefreshTokenPayload;
+    payload: SessionTokenPayload;
   } {
     const token = this.#getRefreshTokenOrThrow(request);
     const payload = this.#tokensSessionsPayloadVerifier.verifyRefreshTokenOrThrow(token);
@@ -349,7 +349,7 @@ export class AuthRoutesController {
     return refreshToken;
   }
 
-  #getCurrentAccessTokenPayload(request: FastifyRequest): SessionAccessTokenMeta | null {
+  #getCurrentAccessTokenPayload(request: FastifyRequest): SessionTokenMeta | null {
     const token = this.#authCookiesService.getAccessToken(request);
     if (!token) return null;
 

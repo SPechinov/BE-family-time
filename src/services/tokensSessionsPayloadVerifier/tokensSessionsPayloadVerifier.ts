@@ -1,12 +1,5 @@
 import { IJwtVerifier, ITokensSessionsPayloadVerifier } from '@/domains/services';
-import {
-  SessionAccessTokenMeta,
-  SessionAccessTokenPayload,
-  SessionAccessTokenVerificationPayload,
-  SessionRefreshTokenPayload,
-  toSessionId,
-  UserId,
-} from '@/entities';
+import { SessionTokenMeta, SessionTokenPayload, SessionUnion, toSessionId, UserId } from '@/entities';
 import { ErrorUnauthorized } from '@/pkg';
 
 export class TokensSessionsPayloadVerifier implements ITokensSessionsPayloadVerifier {
@@ -16,49 +9,29 @@ export class TokensSessionsPayloadVerifier implements ITokensSessionsPayloadVeri
     this.#jwtVerifier = props.jwtVerifier;
   }
 
-  verifyRefreshToken(token: string): SessionRefreshTokenPayload | null {
-    const payload = this.#verifyToken(token, {
-      type: 'refresh',
-      requireUserId: true,
-      requireSid: true,
-      requireExp: false,
-    });
-    if (!payload) return null;
-
-    return { userId: payload.userId, sid: toSessionId(payload.sid), jti: payload.jti, exp: payload.exp };
-  }
-
-  verifyRefreshTokenOrThrow(token: string): SessionRefreshTokenPayload {
+  verifyRefreshTokenOrThrow(token: string): SessionTokenPayload {
     const payload = this.verifyRefreshToken(token);
     if (!payload) throw new ErrorUnauthorized();
+
     return payload;
   }
 
-  verifyAccessToken(token: string): SessionAccessTokenVerificationPayload | null {
-    const payload = this.#verifyToken(token, {
-      type: 'access',
-      requireUserId: false,
-      requireSid: false,
-      requireExp: true,
-    });
-    if (!payload || payload.exp === undefined) return null;
-
-    return { jti: payload.jti, exp: payload.exp };
+  verifyRefreshToken(token: string): SessionTokenPayload | null {
+    return this.#verifyToken(token, { type: 'refresh' });
   }
 
-  verifyAccessTokenOrThrow(token: string): SessionAccessTokenPayload {
-    const payload = this.#verifyToken(token, {
-      type: 'access',
-      requireUserId: true,
-      requireSid: true,
-      requireExp: true,
-    });
-    if (!payload || payload.exp === undefined) throw new ErrorUnauthorized();
+  verifyAccessTokenOrThrow(token: string): SessionTokenPayload {
+    const payload = this.verifyAccessToken(token);
+    if (!payload) throw new ErrorUnauthorized();
 
-    return { userId: payload.userId, sid: toSessionId(payload.sid), jti: payload.jti, exp: payload.exp };
+    return payload;
   }
 
-  toSessionAccessTokenMeta(payload: SessionAccessTokenVerificationPayload): SessionAccessTokenMeta {
+  verifyAccessToken(token: string): SessionTokenPayload | null {
+    return this.#verifyToken(token, { type: 'access' });
+  }
+
+  toSessionAccessTokenMeta(payload: SessionTokenPayload): SessionTokenMeta {
     return {
       jti: payload.jti,
       expiresAt: payload.exp * 1000,
@@ -68,38 +41,26 @@ export class TokensSessionsPayloadVerifier implements ITokensSessionsPayloadVeri
   #verifyToken(
     token: string,
     props: {
-      type: 'access' | 'refresh';
-      requireUserId: boolean;
-      requireSid: boolean;
-      requireExp: boolean;
+      type: SessionUnion;
     },
-  ):
-    | { userId: UserId; sid: string; jti: string; exp: number }
-    | { userId: UserId; sid: string; jti: string; exp?: number }
-    | null {
+  ): SessionTokenPayload | null {
     let payload;
     try {
-      payload = this.#jwtVerifier.verify<{
-        userId?: UserId;
-        sid?: string;
-        jti?: string;
-        typ?: 'access' | 'refresh';
-        exp?: number;
-      }>(token);
+      payload = this.#jwtVerifier.verify<Partial<SessionTokenPayload>>(token);
     } catch {
       return null;
     }
 
-    if (payload.typ !== props.type || !payload.jti) return null;
-    if (props.requireUserId && !payload.userId) return null;
-    if (props.requireSid && !payload.sid) return null;
-    if (props.requireExp && !payload.exp) return null;
+    if (payload.typ !== props.type || !payload.jti || !payload.userId || !payload.sid || !payload.exp) {
+      return null;
+    }
 
     return {
       userId: payload.userId as UserId,
-      sid: payload.sid as string,
+      sid: toSessionId(payload.sid),
       jti: payload.jti,
       exp: payload.exp,
+      typ: payload.typ,
     };
   }
 }

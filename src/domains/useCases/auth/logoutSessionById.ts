@@ -1,4 +1,4 @@
-import { SessionAccessTokenMeta, SessionId, UserId } from '@/entities';
+import { SessionTokenMeta, SessionId, UserId } from '@/entities';
 import { DefaultProps } from '../types';
 
 export interface ILogoutSessionByIdUseCase {
@@ -8,7 +8,7 @@ export interface ILogoutSessionByIdUseCase {
       refreshJti: string;
       sessionId: SessionId;
       currentSessionId: SessionId;
-      currentAccessToken?: SessionAccessTokenMeta;
+      currentAccessToken?: SessionTokenMeta;
     }>,
   ): Promise<{ isCurrentSession: boolean }>;
 }

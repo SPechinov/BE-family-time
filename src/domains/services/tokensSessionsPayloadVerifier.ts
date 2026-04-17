@@ -1,14 +1,9 @@
-import {
-  SessionAccessTokenMeta,
-  SessionAccessTokenPayload,
-  SessionAccessTokenVerificationPayload,
-  SessionRefreshTokenPayload,
-} from '@/entities';
+import { SessionTokenMeta, SessionTokenPayload } from '@/entities';
 
 export interface ITokensSessionsPayloadVerifier {
-  verifyRefreshToken(token: string): SessionRefreshTokenPayload | null;
-  verifyRefreshTokenOrThrow(token: string): SessionRefreshTokenPayload;
-  verifyAccessToken(token: string): SessionAccessTokenVerificationPayload | null;
-  verifyAccessTokenOrThrow(token: string): SessionAccessTokenPayload;
-  toSessionAccessTokenMeta(payload: SessionAccessTokenVerificationPayload): SessionAccessTokenMeta;
+  verifyRefreshToken(token: string): SessionTokenPayload | null;
+  verifyRefreshTokenOrThrow(token: string): SessionTokenPayload;
+  verifyAccessToken(token: string): SessionTokenPayload | null;
+  verifyAccessTokenOrThrow(token: string): SessionTokenPayload;
+  toSessionAccessTokenMeta(payload: SessionTokenPayload): SessionTokenMeta;
 }
