@@ -1,6 +1,54 @@
 import { UUID } from 'node:crypto';
 export type GroupId = UUID & { readonly __brand: 'GroupId' };
 
+export class GroupName {
+  readonly #value: string;
+
+  private constructor(value: string) {
+    this.#value = value;
+  }
+
+  static create(value: string): GroupName {
+    return new GroupName(value);
+  }
+
+  static fromOptional(value?: string): string | undefined {
+    if (value === undefined) return undefined;
+    return GroupName.create(value).value;
+  }
+
+  get value(): string {
+    return this.#value;
+  }
+}
+
+export class GroupDescription {
+  readonly #value: string;
+
+  private constructor(value: string) {
+    this.#value = value;
+  }
+
+  static create(value: string): GroupDescription {
+    return new GroupDescription(value);
+  }
+
+  static fromOptional(value?: string): string | undefined {
+    if (value === undefined) return undefined;
+    return GroupDescription.create(value).value;
+  }
+
+  static fromNullableOptional(value?: string | null): string | null | undefined {
+    if (value === undefined) return undefined;
+    if (value === null) return null;
+    return GroupDescription.create(value).value;
+  }
+
+  get value(): string {
+    return this.#value;
+  }
+}
+
 export class GroupEntity {
   readonly #id: GroupId;
   readonly #name: string;
@@ -9,8 +57,8 @@ export class GroupEntity {
 
   constructor(props: { id: GroupId; name: string; description?: string; createdAt: Date }) {
     this.#id = props.id;
-    this.#name = props.name;
-    this.#description = props.description;
+    this.#name = GroupName.create(props.name).value;
+    this.#description = GroupDescription.fromOptional(props.description);
     this.#createdAt = props.createdAt;
   }
 
@@ -36,8 +84,8 @@ export class GroupCreateEntity {
   readonly #description?: string;
 
   constructor(props: { name: string; description?: string }) {
-    this.#name = props.name;
-    this.#description = props.description;
+    this.#name = GroupName.create(props.name).value;
+    this.#description = GroupDescription.fromOptional(props.description);
   }
   get name() {
     return this.#name;
@@ -83,8 +131,8 @@ export class GroupPatchOneEntity {
   readonly #description?: string | null;
 
   constructor(props: { name?: string; description?: string | null }) {
-    this.#name = props.name;
-    this.#description = props.description;
+    this.#name = GroupName.fromOptional(props.name);
+    this.#description = GroupDescription.fromNullableOptional(props.description);
   }
   get name() {
     return this.#name;
