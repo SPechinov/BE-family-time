@@ -17,5 +17,5 @@ export interface IUsersRepository {
       userPatchOneEntity: UserPatchOneEntity;
     },
     options?: { client?: PoolClient; logger?: ILogger },
-  ): Promise<UserEntity>;
+  ): Promise<UserEntity | null>;
 }

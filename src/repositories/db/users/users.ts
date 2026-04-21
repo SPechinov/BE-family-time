@@ -84,7 +84,7 @@ export class UsersRepository implements IUsersRepository {
 
     let query = 'SELECT * FROM users';
     const { conditions, values } = this.#buildUsersConditions(userFindEntity);
-    if (conditions.length === 0) throw new Error('Invalid find params');
+    if (conditions.length === 0) return null;
 
     query += ' WHERE ' + conditions.join(' AND ');
 
@@ -109,14 +109,14 @@ export class UsersRepository implements IUsersRepository {
       userPatchOneEntity: UserPatchOneEntity;
     },
     options?: { client?: PoolClient; logger?: ILogger },
-  ): Promise<UserEntity> {
+  ): Promise<UserEntity | null> {
     const client = options?.client ?? this.#pool;
 
     const { conditions: findConditions, values: findValues } = this.#buildUsersConditions(userFindOneEntity);
-    if (findConditions.length === 0) throw new Error('Invalid find params');
+    if (findConditions.length === 0) return null;
 
     const { setParts, updateValues } = this.#buildUpdateSetClause(userPatchOneEntity, findValues.length + 1);
-    if (setParts.length === 0) throw new Error('No fields to update');
+    if (setParts.length === 0) return null;
 
     const query = `
         UPDATE users
@@ -133,7 +133,7 @@ export class UsersRepository implements IUsersRepository {
     const result = await client.query<IUserRowData>(query, allValues);
 
     const row = result.rows?.[0];
-    if (!row) throw new Error('User not found or not updated');
+    if (!row) return null;
 
     return this.#buildUserEntity(row);
   }
