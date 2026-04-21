@@ -1,1 +1,2 @@
-export { MeUseCases } from './me';
+export { GetMeUseCase } from './getMe';
+export { PatchMeProfileUseCase } from './patchMeProfile';

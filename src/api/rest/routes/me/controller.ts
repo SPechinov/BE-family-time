@@ -1,5 +1,5 @@
 import { FastifyInstance } from 'fastify';
-import { IMeUseCases } from '@/domains/useCases';
+import { IGetMeUseCase, IPatchMeProfileUseCase } from '@/domains/useCases';
 import { ZodTypeProvider } from 'fastify-type-provider-zod';
 import { PREFIX, ROUTES } from './constants';
 import { SCHEMAS } from './schemas';
@@ -7,11 +7,17 @@ import { toMeResponse, toPatchMeCommand } from '@/api/rest/mappers';
 
 export class MeRoutesController {
   #fastify: FastifyInstance;
-  #meUseCases: IMeUseCases;
+  #getMeUseCase: IGetMeUseCase;
+  #patchMeProfileUseCase: IPatchMeProfileUseCase;
 
-  constructor(props: { fastify: FastifyInstance; meUseCases: IMeUseCases }) {
+  constructor(props: {
+    fastify: FastifyInstance;
+    getMeUseCase: IGetMeUseCase;
+    patchMeProfileUseCase: IPatchMeProfileUseCase;
+  }) {
     this.#fastify = props.fastify;
-    this.#meUseCases = props.meUseCases;
+    this.#getMeUseCase = props.getMeUseCase;
+    this.#patchMeProfileUseCase = props.patchMeProfileUseCase;
   }
 
   register() {
@@ -26,7 +32,7 @@ export class MeRoutesController {
             schema: SCHEMAS.getMe,
           },
           async (request, reply) => {
-            const user = await this.#meUseCases.getMe({
+            const user = await this.#getMeUseCase.execute({
               logger: request.log,
               userId: request.userId,
             });
@@ -41,7 +47,7 @@ export class MeRoutesController {
             schema: SCHEMAS.patch,
           },
           async (request, reply) => {
-            const user = await this.#meUseCases.patch({
+            const user = await this.#patchMeProfileUseCase.execute({
               logger: request.log,
               userId: request.userId,
               userPatchOnePlainEntity: toPatchMeCommand(request.body),
