@@ -141,8 +141,8 @@ export class UserContactsHashedEntity extends UserContactsPlainEntity {}
 export class UserPasswordPlainEntity {
   readonly #password: string;
 
-  constructor(hash: string) {
-    this.#password = hash;
+  constructor(password: string) {
+    this.#password = password;
   }
 
   get password(): string {

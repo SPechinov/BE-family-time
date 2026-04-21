@@ -14,7 +14,7 @@ const isValidIanaTimezone = (value: string): boolean => {
 export const GLOBAL_SCHEMAS = {
   emptyString: z.literal(''),
   firstName: z.string().min(2).max(40).refine(isXss, { message: 'Invalid characters in firstName' }),
-  lastName: z.string().min(2).max(40).refine(isXss, { message: 'Invalid characters in firstName' }),
+  lastName: z.string().min(2).max(40).refine(isXss, { message: 'Invalid characters in lastName' }),
   password: z.string().min(8).max(100),
   email: z.email().max(254).refine(isXss, { message: 'Invalid characters in email' }),
   otpCode: (length: number) =>
@@ -62,7 +62,7 @@ export const USER_SCHEMA = z
     language: GLOBAL_SCHEMAS.language,
     email: GLOBAL_SCHEMAS.email,
     phone: z.string(),
-    firstName: GLOBAL_SCHEMAS.firstName,
+    firstName: GLOBAL_SCHEMAS.firstName.or(GLOBAL_SCHEMAS.emptyString),
     lastName: GLOBAL_SCHEMAS.lastName.or(GLOBAL_SCHEMAS.emptyString),
     dateOfBirth: z.string(),
   })

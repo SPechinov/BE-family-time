@@ -85,17 +85,15 @@ export class UserCryptoMapper {
       return;
     }
 
-    const decryptedDateOfBirth = personalInfoEncrypted.dateOfBirth
-      ? await this.#decryptOptionalField(personalInfoEncrypted.dateOfBirth, encryptionSalt)
-      : personalInfoEncrypted.dateOfBirth;
+    const [decryptedFirstName, decryptedLastName, decryptedDateOfBirth] = await Promise.all([
+      this.#decryptEncryptedOptionalField(personalInfoEncrypted.firstName, encryptionSalt),
+      this.#decryptEncryptedOptionalField(personalInfoEncrypted.lastName, encryptionSalt),
+      this.#decryptEncryptedOptionalField(personalInfoEncrypted.dateOfBirth, encryptionSalt),
+    ]);
 
     return new UserPersonalInfoPlainEntity({
-      firstName: personalInfoEncrypted.firstName
-        ? await this.#decryptOptionalField(personalInfoEncrypted.firstName, encryptionSalt)
-        : undefined,
-      lastName: personalInfoEncrypted.lastName
-        ? await this.#decryptOptionalField(personalInfoEncrypted.lastName, encryptionSalt)
-        : undefined,
+      firstName: decryptedFirstName,
+      lastName: decryptedLastName,
       dateOfBirth:
         decryptedDateOfBirth === undefined
           ? undefined
@@ -115,6 +113,16 @@ export class UserCryptoMapper {
     } catch {
       return null;
     }
+  }
+
+  async #decryptEncryptedOptionalField(
+    value: string | null | undefined,
+    encryptionSalt: string,
+  ): Promise<string | null | undefined> {
+    if (value === undefined) return undefined;
+    if (value === null) return null;
+
+    return this.#decryptOptionalField(value, encryptionSalt);
   }
 
   async #encryptOptionalField(
