@@ -1,273 +1,83 @@
 import {
-  GroupCreateEntity,
-  GroupEntity,
-  GroupFindManyEntity,
-  GroupFindOneEntity,
-  GroupId,
-  GroupPatchOneEntity,
-  GroupsUsersCreateEntity,
-  GroupsUsersDeleteOneEntity,
-  GroupsUsersFindManyEntity,
-  GroupsUsersFindOneEntity,
-  UserId,
-} from '@/entities';
-import {
-  ErrorGroupHasUsers,
-  ErrorGroupNotExists,
-  ErrorGroupsLimitExceeded,
-  ErrorGroupUsersCountLimitExceeded,
-  ErrorUserInGroup,
-  ErrorUserIsGroupOwner,
-  ErrorUserIsNotGroupOwner,
-  ErrorUserNotInGroup,
-} from '@/pkg';
-import { IGroupsService, IGroupsUsersService, IUsersService } from '@/domains/services';
-import { IDbTransactionService } from '@/pkg/dbTransaction';
-import { DefaultProps, IGroupsUseCases } from '@/domains/useCases';
-import { CONFIG } from '@/config';
-import { ILogger } from '@/pkg/logger';
-import { PoolClient } from 'pg';
+  ICreateUserGroupUseCase,
+  IDeleteUserGroupUseCase,
+  IExcludeUserFromGroupUseCase,
+  IGetUserGroupUseCase,
+  IGroupsUseCases,
+  IInviteUserInGroupUseCase,
+  IListUserGroupsUseCase,
+  IPatchUserGroupUseCase,
+} from '@/domains/useCases';
+import { CreateUserGroupUseCase } from './createUserGroup';
+import { DeleteUserGroupUseCase } from './deleteUserGroup';
+import { ExcludeUserFromGroupUseCase } from './excludeUserFromGroup';
+import { GetUserGroupUseCase } from './getUserGroup';
+import { InviteUserInGroupUseCase } from './inviteUserInGroup';
+import { ListUserGroupsUseCase } from './listUserGroups';
+import { PatchUserGroupUseCase } from './patchUserGroup';
+import { GroupsUseCasesDeps } from './shared/types';
 
+// Transitional aggregate adapter for compatibility with current bootstrap/controller wiring.
+// Will be removed when transport depends on per-scenario use cases directly.
 export class GroupsUseCases implements IGroupsUseCases {
-  readonly #usersService: IUsersService;
-  readonly #groupsService: IGroupsService;
-  readonly #groupsUsersService: IGroupsUsersService;
-  readonly #transactionService: IDbTransactionService;
+  readonly #listUserGroupsUseCase: IListUserGroupsUseCase;
+  readonly #createUserGroupUseCase: ICreateUserGroupUseCase;
+  readonly #getUserGroupUseCase: IGetUserGroupUseCase;
+  readonly #patchUserGroupUseCase: IPatchUserGroupUseCase;
+  readonly #inviteUserInGroupUseCase: IInviteUserInGroupUseCase;
+  readonly #excludeUserFromGroupUseCase: IExcludeUserFromGroupUseCase;
+  readonly #deleteUserGroupUseCase: IDeleteUserGroupUseCase;
 
-  constructor(props: {
-    usersService: IUsersService;
-    groupsService: IGroupsService;
-    groupsUsersService: IGroupsUsersService;
-    transactionService: IDbTransactionService;
-  }) {
-    this.#usersService = props.usersService;
-    this.#groupsService = props.groupsService;
-    this.#groupsUsersService = props.groupsUsersService;
-    this.#transactionService = props.transactionService;
-  }
-
-  #buildOptions(logger: ILogger, client?: PoolClient): { logger: ILogger; client?: PoolClient } {
-    return { logger, client };
-  }
-
-  async createUserGroup({
-    userId,
-    groupCreateEntity,
-    logger,
-  }: DefaultProps<{ userId: UserId; groupCreateEntity: GroupCreateEntity }>): Promise<GroupEntity> {
-    await this.#usersService.findOneByUserIdOrThrow(userId, { logger });
-
-    return this.#transactionService.executeInTransaction(async (client) => {
-      await this.#lockUserGroupsScope(userId, client);
-      await this.#checkLimitExceededUserGroupsOrThrow(userId, this.#buildOptions(logger, client));
-
-      const group = await this.#groupsService.createOne(groupCreateEntity, { client, logger });
-
-      await this.#groupsUsersService.createOne(
-        new GroupsUsersCreateEntity({
-          userId,
-          groupId: group.id,
-          isOwner: true,
-        }),
-        { client, logger },
-      );
-
-      logger.debug({ groupId: group.id }, 'Group created');
-      return group;
+  constructor(props: GroupsUseCasesDeps) {
+    this.#listUserGroupsUseCase = new ListUserGroupsUseCase({
+      usersService: props.usersService,
+      groupsService: props.groupsService,
+      groupsUsersService: props.groupsUsersService,
     });
-  }
-
-  async findUserGroup({
-    userId,
-    groupId,
-    logger,
-  }: DefaultProps<{ userId: UserId; groupId: GroupId }>): Promise<GroupEntity> {
-    await this.#usersService.findOneByUserIdOrThrow(userId, { logger });
-
-    const groupUser = await this.#groupsUsersService.findOne(new GroupsUsersFindOneEntity({ groupId, userId }), {
-      logger,
+    this.#createUserGroupUseCase = new CreateUserGroupUseCase(props);
+    this.#getUserGroupUseCase = new GetUserGroupUseCase({
+      usersService: props.usersService,
+      groupsUsersService: props.groupsUsersService,
+      groupsService: props.groupsService,
     });
-    if (!groupUser) throw new ErrorGroupNotExists();
-
-    const group = await this.#groupsService.findOne(new GroupFindOneEntity({ id: groupId }), { logger });
-    if (!group) throw new ErrorGroupNotExists();
-
-    return group;
-  }
-
-  async findUserGroupsList({ userId, logger }: DefaultProps<{ userId: UserId }>): Promise<GroupEntity[]> {
-    await this.#usersService.findOneByUserIdOrThrow(userId, { logger });
-
-    const groupsUsers = await this.#groupsUsersService.findUserGroups(userId, { logger });
-    const groupsIds = groupsUsers.map((groupUser) => groupUser.groupId);
-    return this.#groupsService.findMany(new GroupFindManyEntity({ ids: groupsIds }), { logger });
-  }
-
-  async patchUserGroup({
-    groupId,
-    userId,
-    groupPatchOneEntity,
-    logger,
-  }: DefaultProps<{
-    userId: UserId;
-    groupId: GroupId;
-    groupPatchOneEntity: GroupPatchOneEntity;
-  }>): Promise<GroupEntity> {
-    await this.#usersService.findOneByUserIdOrThrow(userId, { logger });
-
-    await this.#checkIsGroupOwnerOrThrow(groupId, userId, { logger });
-
-    const group = await this.#groupsService.findOne(new GroupFindOneEntity({ id: groupId }), { logger });
-    if (!group) throw new ErrorGroupNotExists();
-
-    const patchedGroup = await this.#groupsService.patchOne(
-      {
-        groupFindOneEntity: new GroupFindOneEntity({ id: groupId }),
-        groupPatchOneEntity: groupPatchOneEntity,
-      },
-      { logger: logger },
-    );
-    if (!patchedGroup) throw new ErrorGroupNotExists();
-
-    return patchedGroup;
-  }
-
-  async inviteUserInGroup({
-    groupId,
-    actorUserId,
-    targetUserId,
-    logger,
-  }: DefaultProps<{ targetUserId: UserId; actorUserId: UserId; groupId: GroupId }>): Promise<void> {
-    await Promise.all([
-      this.#usersService.findOneByUserIdOrThrow(actorUserId, { logger }),
-      this.#usersService.findOneByUserIdOrThrow(targetUserId, { logger }),
-    ]);
-
-    await this.#transactionService.executeInTransaction(async (client) => {
-      await this.#lockGroupMembersScope(groupId, client);
-      await this.#checkIsGroupOwnerOrThrow(groupId, actorUserId, this.#buildOptions(logger, client));
-      await this.#checkUserNotInGroupOrThrow(groupId, targetUserId, this.#buildOptions(logger, client));
-      await this.#checkLimitExceededUsersInGroupOrThrow(groupId, this.#buildOptions(logger, client));
-
-      await this.#groupsUsersService.createOne(
-        new GroupsUsersCreateEntity({ userId: targetUserId, groupId: groupId, isOwner: false }),
-        { logger, client },
-      );
+    this.#patchUserGroupUseCase = new PatchUserGroupUseCase({
+      usersService: props.usersService,
+      groupsUsersService: props.groupsUsersService,
+      groupsService: props.groupsService,
     });
-  }
-
-  async excludeUserFromGroup({
-    groupId,
-    actorUserId,
-    targetUserId,
-    logger,
-  }: DefaultProps<{ targetUserId: UserId; actorUserId: UserId; groupId: GroupId }>): Promise<void> {
-    await Promise.all([
-      this.#usersService.findOneByUserIdOrThrow(actorUserId, { logger }),
-      this.#usersService.findOneByUserIdOrThrow(targetUserId, { logger }),
-    ]);
-
-    await this.#checkIsGroupOwnerOrThrow(groupId, actorUserId, { logger });
-
-    if (actorUserId === targetUserId) {
-      throw new ErrorUserIsGroupOwner();
-    }
-
-    await this.#checkUserInGroupOrThrow(groupId, targetUserId, { logger });
-
-    await this.#groupsUsersService.deleteOne(
-      new GroupsUsersDeleteOneEntity({ userId: targetUserId, groupId: groupId }),
-      { logger: logger },
-    );
-  }
-
-  async deleteUserGroup({
-    groupId,
-    userId,
-    logger,
-  }: DefaultProps<{ userId: UserId; groupId: GroupId }>): Promise<void> {
-    await this.#usersService.findOneByUserIdOrThrow(userId, { logger });
-
-    await this.#transactionService.executeInTransaction(async (client) => {
-      await this.#lockGroupMembersScope(groupId, client);
-      await this.#checkIsGroupOwnerOrThrow(groupId, userId, this.#buildOptions(logger, client));
-
-      const groupUsersCount = await this.#groupsUsersService.count(new GroupsUsersFindManyEntity({ groupId }), {
-        logger,
-        client,
-      });
-      if (groupUsersCount > 1) {
-        throw new ErrorGroupHasUsers();
-      }
-
-      await this.#groupsService.deleteOne(new GroupFindOneEntity({ id: groupId }), { logger, client });
+    this.#inviteUserInGroupUseCase = new InviteUserInGroupUseCase(props);
+    this.#excludeUserFromGroupUseCase = new ExcludeUserFromGroupUseCase({
+      usersService: props.usersService,
+      groupsUsersService: props.groupsUsersService,
     });
+    this.#deleteUserGroupUseCase = new DeleteUserGroupUseCase(props);
   }
 
-  async #checkUserNotInGroupOrThrow(
-    groupId: GroupId,
-    userId: UserId,
-    options: { logger: ILogger; client?: PoolClient },
-  ) {
-    const groupUser = await this.#groupsUsersService.findOne(
-      new GroupsUsersFindOneEntity({
-        groupId,
-        userId,
-      }),
-      options,
-    );
-
-    if (groupUser) throw new ErrorUserInGroup();
+  findUserGroupsList(...args: Parameters<IListUserGroupsUseCase['findUserGroupsList']>) {
+    return this.#listUserGroupsUseCase.findUserGroupsList(...args);
   }
 
-  async #checkUserInGroupOrThrow(groupId: GroupId, userId: UserId, options: { logger: ILogger; client?: PoolClient }) {
-    const groupUser = await this.#groupsUsersService.findOne(
-      new GroupsUsersFindOneEntity({ groupId, userId }),
-      options,
-    );
-    if (!groupUser) throw new ErrorUserNotInGroup();
+  createUserGroup(...args: Parameters<ICreateUserGroupUseCase['createUserGroup']>) {
+    return this.#createUserGroupUseCase.createUserGroup(...args);
   }
 
-  async #checkIsGroupOwnerOrThrow(groupId: GroupId, userId: UserId, options: { logger: ILogger; client?: PoolClient }) {
-    const groupUser = await this.#groupsUsersService.findOne(
-      new GroupsUsersFindOneEntity({ groupId, userId }),
-      options,
-    );
-
-    if (!groupUser) {
-      throw new ErrorGroupNotExists();
-    }
-
-    if (!groupUser.isOwner) {
-      throw new ErrorUserIsNotGroupOwner();
-    }
+  findUserGroup(...args: Parameters<IGetUserGroupUseCase['findUserGroup']>) {
+    return this.#getUserGroupUseCase.findUserGroup(...args);
   }
 
-  async #checkLimitExceededUsersInGroupOrThrow(groupId: GroupId, options: { logger: ILogger; client?: PoolClient }) {
-    const usersCount = await this.#groupsUsersService.count(
-      new GroupsUsersFindManyEntity({
-        groupId,
-      }),
-      options,
-    );
-
-    if (usersCount >= CONFIG.limits.group.maxUsers) {
-      throw new ErrorGroupUsersCountLimitExceeded();
-    }
+  patchUserGroup(...args: Parameters<IPatchUserGroupUseCase['patchUserGroup']>) {
+    return this.#patchUserGroupUseCase.patchUserGroup(...args);
   }
 
-  async #checkLimitExceededUserGroupsOrThrow(userId: UserId, options: { logger: ILogger; client?: PoolClient }) {
-    const userGroupsCount = await this.#groupsUsersService.count(new GroupsUsersFindManyEntity({ userId }), options);
-    if (userGroupsCount >= CONFIG.limits.user.maxGroups) {
-      throw new ErrorGroupsLimitExceeded();
-    }
+  inviteUserInGroup(...args: Parameters<IInviteUserInGroupUseCase['inviteUserInGroup']>) {
+    return this.#inviteUserInGroupUseCase.inviteUserInGroup(...args);
   }
 
-  async #lockUserGroupsScope(userId: UserId, client: PoolClient) {
-    await client.query('SELECT pg_advisory_xact_lock(hashtext($1))', [`groups:user:${userId}`]);
+  excludeUserFromGroup(...args: Parameters<IExcludeUserFromGroupUseCase['excludeUserFromGroup']>) {
+    return this.#excludeUserFromGroupUseCase.excludeUserFromGroup(...args);
   }
 
-  async #lockGroupMembersScope(groupId: GroupId, client: PoolClient) {
-    await client.query('SELECT pg_advisory_xact_lock(hashtext($1))', [`groups:group:${groupId}`]);
+  deleteUserGroup(...args: Parameters<IDeleteUserGroupUseCase['deleteUserGroup']>) {
+    return this.#deleteUserGroupUseCase.deleteUserGroup(...args);
   }
 }
