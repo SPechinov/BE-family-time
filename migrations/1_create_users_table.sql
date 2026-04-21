@@ -9,7 +9,7 @@ CREATE TABLE IF NOT EXISTS users (
     password_hashed BYTEA,
     first_name_encrypted BYTEA,
     last_name_encrypted BYTEA,
-    date_of_birth TIMESTAMP,
+    date_of_birth_encrypted BYTEA,
     time_zone TEXT NOT NULL DEFAULT 'Europe/Moscow',
     language TEXT NOT NULL DEFAULT 'ru' CHECK (language IN ('ru','en')),
     created_at TIMESTAMP DEFAULT NOW(),

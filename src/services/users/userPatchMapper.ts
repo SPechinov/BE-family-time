@@ -34,16 +34,13 @@ export class UserPatchMapper {
       this.#userPasswordHasher.hash(passwordPlain),
     ]);
     const contactsHashed = this.#userContactsHasher.hash(contactsPlain);
-    const dateOfBirth = personalInfoPlain?.dateOfBirth;
-
     if (
       personalInfoEncrypted === undefined &&
       contactsEncrypted === undefined &&
       contactsHashed === undefined &&
       passwordHashed === undefined &&
       timeZone === undefined &&
-      language === undefined &&
-      dateOfBirth === undefined
+      language === undefined
     ) {
       throw new ErrorInvalidUserPatchParams();
     }
@@ -55,7 +52,6 @@ export class UserPatchMapper {
       passwordHashed,
       timeZone,
       language,
-      dateOfBirth,
     });
   }
 }

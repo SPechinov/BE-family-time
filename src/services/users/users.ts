@@ -114,11 +114,7 @@ export class UsersService implements IUsersService {
   async decryptUser(userEntity: UserEntity): Promise<UserPlainEntity> {
     const [contacts, personalInfo] = await Promise.all([
       this.#userCryptoMapper.decryptContacts(userEntity.encryptionSalt, userEntity.contactsEncrypted),
-      this.#userCryptoMapper.decryptPersonalInfo(
-        userEntity.encryptionSalt,
-        userEntity.personalInfoEncrypted,
-        userEntity.dateOfBirth,
-      ),
+      this.#userCryptoMapper.decryptPersonalInfo(userEntity.encryptionSalt, userEntity.personalInfoEncrypted),
     ]);
 
     return new UserPlainEntity({

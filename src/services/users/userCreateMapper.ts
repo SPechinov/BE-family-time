@@ -36,7 +36,6 @@ export class UserCreateMapper {
       encryptionSalt: props.encryptionSalt,
       timeZone: props.userCreatePlainEntity.timeZone,
       language: props.userCreatePlainEntity.language,
-      dateOfBirth: personalInfoPlain?.dateOfBirth,
       personalInfoEncrypted: personalInfoEncrypted ?? undefined,
       contactsHashed: contactsHashed ?? undefined,
       contactsEncrypted: contactsEncrypted ?? undefined,

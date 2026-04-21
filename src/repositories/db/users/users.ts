@@ -39,7 +39,7 @@ export class UsersRepository implements IUsersRepository {
         password_hashed,
         first_name_encrypted,
         last_name_encrypted,
-        date_of_birth
+        date_of_birth_encrypted
       )
       VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11)
       RETURNING *
@@ -56,7 +56,7 @@ export class UsersRepository implements IUsersRepository {
       userCreateEntity.passwordHashed?.password,
       userCreateEntity.personalInfoEncrypted?.firstName,
       userCreateEntity.personalInfoEncrypted?.lastName,
-      userCreateEntity.dateOfBirth,
+      userCreateEntity.personalInfoEncrypted?.dateOfBirth,
     ];
 
     options?.logger?.debug({ query, values }, 'Users repository: createOne');
@@ -170,7 +170,7 @@ export class UsersRepository implements IUsersRepository {
     let valueIndex = startValueIndex;
     if (userPatchEntity.personalInfoEncrypted !== undefined) {
       if (userPatchEntity.personalInfoEncrypted === null) {
-        setParts.push(`first_name_encrypted = NULL`, `last_name_encrypted = NULL`);
+        setParts.push(`first_name_encrypted = NULL`, `last_name_encrypted = NULL`, `date_of_birth_encrypted = NULL`);
       } else {
         if (userPatchEntity.personalInfoEncrypted.firstName !== undefined) {
           setParts.push(`first_name_encrypted = $${valueIndex}`);
@@ -182,12 +182,12 @@ export class UsersRepository implements IUsersRepository {
           updateValues.push(userPatchEntity.personalInfoEncrypted.lastName || null);
           valueIndex++;
         }
+        if (userPatchEntity.personalInfoEncrypted.dateOfBirth !== undefined) {
+          setParts.push(`date_of_birth_encrypted = $${valueIndex}`);
+          updateValues.push(userPatchEntity.personalInfoEncrypted.dateOfBirth || null);
+          valueIndex++;
+        }
       }
-    }
-    if (userPatchEntity.dateOfBirth !== undefined) {
-      setParts.push(`date_of_birth = $${valueIndex}`);
-      updateValues.push(userPatchEntity.dateOfBirth || null);
-      valueIndex++;
     }
     if (userPatchEntity.contactsEncrypted !== undefined) {
       if (userPatchEntity.contactsEncrypted === null) {
@@ -256,12 +256,14 @@ export class UsersRepository implements IUsersRepository {
   #buildUserEntity(row: IUserRowData) {
     const firstNameEncrypted = row.first_name_encrypted?.toString('utf-8') || null;
     const lastNameEncrypted = row.last_name_encrypted?.toString('utf-8') || null;
+    const dateOfBirthEncrypted = row.date_of_birth_encrypted?.toString('utf-8') || null;
     const emailEncrypted = row.email_encrypted?.toString('utf-8') || null;
     const phoneEncrypted = row.phone_encrypted?.toString('utf-8') || null;
 
     const personalInfoEncrypted = new UserPersonalInfoEncryptedEntity({
       firstName: firstNameEncrypted,
       lastName: lastNameEncrypted,
+      dateOfBirth: dateOfBirthEncrypted,
     });
 
     const contactsHashed = new UserContactsHashedEntity({
@@ -283,7 +285,6 @@ export class UsersRepository implements IUsersRepository {
       encryptionSalt: row.encryption_salt,
       timeZone: row.time_zone,
       language: row.language,
-      dateOfBirth: row.date_of_birth,
       personalInfoEncrypted,
       contactsHashed,
       contactsEncrypted,

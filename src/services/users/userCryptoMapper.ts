@@ -37,22 +37,23 @@ export class UserCryptoMapper {
     if (personalInfoPlain === null) return null;
     if (!encryptionSalt) return undefined;
 
-    const [encryptedFirstName, encryptedLastName] = await Promise.all([
-      personalInfoPlain.firstName === undefined
-        ? Promise.resolve(undefined)
-        : personalInfoPlain.firstName === null
-          ? Promise.resolve(null)
-          : this.#encryptionService.encrypt(personalInfoPlain.firstName, encryptionSalt),
-      personalInfoPlain.lastName === undefined
-        ? Promise.resolve(undefined)
-        : personalInfoPlain.lastName === null
-          ? Promise.resolve(null)
-          : this.#encryptionService.encrypt(personalInfoPlain.lastName, encryptionSalt),
+    const dateOfBirthIso =
+      personalInfoPlain.dateOfBirth === undefined
+        ? undefined
+        : personalInfoPlain.dateOfBirth === null
+          ? null
+          : personalInfoPlain.dateOfBirth.toISOString();
+
+    const [encryptedFirstName, encryptedLastName, encryptedDateOfBirth] = await Promise.all([
+      this.#encryptOptionalField(personalInfoPlain.firstName, encryptionSalt),
+      this.#encryptOptionalField(personalInfoPlain.lastName, encryptionSalt),
+      this.#encryptOptionalField(dateOfBirthIso, encryptionSalt),
     ]);
 
     return new UserPersonalInfoEncryptedEntity({
       firstName: encryptedFirstName,
       lastName: encryptedLastName,
+      dateOfBirth: encryptedDateOfBirth,
     });
   }
 
@@ -73,20 +74,20 @@ export class UserCryptoMapper {
   async decryptPersonalInfo(
     encryptionSalt: string,
     personalInfoEncrypted?: UserPersonalInfoEncryptedEntity,
-    dateOfBirth?: Date | null,
   ): Promise<UserPersonalInfoPlainEntity | undefined> {
-    if (!(personalInfoEncrypted instanceof UserPersonalInfoEncryptedEntity)) {
-      if (dateOfBirth === undefined) return;
-      return new UserPersonalInfoPlainEntity({ dateOfBirth });
-    }
+    if (!(personalInfoEncrypted instanceof UserPersonalInfoEncryptedEntity)) return;
 
     if (
       personalInfoEncrypted.firstName === undefined &&
       personalInfoEncrypted.lastName === undefined &&
-      dateOfBirth === undefined
+      personalInfoEncrypted.dateOfBirth === undefined
     ) {
       return;
     }
+
+    const decryptedDateOfBirth = personalInfoEncrypted.dateOfBirth
+      ? await this.#decryptOptionalField(personalInfoEncrypted.dateOfBirth, encryptionSalt)
+      : personalInfoEncrypted.dateOfBirth;
 
     return new UserPersonalInfoPlainEntity({
       firstName: personalInfoEncrypted.firstName
@@ -95,7 +96,12 @@ export class UserCryptoMapper {
       lastName: personalInfoEncrypted.lastName
         ? await this.#decryptOptionalField(personalInfoEncrypted.lastName, encryptionSalt)
         : undefined,
-      dateOfBirth,
+      dateOfBirth:
+        decryptedDateOfBirth === undefined
+          ? undefined
+          : decryptedDateOfBirth === null
+            ? null
+            : this.#parseDateOrNull(decryptedDateOfBirth),
     });
   }
 
@@ -109,5 +115,22 @@ export class UserCryptoMapper {
     } catch {
       return null;
     }
+  }
+
+  async #encryptOptionalField(
+    value: string | null | undefined,
+    encryptionSalt: string,
+  ): Promise<string | null | undefined> {
+    if (value === undefined) return undefined;
+    if (value === null) return null;
+
+    return this.#encryptionService.encrypt(value, encryptionSalt);
+  }
+
+  #parseDateOrNull(value: string): Date | null {
+    const date = new Date(value);
+    if (Number.isNaN(date.getTime())) return null;
+
+    return date;
   }
 }
