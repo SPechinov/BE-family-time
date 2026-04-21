@@ -1,7 +1,7 @@
 import {
   UserId,
-  UserLanguageUnion,
   UserLanguage,
+  UserLanguageUnion,
   UserName,
   UserPatchOnePlainEntity,
   UserPersonalInfoPlainEntity,

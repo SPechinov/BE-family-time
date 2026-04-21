@@ -293,8 +293,8 @@ export class UserCreatePlainEntity {
     contactsPlain?: UserContactsPlainEntity;
     passwordPlain?: UserPasswordPlainEntity;
   }) {
-    this.#timeZone = props.timeZone;
-    this.#language = props.language;
+    this.#timeZone = UserTimeZone.create(props.timeZone).value;
+    this.#language = UserLanguage.create(props.language).value;
     this.#personalInfoPlain = props.personalInfoPlain;
     this.#contactsPlain = props.contactsPlain;
     this.#passwordPlain = props.passwordPlain;
@@ -437,8 +437,8 @@ export class UserPatchOnePlainEntity {
     this.#personalInfoPlain = props.personalInfoPlain;
     this.#contactsPlain = props.contactsPlain;
     this.#passwordPlain = props.passwordPlain;
-    this.#timeZone = props.timeZone;
-    this.#language = props.language;
+    this.#timeZone = UserTimeZone.fromOptional(props.timeZone);
+    this.#language = UserLanguage.fromOptional(props.language);
   }
 
   get personalInfoPlain() {
