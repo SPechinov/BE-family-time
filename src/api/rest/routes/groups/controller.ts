@@ -1,17 +1,46 @@
 import { FastifyInstance } from 'fastify';
 import { ZodTypeProvider } from 'fastify-type-provider-zod';
 import { PREFIX, ROUTES } from './constants';
-import { IGroupsUseCases } from '@/domains/useCases';
+import {
+  ICreateUserGroupUseCase,
+  IDeleteUserGroupUseCase,
+  IExcludeUserFromGroupUseCase,
+  IGetUserGroupUseCase,
+  IInviteUserInGroupUseCase,
+  IListUserGroupsUseCase,
+  IPatchUserGroupUseCase,
+} from '@/domains/useCases';
 import { SCHEMAS } from './schemas';
 import { toCreateGroupCommand, toGroupResponse, toGroupsResponse, toPatchGroupCommand } from '@/api/rest/mappers';
 
 export class GroupsRoutesController {
   #fastify: FastifyInstance;
-  #groupsUseCases: IGroupsUseCases;
+  #listUserGroupsUseCase: IListUserGroupsUseCase;
+  #createUserGroupUseCase: ICreateUserGroupUseCase;
+  #getUserGroupUseCase: IGetUserGroupUseCase;
+  #patchUserGroupUseCase: IPatchUserGroupUseCase;
+  #inviteUserInGroupUseCase: IInviteUserInGroupUseCase;
+  #excludeUserFromGroupUseCase: IExcludeUserFromGroupUseCase;
+  #deleteUserGroupUseCase: IDeleteUserGroupUseCase;
 
-  constructor(props: { fastify: FastifyInstance; groupsUseCases: IGroupsUseCases }) {
+  constructor(props: {
+    fastify: FastifyInstance;
+    listUserGroupsUseCase: IListUserGroupsUseCase;
+    createUserGroupUseCase: ICreateUserGroupUseCase;
+    getUserGroupUseCase: IGetUserGroupUseCase;
+    patchUserGroupUseCase: IPatchUserGroupUseCase;
+    inviteUserInGroupUseCase: IInviteUserInGroupUseCase;
+    excludeUserFromGroupUseCase: IExcludeUserFromGroupUseCase;
+    deleteUserGroupUseCase: IDeleteUserGroupUseCase;
+  }) {
     this.#fastify = props.fastify;
-    this.#groupsUseCases = props.groupsUseCases;
+    this.#listUserGroupsUseCase = props.listUserGroupsUseCase;
+    this.#createUserGroupUseCase = props.createUserGroupUseCase;
+    this.#getUserGroupUseCase = props.getUserGroupUseCase;
+    this.#patchUserGroupUseCase = props.patchUserGroupUseCase;
+    this.#inviteUserInGroupUseCase = props.inviteUserInGroupUseCase;
+    this.#excludeUserFromGroupUseCase = props.excludeUserFromGroupUseCase;
+    this.#deleteUserGroupUseCase = props.deleteUserGroupUseCase;
   }
 
   register() {
@@ -26,7 +55,7 @@ export class GroupsRoutesController {
             preHandler: [instance.authenticate],
           },
           async (request, reply) => {
-            const groups = await this.#groupsUseCases.findUserGroupsList({
+            const groups = await this.#listUserGroupsUseCase.findUserGroupsList({
               userId: request.userId,
               logger: request.log,
             });
@@ -41,7 +70,7 @@ export class GroupsRoutesController {
             preHandler: [instance.authenticate],
           },
           async (request, reply) => {
-            const group = await this.#groupsUseCases.createUserGroup({
+            const group = await this.#createUserGroupUseCase.createUserGroup({
               groupCreateEntity: toCreateGroupCommand(request.body),
               userId: request.userId,
               logger: request.log,
@@ -57,7 +86,7 @@ export class GroupsRoutesController {
             preHandler: [instance.authenticate],
           },
           async (request, reply) => {
-            const group = await this.#groupsUseCases.findUserGroup({
+            const group = await this.#getUserGroupUseCase.findUserGroup({
               userId: request.userId,
               groupId: request.params.groupId,
               logger: request.log,
@@ -74,7 +103,7 @@ export class GroupsRoutesController {
             preHandler: [instance.authenticate],
           },
           async (request, reply) => {
-            const group = await this.#groupsUseCases.patchUserGroup({
+            const group = await this.#patchUserGroupUseCase.patchUserGroup({
               userId: request.userId,
               groupId: request.params.groupId,
               groupPatchOneEntity: toPatchGroupCommand(request.body),
@@ -91,7 +120,7 @@ export class GroupsRoutesController {
             preHandler: [instance.authenticate],
           },
           async (request, reply) => {
-            await this.#groupsUseCases.inviteUserInGroup({
+            await this.#inviteUserInGroupUseCase.inviteUserInGroup({
               groupId: request.params.groupId,
               actorUserId: request.userId,
               targetUserId: request.body.targetUserId,
@@ -108,7 +137,7 @@ export class GroupsRoutesController {
             preHandler: [instance.authenticate],
           },
           async (request, reply) => {
-            await this.#groupsUseCases.excludeUserFromGroup({
+            await this.#excludeUserFromGroupUseCase.excludeUserFromGroup({
               groupId: request.params.groupId,
               actorUserId: request.userId,
               targetUserId: request.body.targetUserId,
@@ -125,7 +154,7 @@ export class GroupsRoutesController {
             preHandler: [instance.authenticate],
           },
           async (request, reply) => {
-            await this.#groupsUseCases.deleteUserGroup({
+            await this.#deleteUserGroupUseCase.deleteUserGroup({
               userId: request.userId,
               groupId: request.params.groupId,
               logger: request.log,
