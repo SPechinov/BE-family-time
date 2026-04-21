@@ -53,7 +53,7 @@ export const toPatchMeProfileCommand = (props: {
   };
 };
 
-export const toPatchMeEntityCommand = (body: {
+const toPatchMeEntityCommand = (body: {
   firstName?: string | null;
   lastName?: string | null;
   dateOfBirth?: Date | null;

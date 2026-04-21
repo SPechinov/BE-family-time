@@ -78,10 +78,9 @@ Sensitive fields handling:
 
 ## Auth Notes
 
-- Access token is returned in `Authorization` response header.
-- Refresh token is stored in cookie.
+- Access and refresh tokens are set and read via `httpOnly` cookies.
 - Refresh sessions are stored in Redis.
-- Access token blacklist is in-memory only.
+- Access token blacklist is stored in Redis with TTL.
 - In dev mode OTP is exposed via `x-dev-otp-code`.
 
 ## Runtime Commands
@@ -103,7 +102,6 @@ Sensitive fields handling:
 
 - `docker-compose.yaml` database name differs from `config/env.yaml` and migration script target.
 - Redis password expectations in `docker-compose.yaml` and app config are not fully synchronized.
-- `calendar_events.creator_user_id` uses `NOT NULL` together with `ON DELETE SET NULL`.
 - The project mostly uses `TIMESTAMP`, not `TIMESTAMPTZ`.
 - Period filtering for recurring calendar events is simplified in repository logic.
 

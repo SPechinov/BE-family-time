@@ -4,6 +4,19 @@
 
 Привести `src/api/rest` к роли transport-адаптера и вынести orchestration/business-flow в application-слой по правилам Clean Architecture.
 
+## Статус Выполнения (2026-04-21)
+
+- ✅ 3. Стабилизировать структуру `api/rest` (есть `routes/schemas/mappers/hooks/adapters/types/constants`, `composites` удалены)
+- ✅ 4. Вынести auth orchestration из контроллера в `application/auth` (реализовано как отдельные auth use cases по сценариям)
+- ✅ 5. Сделать `AuthRoutesController` thin-controller
+- ✅ 6. Завершить разделение JWT responsibility (`IJwtVerifier` + Fastify adapter + `TokensSessionsPayloadVerifier`)
+- ✅ 8. Нормализовать нейминг и экспорты (`TokensSessions*`)
+- ✅ 9. DTO mapping вынесен в `api/rest/mappers/*` (включая `me`)
+- ✅ 10. Централизация error policy через глобальный handler
+- ✅ 11. Миграция auth вертикальными срезами выполнена
+- ⚠️ 2. Composition Root пока остается в `src/api/rest/bootstrap/*` (не перенесен в `src/app/bootstrap/rest.ts`)
+- ⚠️ 12. Отдельные unit-tests для auth handlers/use cases пока не добавлены
+
 ## Целевые границы слоев
 
 - `api/rest`: только HTTP transport (routes, schemas, hooks, mappers, framework adapters).
