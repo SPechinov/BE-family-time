@@ -3,7 +3,7 @@ import { IGetMeUseCase, IPatchMeProfileUseCase } from '@/domains/useCases';
 import { ZodTypeProvider } from 'fastify-type-provider-zod';
 import { PREFIX, ROUTES } from './constants';
 import { SCHEMAS } from './schemas';
-import { toMeResponse, toPatchMeCommand } from '@/api/rest/mappers';
+import { toGetMeCommand, toMeResponse, toPatchMeProfileCommand } from '@/api/rest/mappers';
 
 export class MeRoutesController {
   #fastify: FastifyInstance;
@@ -34,7 +34,7 @@ export class MeRoutesController {
           async (request, reply) => {
             const user = await this.#getMeUseCase.execute({
               logger: request.log,
-              userId: request.userId,
+              ...toGetMeCommand({ userId: request.userId }),
             });
             reply.status(200).send(toMeResponse(user));
           },
@@ -49,8 +49,10 @@ export class MeRoutesController {
           async (request, reply) => {
             const user = await this.#patchMeProfileUseCase.execute({
               logger: request.log,
-              userId: request.userId,
-              userPatchOnePlainEntity: toPatchMeCommand(request.body),
+              ...toPatchMeProfileCommand({
+                userId: request.userId,
+                body: request.body,
+              }),
             });
 
             reply.status(200).send(toMeResponse(user));

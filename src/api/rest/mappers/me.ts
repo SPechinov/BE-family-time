@@ -1,4 +1,5 @@
 import {
+  UserId,
   UserLanguageUnion,
   UserLanguage,
   UserName,
@@ -7,6 +8,12 @@ import {
   UserPlainEntity,
   UserTimeZone,
 } from '@/entities';
+
+export const toGetMeCommand = (props: { userId: UserId }) => {
+  return {
+    userId: props.userId,
+  };
+};
 
 export const toMeResponse = (user: UserPlainEntity) => {
   return {
@@ -21,7 +28,25 @@ export const toMeResponse = (user: UserPlainEntity) => {
   };
 };
 
-export const toPatchMeCommand = (body: {
+export const toPatchMeProfileCommand = (props: {
+  userId: UserId;
+  body: {
+    firstName?: string | null;
+    lastName?: string | null;
+    dateOfBirth?: Date | null;
+    timeZone?: string;
+    language?: UserLanguageUnion;
+  };
+}) => {
+  const userPatchOnePlainEntity = toPatchMeEntityCommand(props.body);
+
+  return {
+    userId: props.userId,
+    userPatchOnePlainEntity,
+  };
+};
+
+export const toPatchMeEntityCommand = (body: {
   firstName?: string | null;
   lastName?: string | null;
   dateOfBirth?: Date | null;
