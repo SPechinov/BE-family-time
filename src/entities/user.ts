@@ -16,14 +16,6 @@ export class UserName {
     return new UserName(value);
   }
 
-  static fromPatchInput(value?: string | null): string | null | undefined {
-    if (value === undefined) return undefined;
-    if (value === '') return null;
-    if (value === null) return null;
-
-    return UserName.create(value).value;
-  }
-
   get value(): string {
     return this.#value;
   }

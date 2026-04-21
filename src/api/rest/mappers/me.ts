@@ -9,6 +9,13 @@ import {
   UserTimeZone,
 } from '@/entities';
 
+const normalizeNullableProfileTextField = (value?: string | null): string | null | undefined => {
+  if (value === undefined) return undefined;
+  if (value === null || value.trim() === '') return null;
+
+  return UserName.create(value).value;
+};
+
 export const toGetMeCommand = (props: { userId: UserId }) => {
   return {
     userId: props.userId,
@@ -53,8 +60,8 @@ export const toPatchMeEntityCommand = (body: {
   timeZone?: string;
   language?: UserLanguageUnion;
 }) => {
-  const firstName = UserName.fromPatchInput(body.firstName);
-  const lastName = UserName.fromPatchInput(body.lastName);
+  const firstName = normalizeNullableProfileTextField(body.firstName);
+  const lastName = normalizeNullableProfileTextField(body.lastName);
 
   let personalInfoPlain: UserPersonalInfoPlainEntity | undefined;
   if (firstName !== undefined || lastName !== undefined || body.dateOfBirth !== undefined) {
