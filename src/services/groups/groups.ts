@@ -44,7 +44,7 @@ export class GroupsService implements IGroupsService {
       groupPatchOneEntity: GroupPatchOneEntity;
     },
     options?: { client?: PoolClient; logger?: ILogger },
-  ): Promise<GroupEntity> {
+  ): Promise<GroupEntity | null> {
     return this.#groupsRepository.patchOne(props, options);
   }
 

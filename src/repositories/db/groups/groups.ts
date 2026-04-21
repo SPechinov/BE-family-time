@@ -49,7 +49,7 @@ export class GroupsRepository implements IGroupsRepository {
 
     let query = 'SELECT * FROM groups';
     const { conditions, values } = this.#buildGroupsConditions(groupFindOneEntity);
-    if (conditions.length === 0) throw new Error('Invalid find params');
+    if (conditions.length === 0) return null;
 
     query += ' WHERE ' + conditions.join(' AND ');
 
@@ -98,14 +98,14 @@ export class GroupsRepository implements IGroupsRepository {
       groupPatchOneEntity: GroupPatchOneEntity;
     },
     options?: { client?: PoolClient; logger?: ILogger },
-  ): Promise<GroupEntity> {
+  ): Promise<GroupEntity | null> {
     const client = options?.client ?? this.#pool;
 
     const { conditions: findConditions, values: findValues } = this.#buildGroupsConditions(groupFindOneEntity);
-    if (findConditions.length === 0) throw new Error('Invalid find params');
+    if (findConditions.length === 0) return null;
 
     const { setParts, updateValues } = this.#buildUpdateSetClause(groupPatchOneEntity, findValues.length + 1);
-    if (setParts.length === 0) throw new Error('No fields to update');
+    if (setParts.length === 0) return null;
 
     const query = `
         UPDATE groups
@@ -120,7 +120,7 @@ export class GroupsRepository implements IGroupsRepository {
     const result = await client.query<IGroupRowData>(query, allValues);
 
     const row = result.rows?.[0];
-    if (!row) throw new Error('Group not found or not updated');
+    if (!row) return null;
 
     return this.#buildGroupEntity(row);
   }
@@ -132,7 +132,7 @@ export class GroupsRepository implements IGroupsRepository {
     const client = options?.client ?? this.#pool;
 
     const { conditions, values } = this.#buildGroupsConditions(groupFindOneEntity);
-    if (conditions.length === 0) throw new Error('Invalid delete params');
+    if (conditions.length === 0) return;
 
     const query = `
       DELETE FROM groups

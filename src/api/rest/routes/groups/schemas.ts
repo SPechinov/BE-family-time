@@ -38,7 +38,7 @@ const PATCH = {
   body: z
     .object({
       name: GLOBAL_SCHEMAS.groupName.optional(),
-      description: GLOBAL_SCHEMAS.groupDescription.optional(),
+      description: GLOBAL_SCHEMAS.groupDescription.nullable().optional(),
     })
     .refine((data) => Object.keys(data).length > 0, { message: 'At least one field must be provided' }),
   response: createResponseSchema({

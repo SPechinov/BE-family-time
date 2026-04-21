@@ -27,6 +27,6 @@ export interface IGroupsRepository {
       groupPatchOneEntity: GroupPatchOneEntity;
     },
     options?: { client?: PoolClient; logger?: ILogger },
-  ): Promise<GroupEntity>;
+  ): Promise<GroupEntity | null>;
   deleteOne(groupFindOneEntity: GroupFindOneEntity, options?: { client?: PoolClient; logger?: ILogger }): Promise<void>;
 }
