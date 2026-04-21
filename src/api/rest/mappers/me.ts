@@ -8,8 +8,16 @@ import {
   UserPlainEntity,
   UserTimeZone,
 } from '@/entities';
+import { ErrorInvalidUserPatchParams } from '@/pkg';
 
-const normalizeNullableProfileTextField = (value?: string | null): string | null | undefined => {
+const normalizeRequiredProfileTextField = (value?: string | null): string | undefined => {
+  if (value === undefined) return undefined;
+  if (value === null || value.trim() === '') throw new ErrorInvalidUserPatchParams();
+
+  return UserName.create(value).value;
+};
+
+const normalizeOptionalProfileTextField = (value?: string | null): string | null | undefined => {
   if (value === undefined) return undefined;
   if (value === null || value.trim() === '') return null;
 
@@ -38,7 +46,7 @@ export const toMeResponse = (user: UserPlainEntity) => {
 export const toPatchMeProfileCommand = (props: {
   userId: UserId;
   body: {
-    firstName?: string | null;
+    firstName?: string;
     lastName?: string | null;
     dateOfBirth?: Date | null;
     timeZone?: string;
@@ -54,14 +62,14 @@ export const toPatchMeProfileCommand = (props: {
 };
 
 const toPatchMeEntityCommand = (body: {
-  firstName?: string | null;
+  firstName?: string;
   lastName?: string | null;
   dateOfBirth?: Date | null;
   timeZone?: string;
   language?: UserLanguageUnion;
 }) => {
-  const firstName = normalizeNullableProfileTextField(body.firstName);
-  const lastName = normalizeNullableProfileTextField(body.lastName);
+  const firstName = normalizeRequiredProfileTextField(body.firstName);
+  const lastName = normalizeOptionalProfileTextField(body.lastName);
 
   let personalInfoPlain: UserPersonalInfoPlainEntity | undefined;
   if (firstName !== undefined || lastName !== undefined || body.dateOfBirth !== undefined) {

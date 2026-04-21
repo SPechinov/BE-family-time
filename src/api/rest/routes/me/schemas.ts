@@ -12,7 +12,7 @@ const GET_ME = {
 const PATCH = {
   tags: ['Me'],
   body: z.object({
-    firstName: GLOBAL_SCHEMAS.firstName.nullable().optional().or(GLOBAL_SCHEMAS.emptyString),
+    firstName: GLOBAL_SCHEMAS.firstName.optional(),
     lastName: GLOBAL_SCHEMAS.lastName.nullable().optional().or(GLOBAL_SCHEMAS.emptyString),
     dateOfBirth: z.coerce.date().nullable().optional(),
     timeZone: GLOBAL_SCHEMAS.timeZone.optional(),
