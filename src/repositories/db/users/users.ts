@@ -170,7 +170,7 @@ export class UsersRepository implements IUsersRepository {
     let valueIndex = startValueIndex;
     if (userPatchEntity.personalInfoEncrypted !== undefined) {
       if (userPatchEntity.personalInfoEncrypted === null) {
-        setParts.push(`first_name_encrypted = NULL`, `last_name_encrypted = NULL`, `date_of_birth = NULL`);
+        setParts.push(`first_name_encrypted = NULL`, `last_name_encrypted = NULL`);
       } else {
         if (userPatchEntity.personalInfoEncrypted.firstName !== undefined) {
           setParts.push(`first_name_encrypted = $${valueIndex}`);
