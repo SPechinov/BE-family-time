@@ -1,4 +1,12 @@
-import { UserLanguage, UserPatchOnePlainEntity, UserPersonalInfoPlainEntity, UserPlainEntity } from '@/entities';
+import {
+  UserLanguageUnion,
+  UserLanguage,
+  UserName,
+  UserPatchOnePlainEntity,
+  UserPersonalInfoPlainEntity,
+  UserPlainEntity,
+  UserTimeZone,
+} from '@/entities';
 
 export const toMeResponse = (user: UserPlainEntity) => {
   return {
@@ -18,20 +26,23 @@ export const toPatchMeCommand = (body: {
   lastName?: string | null;
   dateOfBirth?: Date | null;
   timeZone?: string;
-  language?: UserLanguage;
+  language?: UserLanguageUnion;
 }) => {
+  const firstName = UserName.fromPatchInput(body.firstName);
+  const lastName = UserName.fromPatchInput(body.lastName);
+
   let personalInfoPlain: UserPersonalInfoPlainEntity | undefined;
-  if (body.firstName !== undefined || body.lastName !== undefined || body.dateOfBirth !== undefined) {
+  if (firstName !== undefined || lastName !== undefined || body.dateOfBirth !== undefined) {
     personalInfoPlain = new UserPersonalInfoPlainEntity({
-      firstName: body.firstName,
-      lastName: body.lastName,
+      firstName,
+      lastName,
       dateOfBirth: body.dateOfBirth,
     });
   }
 
   return new UserPatchOnePlainEntity({
     personalInfoPlain,
-    timeZone: body.timeZone,
-    language: body.language,
+    timeZone: UserTimeZone.fromOptional(body.timeZone),
+    language: UserLanguage.fromOptional(body.language),
   });
 };

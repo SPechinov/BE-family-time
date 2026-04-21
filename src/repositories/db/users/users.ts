@@ -38,9 +38,10 @@ export class UsersRepository implements IUsersRepository {
         phone_encrypted,
         password_hashed,
         first_name_encrypted,
-        last_name_encrypted
+        last_name_encrypted,
+        date_of_birth
       )
-      VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)
+      VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11)
       RETURNING *
     `;
 
@@ -55,6 +56,7 @@ export class UsersRepository implements IUsersRepository {
       userCreateEntity.passwordHashed?.password,
       userCreateEntity.personalInfoEncrypted?.firstName,
       userCreateEntity.personalInfoEncrypted?.lastName,
+      userCreateEntity.dateOfBirth,
     ];
 
     options?.logger?.debug({ query, values }, 'Users repository: createOne');
@@ -180,12 +182,12 @@ export class UsersRepository implements IUsersRepository {
           updateValues.push(userPatchEntity.personalInfoEncrypted.lastName || null);
           valueIndex++;
         }
-        if (userPatchEntity.personalInfoEncrypted.dateOfBirth !== undefined) {
-          setParts.push(`date_of_birth = $${valueIndex}`);
-          updateValues.push(userPatchEntity.personalInfoEncrypted.dateOfBirth || null);
-          valueIndex++;
-        }
       }
+    }
+    if (userPatchEntity.dateOfBirth !== undefined) {
+      setParts.push(`date_of_birth = $${valueIndex}`);
+      updateValues.push(userPatchEntity.dateOfBirth || null);
+      valueIndex++;
     }
     if (userPatchEntity.contactsEncrypted !== undefined) {
       if (userPatchEntity.contactsEncrypted === null) {
@@ -260,7 +262,6 @@ export class UsersRepository implements IUsersRepository {
     const personalInfoEncrypted = new UserPersonalInfoEncryptedEntity({
       firstName: firstNameEncrypted,
       lastName: lastNameEncrypted,
-      dateOfBirth: row.date_of_birth,
     });
 
     const contactsHashed = new UserContactsHashedEntity({
@@ -282,6 +283,7 @@ export class UsersRepository implements IUsersRepository {
       encryptionSalt: row.encryption_salt,
       timeZone: row.time_zone,
       language: row.language,
+      dateOfBirth: row.date_of_birth,
       personalInfoEncrypted,
       contactsHashed,
       contactsEncrypted,

@@ -3,10 +3,13 @@ import {
   SessionTokenPayload,
   UserContactsPlainEntity,
   UserCreatePlainEntity,
+  UserLanguageUnion,
   UserLanguage,
+  UserName,
   UserPasswordPlainEntity,
   UserPersonalInfoPlainEntity,
   UserSessionEntity,
+  UserTimeZone,
   toSessionId,
 } from '@/entities';
 
@@ -32,16 +35,16 @@ export const toRegistrationEndCommand = (props: {
   firstName: string;
   password: string;
   timeZone: string;
-  language: UserLanguage;
+  language: UserLanguageUnion;
 }) => {
   return {
     otpCode: props.otpCode,
     userCreatePlainEntity: new UserCreatePlainEntity({
-      timeZone: props.timeZone,
-      language: props.language,
+      timeZone: UserTimeZone.create(props.timeZone).value,
+      language: UserLanguage.create(props.language).value,
       contactsPlain: new UserContactsPlainEntity({ email: props.email }),
       personalInfoPlain: new UserPersonalInfoPlainEntity({
-        firstName: props.firstName,
+        firstName: UserName.create(props.firstName).value,
       }),
       passwordPlain: new UserPasswordPlainEntity(props.password),
     }),

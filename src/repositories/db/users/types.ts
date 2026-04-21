@@ -1,4 +1,4 @@
-import { UserId, UserLanguage } from '@/entities';
+import { UserId, UserLanguageUnion } from '@/entities';
 
 export interface IUserRowData {
   id: UserId;
@@ -12,7 +12,7 @@ export interface IUserRowData {
   password_hashed?: Buffer | null;
   date_of_birth?: Date | null;
   time_zone: string;
-  language: UserLanguage;
+  language: UserLanguageUnion;
   created_at: Date;
   updated_at: Date;
 }

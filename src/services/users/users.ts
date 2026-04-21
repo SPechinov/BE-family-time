@@ -11,22 +11,23 @@ import {
   UserFindOnePlainEntity,
   UserEntity,
   UserPasswordHashedEntity,
-  UserPatchOneEntity,
   UserPatchOnePlainEntity,
   UserPersonalInfoEncryptedEntity,
   UserPersonalInfoPlainEntity,
   UserPlainEntity,
   UserId,
 } from '@/entities';
-import { ErrorInvalidUserFindParams, ErrorInvalidUserPatchParams, ErrorUserNotExists } from '@/pkg/errors';
+import { ErrorInvalidUserFindParams, ErrorUserNotExists } from '@/pkg/errors';
 import { ILogger } from '@/pkg/logger';
 import { PoolClient } from 'pg';
+import { UserPatchMapper } from './userPatchMapper';
 
 export class UsersService implements IUsersService {
   readonly #usersRepository: IUsersRepository;
   readonly #hmacService: IHmacService;
   readonly #encryptionService: IEncryptionService;
   readonly #hashPasswordService: IHashPasswordService;
+  readonly #userPatchMapper: UserPatchMapper;
 
   constructor(props: {
     usersRepository: IUsersRepository;
@@ -38,6 +39,11 @@ export class UsersService implements IUsersService {
     this.#hmacService = props.hmacService;
     this.#encryptionService = props.encryptionService;
     this.#hashPasswordService = props.hashPasswordService;
+    this.#userPatchMapper = new UserPatchMapper({
+      hmacService: this.#hmacService,
+      encryptionService: this.#encryptionService,
+      hashPasswordService: this.#hashPasswordService,
+    });
   }
 
   async createOne(
@@ -58,6 +64,7 @@ export class UsersService implements IUsersService {
         encryptionSalt,
         timeZone: userCreatePlainEntity.timeZone,
         language: userCreatePlainEntity.language,
+        dateOfBirth: personalInfoPlain?.dateOfBirth,
         personalInfoEncrypted: personalInfoEncrypted ?? undefined,
         contactsHashed: contactsHashed ?? undefined,
         contactsEncrypted: contactsEncrypted ?? undefined,
@@ -101,7 +108,7 @@ export class UsersService implements IUsersService {
     const foundUser = await this.#usersRepository.findOne(userFindOneEntity, options);
     if (!foundUser) throw new ErrorUserNotExists();
 
-    const userPatchOneEntity = await this.#convertUserPatchOnePlainToHashedOrThrow({
+    const userPatchOneEntity = await this.#userPatchMapper.mapPlainToEncrypted({
       userPatchOnePlainEntity,
       encryptionSalt: foundUser.encryptionSalt,
     });
@@ -115,7 +122,7 @@ export class UsersService implements IUsersService {
   async decryptUser(userEntity: UserEntity): Promise<UserPlainEntity> {
     const [contacts, personalInfo] = await Promise.all([
       this.#decryptContacts(userEntity.encryptionSalt, userEntity.contactsEncrypted),
-      this.#decryptPersonalInfo(userEntity.encryptionSalt, userEntity.personalInfoEncrypted),
+      this.#decryptPersonalInfo(userEntity.encryptionSalt, userEntity.personalInfoEncrypted, userEntity.dateOfBirth),
     ]);
 
     return new UserPlainEntity({
@@ -153,33 +160,27 @@ export class UsersService implements IUsersService {
   async #decryptPersonalInfo(
     encryptionSalt: string,
     personalInfoEncrypted?: UserPersonalInfoEncryptedEntity,
+    dateOfBirth?: Date | null,
   ): Promise<UserPersonalInfoPlainEntity | undefined> {
     if (!(personalInfoEncrypted instanceof UserPersonalInfoEncryptedEntity)) {
-      return;
+      if (dateOfBirth === undefined) return;
+
+      return new UserPersonalInfoPlainEntity({ dateOfBirth });
     }
 
     if (
       personalInfoEncrypted.firstName === undefined &&
       personalInfoEncrypted.lastName === undefined &&
-      personalInfoEncrypted.dateOfBirth === undefined
+      dateOfBirth === undefined
     ) {
       return;
     }
 
-    const { firstName, lastName, dateOfBirth } = personalInfoEncrypted;
+    const { firstName, lastName } = personalInfoEncrypted;
+
     return new UserPersonalInfoPlainEntity({
-      firstName:
-        firstName === undefined
-          ? undefined
-          : firstName === null
-            ? null
-            : await this.#decryptOptionalField(firstName, encryptionSalt),
-      lastName:
-        lastName === undefined
-          ? undefined
-          : lastName === null
-            ? null
-            : await this.#decryptOptionalField(lastName, encryptionSalt),
+      firstName: firstName ? await this.#decryptOptionalField(firstName, encryptionSalt) : undefined,
+      lastName: lastName ? await this.#decryptOptionalField(lastName, encryptionSalt) : undefined,
       dateOfBirth,
     });
   }
@@ -214,37 +215,30 @@ export class UsersService implements IUsersService {
     });
   }
 
-  async #convertUserPatchOnePlainToHashedOrThrow({
-    userPatchOnePlainEntity,
-    encryptionSalt,
-  }: {
-    userPatchOnePlainEntity: UserPatchOnePlainEntity;
-    encryptionSalt: string;
-  }): Promise<UserPatchOneEntity> {
-    const { personalInfoPlain, contactsPlain, passwordPlain, timeZone, language } = userPatchOnePlainEntity;
+  async #preparePersonalInfo(
+    personalInfoPlain: UserPatchOnePlainEntity['personalInfoPlain'],
+    encryptionSalt: string,
+  ): Promise<UserPersonalInfoEncryptedEntity | undefined | null> {
+    if (personalInfoPlain === undefined) return undefined;
+    if (personalInfoPlain === null) return null;
 
-    const personalInfoEncrypted = await this.#preparePersonalInfo(personalInfoPlain, encryptionSalt);
-    const { contactsEncrypted, contactsHashed } = await this.#prepareContacts(contactsPlain, encryptionSalt);
-    const passwordHashed = await this.#preparePasswordHashed(passwordPlain);
+    const { firstName, lastName } = personalInfoPlain;
+    const [encryptedFirstName, encryptedLastName] = await Promise.all([
+      firstName === undefined
+        ? Promise.resolve(undefined)
+        : firstName === null
+          ? Promise.resolve(null)
+          : this.#encryptionService.encrypt(firstName, encryptionSalt),
+      lastName === undefined
+        ? Promise.resolve(undefined)
+        : lastName === null
+          ? Promise.resolve(null)
+          : this.#encryptionService.encrypt(lastName, encryptionSalt),
+    ]);
 
-    if (
-      personalInfoEncrypted === undefined &&
-      contactsEncrypted === undefined &&
-      contactsHashed === undefined &&
-      passwordHashed === undefined &&
-      timeZone === undefined &&
-      language === undefined
-    ) {
-      throw new ErrorInvalidUserPatchParams();
-    }
-
-    return new UserPatchOneEntity({
-      personalInfoEncrypted,
-      contactsEncrypted,
-      contactsHashed,
-      passwordHashed,
-      timeZone,
-      language,
+    return new UserPersonalInfoEncryptedEntity({
+      firstName: encryptedFirstName,
+      lastName: encryptedLastName,
     });
   }
 
@@ -272,34 +266,6 @@ export class UsersService implements IUsersService {
     });
 
     return { contactsEncrypted, contactsHashed };
-  }
-
-  async #preparePersonalInfo(
-    personalInfoPlain: UserPatchOnePlainEntity['personalInfoPlain'],
-    encryptionSalt: string,
-  ): Promise<UserPersonalInfoEncryptedEntity | undefined | null> {
-    if (personalInfoPlain === undefined) return undefined;
-    if (personalInfoPlain === null) return null;
-
-    const { firstName, lastName } = personalInfoPlain;
-    const [encryptedFirstName, encryptedLastName] = await Promise.all([
-      firstName === undefined
-        ? Promise.resolve(undefined)
-        : firstName === null
-          ? Promise.resolve(null)
-          : this.#encryptionService.encrypt(firstName, encryptionSalt),
-      lastName === undefined
-        ? Promise.resolve(undefined)
-        : lastName === null
-          ? Promise.resolve(null)
-          : this.#encryptionService.encrypt(lastName, encryptionSalt),
-    ]);
-
-    return new UserPersonalInfoEncryptedEntity({
-      firstName: encryptedFirstName,
-      lastName: encryptedLastName,
-      dateOfBirth: personalInfoPlain.dateOfBirth,
-    });
   }
 
   async #preparePasswordHashed(
