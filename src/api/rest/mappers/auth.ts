@@ -65,11 +65,11 @@ export const toForgotPasswordEndCommand = (props: { email: string; otpCode: stri
   };
 };
 
-export const toGetAllSessionsCommand = (payload: SessionTokenPayload) => {
+export const toGetSessionsCommand = (props: { payload: SessionTokenPayload }) => {
   return {
-    userId: payload.userId,
-    refreshJti: payload.jti,
-    currentSessionId: payload.sid,
+    userId: props.payload.userId,
+    refreshJti: props.payload.jti,
+    currentSessionId: props.payload.sid,
   };
 };
 
@@ -121,7 +121,7 @@ export const toRefreshTokensCommand = (props: {
   };
 };
 
-export const toGetAllSessionsResponse = (sessions: UserSessionEntity[]) => {
+export const toGetSessionsResponse = (sessions: UserSessionEntity[]) => {
   return {
     sessions: sessions.map((session) => ({
       sessionId: session.sessionId,

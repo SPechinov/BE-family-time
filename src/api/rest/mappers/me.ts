@@ -30,7 +30,7 @@ export const toGetMeCommand = (props: { userId: UserId }) => {
   };
 };
 
-export const toMeResponse = (user: UserPlainEntity) => {
+export const toMeProfileResponse = (user: UserPlainEntity) => {
   return {
     id: user.id,
     timeZone: user.timeZone,

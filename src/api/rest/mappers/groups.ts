@@ -26,16 +26,16 @@ export const toGroupResponse = (group: GroupEntity) => {
   };
 };
 
-export const toGroupsResponse = (groups: GroupEntity[]) => groups.map(toGroupResponse);
+export const toGetGroupsListResponse = (groups: GroupEntity[]) => groups.map(toGroupResponse);
 
-export const toCreateGroupCommand = (body: { name: string; description?: string }) =>
+export const toCreateGroupCommand = (props: { body: { name: string; description?: string } }) =>
   new GroupCreateEntity({
-    name: body.name,
-    description: normalizeCreateDescription(body.description),
+    name: props.body.name,
+    description: normalizeCreateDescription(props.body.description),
   });
 
-export const toPatchGroupCommand = (body: { name?: string; description?: string | null }) =>
+export const toPatchGroupCommand = (props: { body: { name?: string; description?: string | null } }) =>
   new GroupPatchOneEntity({
-    name: body.name,
-    description: normalizePatchDescription(body.description),
+    name: props.body.name,
+    description: normalizePatchDescription(props.body.description),
   });

@@ -23,8 +23,8 @@ import { AuthCookiesService } from './authCookiesService';
 import {
   toForgotPasswordEndCommand,
   toForgotPasswordStartCommand,
-  toGetAllSessionsCommand,
-  toGetAllSessionsResponse,
+  toGetSessionsCommand,
+  toGetSessionsResponse,
   toLoginCommand,
   toLogoutAllSessionsCommand,
   toLogoutSessionByIdCommand,
@@ -225,10 +225,10 @@ export class AuthRoutesController {
         const payload = this.#getVerifiedRefreshPayloadOrThrow(request);
         const sessions = await this.#getSessionsUseCase.execute({
           logger: request.log,
-          ...toGetAllSessionsCommand(payload),
+          ...toGetSessionsCommand({ payload }),
         });
 
-        reply.status(200).send(toGetAllSessionsResponse(sessions));
+        reply.status(200).send(toGetSessionsResponse(sessions));
       },
     );
   }

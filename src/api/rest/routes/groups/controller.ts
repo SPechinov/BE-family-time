@@ -11,7 +11,7 @@ import {
   IPatchUserGroupUseCase,
 } from '@/domains/useCases';
 import { SCHEMAS } from './schemas';
-import { toCreateGroupCommand, toGroupResponse, toGroupsResponse, toPatchGroupCommand } from '@/api/rest/mappers';
+import { toCreateGroupCommand, toGetGroupsListResponse, toGroupResponse, toPatchGroupCommand } from '@/api/rest/mappers';
 
 type ZodRouter = FastifyInstance<any, any, any, any, ZodTypeProvider>;
 
@@ -74,7 +74,7 @@ export class GroupsRoutesController {
           userId: request.userId,
           logger: request.log,
         });
-        reply.status(200).send(toGroupsResponse(groups));
+        reply.status(200).send(toGetGroupsListResponse(groups));
       },
     );
   }
@@ -88,7 +88,7 @@ export class GroupsRoutesController {
       },
       async (request, reply) => {
         const group = await this.#createUserGroupUseCase.execute({
-          groupCreateEntity: toCreateGroupCommand(request.body),
+          groupCreateEntity: toCreateGroupCommand({ body: request.body }),
           userId: request.userId,
           logger: request.log,
         });
@@ -127,7 +127,7 @@ export class GroupsRoutesController {
         const group = await this.#patchUserGroupUseCase.execute({
           userId: request.userId,
           groupId: request.params.groupId,
-          groupPatchOneEntity: toPatchGroupCommand(request.body),
+          groupPatchOneEntity: toPatchGroupCommand({ body: request.body }),
           logger: request.log,
         });
         reply.status(200).send(toGroupResponse(group));

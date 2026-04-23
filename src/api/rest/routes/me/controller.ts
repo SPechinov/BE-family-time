@@ -3,7 +3,7 @@ import { IGetMeUseCase, IPatchMeProfileUseCase } from '@/domains/useCases';
 import { ZodTypeProvider } from 'fastify-type-provider-zod';
 import { PREFIX, ROUTES } from './constants';
 import { SCHEMAS } from './schemas';
-import { toGetMeCommand, toMeResponse, toPatchMeProfileCommand } from '@/api/rest/mappers';
+import { toGetMeCommand, toMeProfileResponse, toPatchMeProfileCommand } from '@/api/rest/mappers';
 
 type ZodRouter = FastifyInstance<any, any, any, any, ZodTypeProvider>;
 
@@ -46,7 +46,7 @@ export class MeRoutesController {
           logger: request.log,
           ...toGetMeCommand({ userId: request.userId }),
         });
-        reply.status(200).send(toMeResponse(user));
+        reply.status(200).send(toMeProfileResponse(user));
       },
     );
   }
@@ -67,7 +67,7 @@ export class MeRoutesController {
           }),
         });
 
-        reply.status(200).send(toMeResponse(user));
+        reply.status(200).send(toMeProfileResponse(user));
       },
     );
   }
