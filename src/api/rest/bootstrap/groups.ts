@@ -13,13 +13,15 @@ import {
 import { IGroupsService, IGroupsUsersService, IUsersService } from '@/domains/services';
 import { Pool } from 'pg';
 
-export const registerGroupsRoutes = (props: {
+type GroupsRouteDeps = {
   instance: FastifyInstance;
   postgres: Pool;
   usersService: IUsersService;
   groupsService: IGroupsService;
   groupsUsersService: IGroupsUsersService;
-}) => {
+};
+
+const buildGroupsUseCases = (props: GroupsRouteDeps) => {
   const deps = {
     groupsService: props.groupsService,
     usersService: props.usersService,
@@ -50,8 +52,7 @@ export const registerGroupsRoutes = (props: {
   });
   const deleteUserGroupUseCase = new DeleteUserGroupUseCase(deps);
 
-  new GroupsRoutesController({
-    fastify: props.instance,
+  return {
     listUserGroupsUseCase,
     createUserGroupUseCase,
     getUserGroupUseCase,
@@ -59,5 +60,14 @@ export const registerGroupsRoutes = (props: {
     inviteUserInGroupUseCase,
     excludeUserFromGroupUseCase,
     deleteUserGroupUseCase,
+  };
+};
+
+export const registerGroupsRoutes = (props: GroupsRouteDeps) => {
+  const useCases = buildGroupsUseCases(props);
+
+  new GroupsRoutesController({
+    fastify: props.instance,
+    ...useCases,
   }).register();
 };

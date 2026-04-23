@@ -18,11 +18,13 @@ import {
 import { IUsersService } from '@/domains/services';
 import { createAuthInfra } from './shared';
 
-export const registerAuthRoutes = (props: {
+type AuthRouteDeps = {
   instance: FastifyInstance;
   usersService: IUsersService;
   authInfra: ReturnType<typeof createAuthInfra>;
-}) => {
+};
+
+const buildAuthUseCases = (props: AuthRouteDeps) => {
   const jwtVerifier = new FastifyJwtVerifier({ fastify: props.instance });
   const tokensSessionsPayloadVerifier = new TokensSessionsPayloadVerifier({ jwtVerifier });
   const tokensSessionsGenerator = new TokensSessionsGenerator({
@@ -78,8 +80,7 @@ export const registerAuthRoutes = (props: {
     tokensSessionsBlacklistStore: props.authInfra.tokensSessionsBlacklistStore,
   });
 
-  new AuthRoutesController({
-    fastify: props.instance,
+  return {
     loginUseCase,
     registrationStartUseCase,
     registrationEndUseCase,
@@ -91,5 +92,14 @@ export const registerAuthRoutes = (props: {
     logoutAllSessionsUseCase,
     logoutSessionByIdUseCase,
     tokensSessionsPayloadVerifier,
+  };
+};
+
+export const registerAuthRoutes = (props: AuthRouteDeps) => {
+  const useCases = buildAuthUseCases(props);
+
+  new AuthRoutesController({
+    fastify: props.instance,
+    ...useCases,
   }).register();
 };
