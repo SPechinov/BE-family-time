@@ -13,7 +13,7 @@ export class ExcludeUserFromGroupUseCase implements IExcludeUserFromGroupUseCase
     this.#guards = new GroupsGuards({ groupsUsersService: props.groupsUsersService });
   }
 
-  async excludeUserFromGroup(props: Parameters<IExcludeUserFromGroupUseCase['excludeUserFromGroup']>[0]): Promise<void> {
+  async execute(props: Parameters<IExcludeUserFromGroupUseCase['execute']>[0]): Promise<void> {
     await Promise.all([
       this.#deps.usersService.findOneByUserIdOrThrow(props.actorUserId, { logger: props.logger }),
       this.#deps.usersService.findOneByUserIdOrThrow(props.targetUserId, { logger: props.logger }),

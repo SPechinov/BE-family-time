@@ -55,7 +55,7 @@ export class GroupsRoutesController {
             preHandler: [instance.authenticate],
           },
           async (request, reply) => {
-            const groups = await this.#listUserGroupsUseCase.findUserGroupsList({
+            const groups = await this.#listUserGroupsUseCase.execute({
               userId: request.userId,
               logger: request.log,
             });
@@ -70,7 +70,7 @@ export class GroupsRoutesController {
             preHandler: [instance.authenticate],
           },
           async (request, reply) => {
-            const group = await this.#createUserGroupUseCase.createUserGroup({
+            const group = await this.#createUserGroupUseCase.execute({
               groupCreateEntity: toCreateGroupCommand(request.body),
               userId: request.userId,
               logger: request.log,
@@ -86,7 +86,7 @@ export class GroupsRoutesController {
             preHandler: [instance.authenticate],
           },
           async (request, reply) => {
-            const group = await this.#getUserGroupUseCase.findUserGroup({
+            const group = await this.#getUserGroupUseCase.execute({
               userId: request.userId,
               groupId: request.params.groupId,
               logger: request.log,
@@ -103,7 +103,7 @@ export class GroupsRoutesController {
             preHandler: [instance.authenticate],
           },
           async (request, reply) => {
-            const group = await this.#patchUserGroupUseCase.patchUserGroup({
+            const group = await this.#patchUserGroupUseCase.execute({
               userId: request.userId,
               groupId: request.params.groupId,
               groupPatchOneEntity: toPatchGroupCommand(request.body),
@@ -120,7 +120,7 @@ export class GroupsRoutesController {
             preHandler: [instance.authenticate],
           },
           async (request, reply) => {
-            await this.#inviteUserInGroupUseCase.inviteUserInGroup({
+            await this.#inviteUserInGroupUseCase.execute({
               groupId: request.params.groupId,
               actorUserId: request.userId,
               targetUserId: request.body.targetUserId,
@@ -137,7 +137,7 @@ export class GroupsRoutesController {
             preHandler: [instance.authenticate],
           },
           async (request, reply) => {
-            await this.#excludeUserFromGroupUseCase.excludeUserFromGroup({
+            await this.#excludeUserFromGroupUseCase.execute({
               groupId: request.params.groupId,
               actorUserId: request.userId,
               targetUserId: request.body.targetUserId,
@@ -154,7 +154,7 @@ export class GroupsRoutesController {
             preHandler: [instance.authenticate],
           },
           async (request, reply) => {
-            await this.#deleteUserGroupUseCase.deleteUserGroup({
+            await this.#deleteUserGroupUseCase.execute({
               userId: request.userId,
               groupId: request.params.groupId,
               logger: request.log,

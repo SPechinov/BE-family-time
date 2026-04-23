@@ -14,7 +14,7 @@ export class DeleteUserGroupUseCase implements IDeleteUserGroupUseCase {
     this.#guards = new GroupsGuards({ groupsUsersService: props.groupsUsersService });
   }
 
-  async deleteUserGroup(props: Parameters<IDeleteUserGroupUseCase['deleteUserGroup']>[0]): Promise<void> {
+  async execute(props: Parameters<IDeleteUserGroupUseCase['execute']>[0]): Promise<void> {
     await this.#deps.usersService.findOneByUserIdOrThrow(props.userId, { logger: props.logger });
 
     await this.#deps.transactionService.executeInTransaction(async (client) => {

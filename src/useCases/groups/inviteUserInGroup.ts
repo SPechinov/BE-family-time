@@ -13,7 +13,7 @@ export class InviteUserInGroupUseCase implements IInviteUserInGroupUseCase {
     this.#guards = new GroupsGuards({ groupsUsersService: props.groupsUsersService });
   }
 
-  async inviteUserInGroup(props: Parameters<IInviteUserInGroupUseCase['inviteUserInGroup']>[0]): Promise<void> {
+  async execute(props: Parameters<IInviteUserInGroupUseCase['execute']>[0]): Promise<void> {
     await Promise.all([
       this.#deps.usersService.findOneByUserIdOrThrow(props.actorUserId, { logger: props.logger }),
       this.#deps.usersService.findOneByUserIdOrThrow(props.targetUserId, { logger: props.logger }),

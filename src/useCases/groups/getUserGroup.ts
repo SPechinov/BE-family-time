@@ -10,7 +10,7 @@ export class GetUserGroupUseCase implements IGetUserGroupUseCase {
     this.#deps = props;
   }
 
-  async findUserGroup(props: Parameters<IGetUserGroupUseCase['findUserGroup']>[0]): Promise<GroupEntity> {
+  async execute(props: Parameters<IGetUserGroupUseCase['execute']>[0]): Promise<GroupEntity> {
     await this.#deps.usersService.findOneByUserIdOrThrow(props.userId, { logger: props.logger });
 
     const groupUser = await this.#deps.groupsUsersService.findOne(

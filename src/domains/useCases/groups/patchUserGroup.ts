@@ -2,7 +2,7 @@ import { GroupEntity, GroupId, GroupPatchOneEntity, UserId } from '@/entities';
 import { DefaultProps } from '../types';
 
 export interface IPatchUserGroupUseCase {
-  patchUserGroup(
+  execute(
     props: DefaultProps<{
       userId: UserId;
       groupId: GroupId;

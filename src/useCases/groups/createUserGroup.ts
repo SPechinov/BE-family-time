@@ -13,7 +13,7 @@ export class CreateUserGroupUseCase implements ICreateUserGroupUseCase {
     this.#guards = new GroupsGuards({ groupsUsersService: props.groupsUsersService });
   }
 
-  async createUserGroup(props: Parameters<ICreateUserGroupUseCase['createUserGroup']>[0]): Promise<GroupEntity> {
+  async execute(props: Parameters<ICreateUserGroupUseCase['execute']>[0]): Promise<GroupEntity> {
     await this.#deps.usersService.findOneByUserIdOrThrow(props.userId, { logger: props.logger });
 
     return this.#deps.transactionService.executeInTransaction(async (client) => {

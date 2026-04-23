@@ -9,7 +9,7 @@ export class ListUserGroupsUseCase implements IListUserGroupsUseCase {
     this.#deps = props;
   }
 
-  async findUserGroupsList(props: Parameters<IListUserGroupsUseCase['findUserGroupsList']>[0]): Promise<GroupEntity[]> {
+  async execute(props: Parameters<IListUserGroupsUseCase['execute']>[0]): Promise<GroupEntity[]> {
     await this.#deps.usersService.findOneByUserIdOrThrow(props.userId, { logger: props.logger });
 
     const groupsUsers = await this.#deps.groupsUsersService.findUserGroups(props.userId, { logger: props.logger });

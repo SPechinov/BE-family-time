@@ -13,7 +13,7 @@ export class PatchUserGroupUseCase implements IPatchUserGroupUseCase {
     this.#guards = new GroupsGuards({ groupsUsersService: props.groupsUsersService });
   }
 
-  async patchUserGroup(props: Parameters<IPatchUserGroupUseCase['patchUserGroup']>[0]): Promise<GroupEntity> {
+  async execute(props: Parameters<IPatchUserGroupUseCase['execute']>[0]): Promise<GroupEntity> {
     await this.#deps.usersService.findOneByUserIdOrThrow(props.userId, { logger: props.logger });
     await this.#guards.checkIsGroupOwnerOrThrow(props.groupId, props.userId, { logger: props.logger });
 
