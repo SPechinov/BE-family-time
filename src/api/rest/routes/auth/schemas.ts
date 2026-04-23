@@ -3,7 +3,7 @@ import { createResponseSchema } from '../../utils';
 import { CONFIG } from '@/config';
 import { GLOBAL_SCHEMAS, SESSION_SCHEMA } from '../../schemas';
 
-const SCHEMA_LOGIN = {
+const LOGIN = {
   tags: ['Auth'],
   security: [],
   headers: z.object({
@@ -18,7 +18,7 @@ const SCHEMA_LOGIN = {
   }),
 };
 
-const SCHEMA_REGISTRATION_START = {
+const REGISTRATION_START = {
   tags: ['Auth'],
   security: [],
   body: z.object({
@@ -29,7 +29,7 @@ const SCHEMA_REGISTRATION_START = {
   }),
 };
 
-const SCHEMA_REGISTRATION_END = {
+const REGISTRATION_END = {
   tags: ['Auth'],
   security: [],
   body: z.object({
@@ -45,7 +45,7 @@ const SCHEMA_REGISTRATION_END = {
   }),
 };
 
-const SCHEMA_FORGOT_PASSWORD_START = {
+const FORGOT_PASSWORD_START = {
   tags: ['Auth'],
   security: [],
   body: z.object({
@@ -56,7 +56,7 @@ const SCHEMA_FORGOT_PASSWORD_START = {
   }),
 };
 
-const SCHEMA_FORGOT_PASSWORD_END = {
+const FORGOT_PASSWORD_END = {
   tags: ['Auth'],
   security: [],
   body: z.object({
@@ -69,7 +69,7 @@ const SCHEMA_FORGOT_PASSWORD_END = {
   }),
 };
 
-const SCHEMA_GET_ALL_SESSIONS = {
+const GET_ALL_SESSIONS = {
   tags: ['Auth'],
   response: createResponseSchema({
     200: z.object({
@@ -78,21 +78,21 @@ const SCHEMA_GET_ALL_SESSIONS = {
   }),
 };
 
-const SCHEMA_LOGOUT_ALL_SESSIONS = {
+const LOGOUT_ALL_SESSIONS = {
   tags: ['Auth'],
   response: createResponseSchema({
     200: z.void(),
   }),
 };
 
-const SCHEMA_LOGOUT_SESSION = {
+const LOGOUT_SESSION = {
   tags: ['Auth'],
   response: createResponseSchema({
     200: z.void(),
   }),
 };
 
-const SCHEMA_LOGOUT_SESSION_BY_ID = {
+const LOGOUT_SESSION_BY_ID = {
   tags: ['Auth'],
   params: z.object({
     sessionId: z.uuidv4(),
@@ -102,7 +102,7 @@ const SCHEMA_LOGOUT_SESSION_BY_ID = {
   }),
 };
 
-const SCHEMA_REFRESH_TOKENS = {
+const REFRESH_TOKENS = {
   tags: ['Auth'],
   security: [],
   headers: z.object({
@@ -113,15 +113,15 @@ const SCHEMA_REFRESH_TOKENS = {
   }),
 };
 
-export const AUTH_SCHEMAS = Object.freeze({
-  login: SCHEMA_LOGIN,
-  registrationStart: SCHEMA_REGISTRATION_START,
-  registrationEnd: SCHEMA_REGISTRATION_END,
-  forgotPasswordStart: SCHEMA_FORGOT_PASSWORD_START,
-  forgotPasswordEnd: SCHEMA_FORGOT_PASSWORD_END,
-  getAllSession: SCHEMA_GET_ALL_SESSIONS,
-  logoutAllSession: SCHEMA_LOGOUT_ALL_SESSIONS,
-  logoutSession: SCHEMA_LOGOUT_SESSION,
-  logoutSessionById: SCHEMA_LOGOUT_SESSION_BY_ID,
-  refreshTokens: SCHEMA_REFRESH_TOKENS,
+export const SCHEMAS = Object.freeze({
+  login: LOGIN,
+  registrationStart: REGISTRATION_START,
+  registrationEnd: REGISTRATION_END,
+  forgotPasswordStart: FORGOT_PASSWORD_START,
+  forgotPasswordEnd: FORGOT_PASSWORD_END,
+  getAllSessions: GET_ALL_SESSIONS,
+  logoutAllSessions: LOGOUT_ALL_SESSIONS,
+  logoutSession: LOGOUT_SESSION,
+  logoutSessionById: LOGOUT_SESSION_BY_ID,
+  refreshTokens: REFRESH_TOKENS,
 });

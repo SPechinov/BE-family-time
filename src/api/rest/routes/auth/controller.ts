@@ -1,6 +1,6 @@
 import { FastifyInstance, FastifyRequest } from 'fastify';
 import { ZodTypeProvider } from 'fastify-type-provider-zod';
-import { AUTH_SCHEMAS } from './schemas';
+import { SCHEMAS } from './schemas';
 import { SessionTokenMeta, SessionTokenPayload } from '@/entities';
 import { isDev } from '@/config';
 import { HEADER_NAME } from '../../constants';
@@ -104,7 +104,7 @@ export class AuthRoutesController {
     router.post(
       ROUTES.login,
       {
-        schema: AUTH_SCHEMAS.login,
+        schema: SCHEMAS.login,
       },
       async (request, reply) => {
         const tokens = await this.#loginUseCase.execute({
@@ -128,7 +128,7 @@ export class AuthRoutesController {
     router.post(
       ROUTES.registrationStart,
       {
-        schema: AUTH_SCHEMAS.registrationStart,
+        schema: SCHEMAS.registrationStart,
       },
       async (request, reply) => {
         const result = await this.#registrationStartUseCase.execute({
@@ -147,7 +147,7 @@ export class AuthRoutesController {
     router.post(
       ROUTES.registrationEnd,
       {
-        schema: AUTH_SCHEMAS.registrationEnd,
+        schema: SCHEMAS.registrationEnd,
       },
       async (request, reply) => {
         await this.#registrationEndUseCase.execute({
@@ -170,7 +170,7 @@ export class AuthRoutesController {
     router.post(
       ROUTES.forgotPasswordStart,
       {
-        schema: AUTH_SCHEMAS.forgotPasswordStart,
+        schema: SCHEMAS.forgotPasswordStart,
         config: {
           hideUserNotExistsAsOk: true,
         },
@@ -193,7 +193,7 @@ export class AuthRoutesController {
     router.post(
       ROUTES.forgotPasswordEnd,
       {
-        schema: AUTH_SCHEMAS.forgotPasswordEnd,
+        schema: SCHEMAS.forgotPasswordEnd,
         config: {
           hideUserNotExistsAsOk: true,
         },
@@ -219,7 +219,7 @@ export class AuthRoutesController {
     router.get(
       ROUTES.getAllSessions,
       {
-        schema: AUTH_SCHEMAS.getAllSession,
+        schema: SCHEMAS.getAllSessions,
       },
       async (request, reply) => {
         const payload = this.#getVerifiedRefreshPayloadOrThrow(request);
@@ -237,7 +237,7 @@ export class AuthRoutesController {
     router.post(
       ROUTES.logoutAllSessions,
       {
-        schema: AUTH_SCHEMAS.logoutAllSession,
+        schema: SCHEMAS.logoutAllSessions,
       },
       async (request, reply) => {
         const payload = this.#getVerifiedRefreshPayloadOrThrow(request);
@@ -260,7 +260,7 @@ export class AuthRoutesController {
     router.post(
       ROUTES.logoutSession,
       {
-        schema: AUTH_SCHEMAS.logoutSession,
+        schema: SCHEMAS.logoutSession,
       },
       async (request, reply) => {
         const payload = this.#getVerifiedRefreshPayloadOrThrow(request);
@@ -283,7 +283,7 @@ export class AuthRoutesController {
     router.delete(
       ROUTES.logoutSessionById,
       {
-        schema: AUTH_SCHEMAS.logoutSessionById,
+        schema: SCHEMAS.logoutSessionById,
       },
       async (request, reply) => {
         const payload = this.#getVerifiedRefreshPayloadOrThrow(request);
@@ -311,7 +311,7 @@ export class AuthRoutesController {
     router.post(
       ROUTES.refreshTokens,
       {
-        schema: AUTH_SCHEMAS.refreshTokens,
+        schema: SCHEMAS.refreshTokens,
       },
       async (request, reply) => {
         const { token: refreshToken } = this.#getVerifiedRefreshTokenOrThrow(request);
