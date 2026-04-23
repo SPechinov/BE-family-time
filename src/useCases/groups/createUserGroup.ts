@@ -1,14 +1,14 @@
 import { ICreateUserGroupUseCase } from '@/domains/useCases';
 import { GroupEntity, GroupsUsersCreateEntity } from '@/entities';
 import { GroupsGuards } from './shared/guards';
-import { GroupsUseCasesDeps } from './shared/types';
+import { GroupUseCasesDeps } from './shared/types';
 import { buildOptions, lockUserGroupsScope } from './shared/transaction';
 
 export class CreateUserGroupUseCase implements ICreateUserGroupUseCase {
-  readonly #deps: GroupsUseCasesDeps;
+  readonly #deps: GroupUseCasesDeps;
   readonly #guards: GroupsGuards;
 
-  constructor(props: GroupsUseCasesDeps) {
+  constructor(props: GroupUseCasesDeps) {
     this.#deps = props;
     this.#guards = new GroupsGuards({ groupsUsersService: props.groupsUsersService });
   }

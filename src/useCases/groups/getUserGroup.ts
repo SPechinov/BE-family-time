@@ -1,12 +1,12 @@
 import { IGetUserGroupUseCase } from '@/domains/useCases';
 import { GroupEntity, GroupFindOneEntity, GroupsUsersFindOneEntity } from '@/entities';
 import { ErrorGroupNotExists } from '@/pkg';
-import { GroupsUseCasesDeps } from './shared/types';
+import { GroupUseCasesDeps } from './shared/types';
 
 export class GetUserGroupUseCase implements IGetUserGroupUseCase {
-  readonly #deps: Pick<GroupsUseCasesDeps, 'usersService' | 'groupsUsersService' | 'groupsService'>;
+  readonly #deps: Pick<GroupUseCasesDeps, 'usersService' | 'groupsUsersService' | 'groupsService'>;
 
-  constructor(props: Pick<GroupsUseCasesDeps, 'usersService' | 'groupsUsersService' | 'groupsService'>) {
+  constructor(props: Pick<GroupUseCasesDeps, 'usersService' | 'groupsUsersService' | 'groupsService'>) {
     this.#deps = props;
   }
 

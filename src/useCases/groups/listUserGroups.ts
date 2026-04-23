@@ -1,11 +1,11 @@
 import { IListUserGroupsUseCase } from '@/domains/useCases';
 import { GroupEntity, GroupFindManyEntity } from '@/entities';
-import { GroupsUseCasesDeps } from './shared/types';
+import { GroupUseCasesDeps } from './shared/types';
 
 export class ListUserGroupsUseCase implements IListUserGroupsUseCase {
-  readonly #deps: Pick<GroupsUseCasesDeps, 'usersService' | 'groupsService' | 'groupsUsersService'>;
+  readonly #deps: Pick<GroupUseCasesDeps, 'usersService' | 'groupsService' | 'groupsUsersService'>;
 
-  constructor(props: Pick<GroupsUseCasesDeps, 'usersService' | 'groupsService' | 'groupsUsersService'>) {
+  constructor(props: Pick<GroupUseCasesDeps, 'usersService' | 'groupsService' | 'groupsUsersService'>) {
     this.#deps = props;
   }
 

@@ -2,13 +2,13 @@ import { IPatchUserGroupUseCase } from '@/domains/useCases';
 import { GroupEntity, GroupFindOneEntity } from '@/entities';
 import { ErrorGroupNotExists } from '@/pkg';
 import { GroupsGuards } from './shared/guards';
-import { GroupsUseCasesDeps } from './shared/types';
+import { GroupUseCasesDeps } from './shared/types';
 
 export class PatchUserGroupUseCase implements IPatchUserGroupUseCase {
-  readonly #deps: Pick<GroupsUseCasesDeps, 'usersService' | 'groupsService' | 'groupsUsersService'>;
+  readonly #deps: Pick<GroupUseCasesDeps, 'usersService' | 'groupsService' | 'groupsUsersService'>;
   readonly #guards: GroupsGuards;
 
-  constructor(props: Pick<GroupsUseCasesDeps, 'usersService' | 'groupsService' | 'groupsUsersService'>) {
+  constructor(props: Pick<GroupUseCasesDeps, 'usersService' | 'groupsService' | 'groupsUsersService'>) {
     this.#deps = props;
     this.#guards = new GroupsGuards({ groupsUsersService: props.groupsUsersService });
   }

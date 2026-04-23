@@ -2,14 +2,14 @@ import { IDeleteUserGroupUseCase } from '@/domains/useCases';
 import { GroupFindOneEntity, GroupsUsersFindManyEntity } from '@/entities';
 import { ErrorGroupHasUsers } from '@/pkg';
 import { GroupsGuards } from './shared/guards';
-import { GroupsUseCasesDeps } from './shared/types';
+import { GroupUseCasesDeps } from './shared/types';
 import { buildOptions, lockGroupMembersScope } from './shared/transaction';
 
 export class DeleteUserGroupUseCase implements IDeleteUserGroupUseCase {
-  readonly #deps: GroupsUseCasesDeps;
+  readonly #deps: GroupUseCasesDeps;
   readonly #guards: GroupsGuards;
 
-  constructor(props: GroupsUseCasesDeps) {
+  constructor(props: GroupUseCasesDeps) {
     this.#deps = props;
     this.#guards = new GroupsGuards({ groupsUsersService: props.groupsUsersService });
   }

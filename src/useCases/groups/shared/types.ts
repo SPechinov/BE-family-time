@@ -1,6 +1,6 @@
 import { IDbTransactionService, IGroupsService, IGroupsUsersService, IUsersService } from '@/domains/services';
 
-export interface GroupsUseCasesDeps {
+export interface GroupUseCasesDeps {
   usersService: IUsersService;
   groupsService: IGroupsService;
   groupsUsersService: IGroupsUsersService;

@@ -2,13 +2,13 @@ import { IExcludeUserFromGroupUseCase } from '@/domains/useCases';
 import { GroupsUsersDeleteOneEntity } from '@/entities';
 import { ErrorUserIsGroupOwner } from '@/pkg';
 import { GroupsGuards } from './shared/guards';
-import { GroupsUseCasesDeps } from './shared/types';
+import { GroupUseCasesDeps } from './shared/types';
 
 export class ExcludeUserFromGroupUseCase implements IExcludeUserFromGroupUseCase {
-  readonly #deps: Pick<GroupsUseCasesDeps, 'usersService' | 'groupsUsersService'>;
+  readonly #deps: Pick<GroupUseCasesDeps, 'usersService' | 'groupsUsersService'>;
   readonly #guards: GroupsGuards;
 
-  constructor(props: Pick<GroupsUseCasesDeps, 'usersService' | 'groupsUsersService'>) {
+  constructor(props: Pick<GroupUseCasesDeps, 'usersService' | 'groupsUsersService'>) {
     this.#deps = props;
     this.#guards = new GroupsGuards({ groupsUsersService: props.groupsUsersService });
   }
