@@ -1,8 +1,5 @@
 import { Pool, PoolClient } from 'pg';
-
-export interface IDbTransactionService {
-  executeInTransaction<T>(fn: (client: PoolClient) => Promise<T>): Promise<T>;
-}
+import { IDbTransactionService } from '@/domains/services';
 
 export class DbTransactionService implements IDbTransactionService {
   readonly #pool: Pool;

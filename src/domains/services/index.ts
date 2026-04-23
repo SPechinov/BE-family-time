@@ -10,3 +10,4 @@ export * from './tokensSessionsGenerator';
 export * from './tokensSessionsPayloadVerifier';
 export * from './jwtSigner';
 export * from './jwtVerifier';
+export * from './transaction';

@@ -1,5 +1,4 @@
-import { IGroupsService, IGroupsUsersService, IUsersService } from '@/domains/services';
-import { IDbTransactionService } from '@/pkg/dbTransaction';
+import { IDbTransactionService, IGroupsService, IGroupsUsersService, IUsersService } from '@/domains/services';
 
 export interface GroupsUseCasesDeps {
   usersService: IUsersService;
