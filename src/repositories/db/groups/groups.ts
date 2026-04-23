@@ -36,7 +36,9 @@ export class GroupsRepository implements IGroupsRepository {
     const result = await client.query<IGroupRowData>(query, values);
 
     const row = result.rows?.[0];
-    if (!row) throw new Error('Group not created');
+    if (!row) {
+      throw new Error('Unexpected repository state: groups.createOne returned no row');
+    }
 
     return this.#buildGroupEntity(row);
   }

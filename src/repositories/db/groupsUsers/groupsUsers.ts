@@ -39,7 +39,9 @@ export class GroupsUsersRepository implements IGroupsUsersRepository {
     const result = await client.query<IGroupsUsersRowData>(query, values);
 
     const row = result.rows?.[0];
-    if (!row) throw new Error('User-Group relation not created');
+    if (!row) {
+      throw new Error('Unexpected repository state: groupsUsers.createOne returned no row');
+    }
 
     return this.#buildGroupsUsersEntity(row);
   }
