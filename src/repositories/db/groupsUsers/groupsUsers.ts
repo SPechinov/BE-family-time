@@ -105,7 +105,8 @@ export class GroupsUsersRepository implements IGroupsUsersRepository {
 
     options?.logger?.debug({ query, values }, 'GroupsUsers repository: count');
     const result = await client.query<{ count: string }>(query, values);
-    return parseInt(result.rows[0].count, 10);
+    const count = result.rows?.[0]?.count;
+    return count ? parseInt(count, 10) : 0;
   }
 
   async deleteOne(
@@ -126,7 +127,7 @@ export class GroupsUsersRepository implements IGroupsUsersRepository {
     await client.query(query, values);
   }
 
-  #buildConditions({ userId, groupId, isOwner }: GroupsUsersFindManyEntity) {
+  #buildConditions({ userId, groupId, isOwner }: GroupsUsersFindOneEntity | GroupsUsersFindManyEntity) {
     const conditions: string[] = [];
     const values: (UserId | GroupId | boolean)[] = [];
     let valueIndex = 1;

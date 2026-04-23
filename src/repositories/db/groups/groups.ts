@@ -146,29 +146,29 @@ export class GroupsRepository implements IGroupsRepository {
     await client.query(query, values);
   }
 
-  #buildGroupsConditions(findEntity: GroupFindOneEntity | GroupFindManyEntity | undefined) {
+  #buildGroupsConditions(findEntity?: GroupFindOneEntity | GroupFindManyEntity) {
     const conditions: string[] = [];
-    const values: (string | number | boolean | GroupId[])[] = [];
+    const values: (string | GroupId)[] = [];
     let valueIndex = 1;
 
     if (!findEntity) {
       return { conditions, values };
     }
 
-    if ('id' in findEntity && findEntity.id) {
+    if ('id' in findEntity && findEntity.id !== undefined) {
       conditions.push(`id = $${valueIndex}`);
       values.push(findEntity.id);
       valueIndex++;
     }
 
-    if ('ids' in findEntity && findEntity.ids && findEntity.ids.length > 0) {
+    if ('ids' in findEntity && findEntity.ids !== undefined && findEntity.ids.length > 0) {
       const placeholders = findEntity.ids.map((_, i) => `$${valueIndex + i}`).join(', ');
       conditions.push(`id IN (${placeholders})`);
       values.push(...findEntity.ids);
       valueIndex += findEntity.ids.length;
     }
 
-    if ('name' in findEntity && findEntity.name) {
+    if ('name' in findEntity && findEntity.name !== undefined) {
       conditions.push(`name ILIKE $${valueIndex}`);
       values.push(`%${findEntity.name}%`);
       valueIndex++;
