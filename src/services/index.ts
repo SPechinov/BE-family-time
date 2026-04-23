@@ -5,4 +5,4 @@ export * from './calendarEvents';
 export * from './crypto';
 export * from './rateLimiter';
 export * from './tokensSessionsGenerator';
-export * from './tokensSessionsPayloadVerifier/tokensSessionsPayloadVerifier';
+export * from './tokensSessionsPayloadVerifier';
