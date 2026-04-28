@@ -1,6 +1,12 @@
 import { FastifyInstance } from 'fastify';
 import { ZodTypeProvider } from 'fastify-type-provider-zod';
-import { ICalendarEventsUseCases } from '@/domains/useCases';
+import {
+  ICreateCalendarEventUseCase,
+  IDeleteCalendarEventUseCase,
+  IGetCalendarEventUseCase,
+  IListCalendarEventsUseCase,
+  IPatchCalendarEventUseCase,
+} from '@/domains/useCases';
 import { PREFIX, ROUTES } from './constants';
 import { SCHEMAS } from './schemas';
 import {
@@ -15,11 +21,26 @@ type ZodRouter = FastifyInstance<any, any, any, any, ZodTypeProvider>;
 
 export class CalendarEventsRoutesController {
   #fastify: FastifyInstance;
-  #calendarEventsUseCases: ICalendarEventsUseCases;
+  #listCalendarEventsUseCase: IListCalendarEventsUseCase;
+  #getCalendarEventUseCase: IGetCalendarEventUseCase;
+  #createCalendarEventUseCase: ICreateCalendarEventUseCase;
+  #patchCalendarEventUseCase: IPatchCalendarEventUseCase;
+  #deleteCalendarEventUseCase: IDeleteCalendarEventUseCase;
 
-  constructor(props: { fastify: FastifyInstance; calendarEventsUseCases: ICalendarEventsUseCases }) {
+  constructor(props: {
+    fastify: FastifyInstance;
+    listCalendarEventsUseCase: IListCalendarEventsUseCase;
+    getCalendarEventUseCase: IGetCalendarEventUseCase;
+    createCalendarEventUseCase: ICreateCalendarEventUseCase;
+    patchCalendarEventUseCase: IPatchCalendarEventUseCase;
+    deleteCalendarEventUseCase: IDeleteCalendarEventUseCase;
+  }) {
     this.#fastify = props.fastify;
-    this.#calendarEventsUseCases = props.calendarEventsUseCases;
+    this.#listCalendarEventsUseCase = props.listCalendarEventsUseCase;
+    this.#getCalendarEventUseCase = props.getCalendarEventUseCase;
+    this.#createCalendarEventUseCase = props.createCalendarEventUseCase;
+    this.#patchCalendarEventUseCase = props.patchCalendarEventUseCase;
+    this.#deleteCalendarEventUseCase = props.deleteCalendarEventUseCase;
   }
 
   register() {
@@ -48,7 +69,7 @@ export class CalendarEventsRoutesController {
       },
       async (request, reply) => {
         const listFilters = toGetCalendarEventsListFilters({ query: request.query });
-        const calendarEvents = await this.#calendarEventsUseCases.getCalendarEventsByGroupId({
+        const calendarEvents = await this.#listCalendarEventsUseCase.execute({
           userId: request.userId,
           groupId: request.params.groupId,
           eventType: listFilters.eventType,
@@ -70,7 +91,7 @@ export class CalendarEventsRoutesController {
         preHandler: [router.authenticate],
       },
       async (request, reply) => {
-        const calendarEvent = await this.#calendarEventsUseCases.getCalendarEvent({
+        const calendarEvent = await this.#getCalendarEventUseCase.execute({
           userId: request.userId,
           groupId: request.params.groupId,
           calendarEventId: request.params.calendarEventId,
@@ -93,7 +114,7 @@ export class CalendarEventsRoutesController {
         const userId = request.userId;
         const groupId = request.params.groupId;
 
-        const calendarEvent = await this.#calendarEventsUseCases.createCalendarEvent({
+        const calendarEvent = await this.#createCalendarEventUseCase.execute({
           userId,
           groupId,
           calendarEventCreateEntity: toCreateCalendarEventCommand({
@@ -116,7 +137,7 @@ export class CalendarEventsRoutesController {
         preHandler: [router.authenticate],
       },
       async (request, reply) => {
-        const calendarEvent = await this.#calendarEventsUseCases.patchCalendarEvent({
+        const calendarEvent = await this.#patchCalendarEventUseCase.execute({
           userId: request.userId,
           groupId: request.params.groupId,
           calendarEventId: request.params.calendarEventId,
@@ -137,7 +158,7 @@ export class CalendarEventsRoutesController {
         preHandler: [router.authenticate],
       },
       async (request, reply) => {
-        await this.#calendarEventsUseCases.deleteCalendarEvent({
+        await this.#deleteCalendarEventUseCase.execute({
           userId: request.userId,
           groupId: request.params.groupId,
           calendarEventId: request.params.calendarEventId,

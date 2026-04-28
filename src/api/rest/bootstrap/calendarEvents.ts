@@ -1,15 +1,39 @@
 import { FastifyInstance } from 'fastify';
 import { CalendarEventsRoutesController } from '@/api/rest/routes/calendarEvents';
-import { CalendarEventsUseCases } from '@/useCases';
+import {
+  CreateCalendarEventUseCase,
+  DeleteCalendarEventUseCase,
+  GetCalendarEventUseCase,
+  ListCalendarEventsUseCase,
+  PatchCalendarEventUseCase,
+} from '@/useCases';
 import { ICalendarEventsService, IGroupsUsersService, IUsersService } from '@/domains/services';
 
-export const registerCalendarEventsRoutes = (props: {
+type CalendarEventsRouteDeps = {
   instance: FastifyInstance;
   usersService: IUsersService;
   groupsUsersService: IGroupsUsersService;
   calendarEventsService: ICalendarEventsService;
-}) => {
-  const calendarEventsUseCases = new CalendarEventsUseCases({
+};
+
+const buildCalendarEventsUseCases = (props: Omit<CalendarEventsRouteDeps, 'instance'>) => {
+  const deps = {
+    usersService: props.usersService,
+    groupsUsersService: props.groupsUsersService,
+    calendarEventsService: props.calendarEventsService,
+  };
+
+  return {
+    listCalendarEventsUseCase: new ListCalendarEventsUseCase(deps),
+    getCalendarEventUseCase: new GetCalendarEventUseCase(deps),
+    createCalendarEventUseCase: new CreateCalendarEventUseCase(deps),
+    patchCalendarEventUseCase: new PatchCalendarEventUseCase(deps),
+    deleteCalendarEventUseCase: new DeleteCalendarEventUseCase(deps),
+  };
+};
+
+export const registerCalendarEventsRoutes = (props: CalendarEventsRouteDeps) => {
+  const useCases = buildCalendarEventsUseCases({
     usersService: props.usersService,
     groupsUsersService: props.groupsUsersService,
     calendarEventsService: props.calendarEventsService,
@@ -17,6 +41,6 @@ export const registerCalendarEventsRoutes = (props: {
 
   new CalendarEventsRoutesController({
     fastify: props.instance,
-    calendarEventsUseCases,
+    ...useCases,
   }).register();
 };
