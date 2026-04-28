@@ -6,7 +6,7 @@
 
 - [x] PR1 — Split Domain UseCase Interfaces (per scenario)
 - [x] PR2 — Split Application UseCases (per scenario classes)
-- [ ] PR3 — Controller Style унификация (`#registerX`)
+- [x] PR3 — Controller Style унификация (`#registerX`)
 - [ ] PR4 — Mappers Contract унификация (`toXCommand` / `toXResponse`)
 - [ ] PR5 — Bootstrap / Composition унификация (`buildXUseCases`)
 - [ ] PR6 — Error Policy Cleanup (expected vs unexpected)

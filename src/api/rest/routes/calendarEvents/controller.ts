@@ -11,6 +11,8 @@ import {
   toPatchCalendarEventCommand,
 } from '@/api/rest/mappers';
 
+type ZodRouter = FastifyInstance<any, any, any, any, ZodTypeProvider>;
+
 export class CalendarEventsRoutesController {
   #fastify: FastifyInstance;
   #calendarEventsUseCases: ICalendarEventsUseCases;
@@ -25,108 +27,124 @@ export class CalendarEventsRoutesController {
       (instance) => {
         const router = instance.withTypeProvider<ZodTypeProvider>();
 
-        router.get(
-          ROUTES.getList,
-          {
-            schema: SCHEMAS.getList,
-            preHandler: [instance.authenticate],
-          },
-          async (request, reply) => {
-            const listFilters = toCalendarEventsListFilters(request.query);
-            const calendarEvents = await this.#calendarEventsUseCases.getCalendarEventsByGroupId({
-              userId: request.userId,
-              groupId: request.params.groupId,
-              eventType: listFilters.eventType,
-              startDate: listFilters.startDate,
-              endDate: listFilters.endDate,
-              logger: request.log,
-            });
-
-            reply.status(200).send(toCalendarEventsResponse(calendarEvents));
-          },
-        );
-
-        router.get(
-          ROUTES.get,
-          {
-            schema: SCHEMAS.get,
-            preHandler: [instance.authenticate],
-          },
-          async (request, reply) => {
-            const calendarEvent = await this.#calendarEventsUseCases.getCalendarEvent({
-              userId: request.userId,
-              groupId: request.params.groupId,
-              calendarEventId: request.params.calendarEventId,
-              logger: request.log,
-            });
-
-            reply.status(200).send(toCalendarEventResponse(calendarEvent));
-          },
-        );
-
-        router.post(
-          ROUTES.create,
-          {
-            schema: SCHEMAS.create,
-            preHandler: [instance.authenticate],
-          },
-          async (request, reply) => {
-            const userId = request.userId;
-            const groupId = request.params.groupId;
-
-            const calendarEvent = await this.#calendarEventsUseCases.createCalendarEvent({
-              userId,
-              groupId,
-              calendarEventCreateEntity: toCreateCalendarEventCommand({
-                userId,
-                groupId,
-                body: request.body,
-              }),
-              logger: request.log,
-            });
-            reply.status(201).send(toCalendarEventResponse(calendarEvent));
-          },
-        );
-
-        router.patch(
-          ROUTES.patch,
-          {
-            schema: SCHEMAS.patch,
-            preHandler: [instance.authenticate],
-          },
-          async (request, reply) => {
-            const calendarEvent = await this.#calendarEventsUseCases.patchCalendarEvent({
-              userId: request.userId,
-              groupId: request.params.groupId,
-              calendarEventId: request.params.calendarEventId,
-              calendarEventPatchOneEntity: toPatchCalendarEventCommand(request.body),
-              logger: request.log,
-            });
-
-            reply.status(200).send(toCalendarEventResponse(calendarEvent));
-          },
-        );
-
-        router.delete(
-          ROUTES.delete,
-          {
-            schema: SCHEMAS.delete,
-            preHandler: [instance.authenticate],
-          },
-          async (request, reply) => {
-            await this.#calendarEventsUseCases.deleteCalendarEvent({
-              userId: request.userId,
-              groupId: request.params.groupId,
-              calendarEventId: request.params.calendarEventId,
-              logger: request.log,
-            });
-
-            reply.status(200).send();
-          },
-        );
+        this.#registerGetList(router);
+        this.#registerGet(router);
+        this.#registerCreate(router);
+        this.#registerPatch(router);
+        this.#registerDelete(router);
       },
       {
         prefix: PREFIX,
+      },
+    );
+  }
+
+  #registerGetList(router: ZodRouter): void {
+    router.get(
+      ROUTES.getList,
+      {
+        schema: SCHEMAS.getList,
+        preHandler: [router.authenticate],
+      },
+      async (request, reply) => {
+        const listFilters = toCalendarEventsListFilters(request.query);
+        const calendarEvents = await this.#calendarEventsUseCases.getCalendarEventsByGroupId({
+          userId: request.userId,
+          groupId: request.params.groupId,
+          eventType: listFilters.eventType,
+          startDate: listFilters.startDate,
+          endDate: listFilters.endDate,
+          logger: request.log,
+        });
+
+        reply.status(200).send(toCalendarEventsResponse(calendarEvents));
+      },
+    );
+  }
+
+  #registerGet(router: ZodRouter): void {
+    router.get(
+      ROUTES.get,
+      {
+        schema: SCHEMAS.get,
+        preHandler: [router.authenticate],
+      },
+      async (request, reply) => {
+        const calendarEvent = await this.#calendarEventsUseCases.getCalendarEvent({
+          userId: request.userId,
+          groupId: request.params.groupId,
+          calendarEventId: request.params.calendarEventId,
+          logger: request.log,
+        });
+
+        reply.status(200).send(toCalendarEventResponse(calendarEvent));
+      },
+    );
+  }
+
+  #registerCreate(router: ZodRouter): void {
+    router.post(
+      ROUTES.create,
+      {
+        schema: SCHEMAS.create,
+        preHandler: [router.authenticate],
+      },
+      async (request, reply) => {
+        const userId = request.userId;
+        const groupId = request.params.groupId;
+
+        const calendarEvent = await this.#calendarEventsUseCases.createCalendarEvent({
+          userId,
+          groupId,
+          calendarEventCreateEntity: toCreateCalendarEventCommand({
+            userId,
+            groupId,
+            body: request.body,
+          }),
+          logger: request.log,
+        });
+        reply.status(201).send(toCalendarEventResponse(calendarEvent));
+      },
+    );
+  }
+
+  #registerPatch(router: ZodRouter): void {
+    router.patch(
+      ROUTES.patch,
+      {
+        schema: SCHEMAS.patch,
+        preHandler: [router.authenticate],
+      },
+      async (request, reply) => {
+        const calendarEvent = await this.#calendarEventsUseCases.patchCalendarEvent({
+          userId: request.userId,
+          groupId: request.params.groupId,
+          calendarEventId: request.params.calendarEventId,
+          calendarEventPatchOneEntity: toPatchCalendarEventCommand(request.body),
+          logger: request.log,
+        });
+
+        reply.status(200).send(toCalendarEventResponse(calendarEvent));
+      },
+    );
+  }
+
+  #registerDelete(router: ZodRouter): void {
+    router.delete(
+      ROUTES.delete,
+      {
+        schema: SCHEMAS.delete,
+        preHandler: [router.authenticate],
+      },
+      async (request, reply) => {
+        await this.#calendarEventsUseCases.deleteCalendarEvent({
+          userId: request.userId,
+          groupId: request.params.groupId,
+          calendarEventId: request.params.calendarEventId,
+          logger: request.log,
+        });
+
+        reply.status(200).send();
       },
     );
   }
