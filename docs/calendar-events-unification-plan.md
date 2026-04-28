@@ -9,8 +9,8 @@
 - [x] PR3 — Controller Style унификация (`#registerX`)
 - [x] PR4 — Mappers Contract унификация (`toXCommand` / `toXResponse`)
 - [x] PR5 — Bootstrap / Composition унификация (`buildXUseCases`)
-- [ ] PR6 — Error Policy Cleanup (expected vs unexpected)
-- [ ] PR7 — Barrel Cleanup
+- [x] PR6 — Error Policy Cleanup (expected vs unexpected)
+- [x] PR7 — Barrel Cleanup
 - [ ] PR8 — Финальная верификация
 
 ## Текущее состояние (baseline)
