@@ -5,8 +5,8 @@ import { PREFIX, ROUTES } from './constants';
 import { SCHEMAS } from './schemas';
 import {
   toCalendarEventResponse,
-  toCalendarEventsListFilters,
-  toCalendarEventsResponse,
+  toGetCalendarEventsListFilters,
+  toGetCalendarEventsListResponse,
   toCreateCalendarEventCommand,
   toPatchCalendarEventCommand,
 } from '@/api/rest/mappers';
@@ -47,7 +47,7 @@ export class CalendarEventsRoutesController {
         preHandler: [router.authenticate],
       },
       async (request, reply) => {
-        const listFilters = toCalendarEventsListFilters(request.query);
+        const listFilters = toGetCalendarEventsListFilters({ query: request.query });
         const calendarEvents = await this.#calendarEventsUseCases.getCalendarEventsByGroupId({
           userId: request.userId,
           groupId: request.params.groupId,
@@ -57,7 +57,7 @@ export class CalendarEventsRoutesController {
           logger: request.log,
         });
 
-        reply.status(200).send(toCalendarEventsResponse(calendarEvents));
+        reply.status(200).send(toGetCalendarEventsListResponse(calendarEvents));
       },
     );
   }
@@ -120,7 +120,7 @@ export class CalendarEventsRoutesController {
           userId: request.userId,
           groupId: request.params.groupId,
           calendarEventId: request.params.calendarEventId,
-          calendarEventPatchOneEntity: toPatchCalendarEventCommand(request.body),
+          calendarEventPatchOneEntity: toPatchCalendarEventCommand({ body: request.body }),
           logger: request.log,
         });
 

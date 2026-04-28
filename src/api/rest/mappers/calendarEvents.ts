@@ -22,7 +22,7 @@ export const toCalendarEventResponse = (calendarEvent: CalendarEventEntity) => {
   };
 };
 
-export const toCalendarEventsResponse = (calendarEvents: CalendarEventEntity[]) =>
+export const toGetCalendarEventsListResponse = (calendarEvents: CalendarEventEntity[]) =>
   calendarEvents.map(toCalendarEventResponse);
 
 export const toCreateCalendarEventCommand = (props: {
@@ -50,18 +50,20 @@ export const toCreateCalendarEventCommand = (props: {
     endDate: props.body.endDate,
   });
 
-export const toPatchCalendarEventCommand = (body: { title?: string | null; description?: string | null }) =>
+export const toPatchCalendarEventCommand = (props: { body: { title?: string | null; description?: string | null } }) =>
   new CalendarEventPatchOneEntity({
-    title: body.title,
-    description: body.description,
+    title: props.body.title,
+    description: props.body.description,
   });
 
-export const toCalendarEventsListFilters = (query: {
-  eventType?: CalendarEventType;
-  startDate?: Date;
-  endDate?: Date;
+export const toGetCalendarEventsListFilters = (props: {
+  query: {
+    eventType?: CalendarEventType;
+    startDate?: Date;
+    endDate?: Date;
+  };
 }) => ({
-  eventType: query.eventType,
-  startDate: query.startDate,
-  endDate: query.endDate,
+  eventType: props.query.eventType,
+  startDate: props.query.startDate,
+  endDate: props.query.endDate,
 });
