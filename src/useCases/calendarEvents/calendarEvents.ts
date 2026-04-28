@@ -1,267 +1,51 @@
-import { ICalendarEventsService, IGroupsUsersService, IUsersService } from '@/domains/services';
-import { DefaultProps, ICalendarEventsUseCases } from '@/domains/useCases';
 import {
-  CalendarEventCreateEntity,
-  CalendarEventEntity,
-  CalendarEventFindManyEntity,
-  CalendarEventFindOneEntity,
-  CalendarEventId,
-  CalendarEventIterationType,
-  CalendarEventPatchOneEntity,
-  CalendarEventRecurrencePattern,
-  CalendarEventType,
-  GroupId,
-  GroupsUsersFindOneEntity,
-  UserId,
-} from '@/entities';
-import {
-  ErrorCalendarEventInvalidDateRange,
-  ErrorCalendarEventNotExists,
-  ErrorCalendarEventRecurrencePattern,
-  ErrorGroupNotExists,
-  ILogger,
-} from '@/pkg';
+  ICalendarEventsUseCases,
+  ICreateCalendarEventUseCase,
+  IDeleteCalendarEventUseCase,
+  IGetCalendarEventUseCase,
+  IListCalendarEventsUseCase,
+  IPatchCalendarEventUseCase,
+} from '@/domains/useCases';
+import { CalendarEventsUseCasesDeps } from './shared/types';
+import { CreateCalendarEventUseCase } from './createCalendarEvent';
+import { DeleteCalendarEventUseCase } from './deleteCalendarEvent';
+import { GetCalendarEventUseCase } from './getCalendarEvent';
+import { ListCalendarEventsUseCase } from './listCalendarEvents';
+import { PatchCalendarEventUseCase } from './patchCalendarEvent';
 
+// Transitional aggregate adapter for compatibility with current controller/bootstrap wiring.
 export class CalendarEventsUseCases implements ICalendarEventsUseCases {
-  readonly #usersService: IUsersService;
-  readonly #calendarEventsService: ICalendarEventsService;
-  readonly #groupsUsersService: IGroupsUsersService;
+  readonly #listCalendarEventsUseCase: IListCalendarEventsUseCase;
+  readonly #getCalendarEventUseCase: IGetCalendarEventUseCase;
+  readonly #createCalendarEventUseCase: ICreateCalendarEventUseCase;
+  readonly #patchCalendarEventUseCase: IPatchCalendarEventUseCase;
+  readonly #deleteCalendarEventUseCase: IDeleteCalendarEventUseCase;
 
-  constructor(props: {
-    usersService: IUsersService;
-    calendarEventsService: ICalendarEventsService;
-    groupsUsersService: IGroupsUsersService;
-  }) {
-    this.#usersService = props.usersService;
-    this.#calendarEventsService = props.calendarEventsService;
-    this.#groupsUsersService = props.groupsUsersService;
+  constructor(props: CalendarEventsUseCasesDeps) {
+    this.#listCalendarEventsUseCase = new ListCalendarEventsUseCase(props);
+    this.#getCalendarEventUseCase = new GetCalendarEventUseCase(props);
+    this.#createCalendarEventUseCase = new CreateCalendarEventUseCase(props);
+    this.#patchCalendarEventUseCase = new PatchCalendarEventUseCase(props);
+    this.#deleteCalendarEventUseCase = new DeleteCalendarEventUseCase(props);
   }
 
-  async createCalendarEvent({
-    userId,
-    groupId,
-    calendarEventCreateEntity,
-    logger,
-  }: DefaultProps<{
-    userId: UserId;
-    groupId: GroupId;
-    calendarEventCreateEntity: CalendarEventCreateEntity;
-  }>): Promise<CalendarEventEntity> {
-    try {
-      this.#validateRecurrencePatternOrThrow(
-        calendarEventCreateEntity.iterationType,
-        calendarEventCreateEntity.recurrencePattern,
-        logger,
-      );
-      this.#validateDateRangeOrThrow(calendarEventCreateEntity.startDate, calendarEventCreateEntity.endDate);
-    } catch (error: unknown) {
-      if (error instanceof Error) {
-        logger.error(error.message);
-      }
-      throw error;
-    }
-
-    const options = { logger };
-    await this.#usersService.findOneByUserIdOrThrow(userId, options);
-    await this.#checkUserInGroupOrThrow(userId, groupId, options);
-    return await this.#calendarEventsService.createOne(calendarEventCreateEntity, options);
+  getCalendarEventsByGroupId(...args: Parameters<ICalendarEventsUseCases['getCalendarEventsByGroupId']>) {
+    return this.#listCalendarEventsUseCase.execute(...args);
   }
 
-  async getCalendarEventsByGroupId({
-    userId,
-    groupId,
-    startDate,
-    endDate,
-    eventType,
-    logger,
-  }: DefaultProps<{
-    userId: UserId;
-    groupId: GroupId;
-    startDate?: Date;
-    endDate?: Date;
-    eventType?: CalendarEventType;
-  }>): Promise<CalendarEventEntity[]> {
-    const options = { logger };
-    await this.#usersService.findOneByUserIdOrThrow(userId, options);
-    await this.#checkUserInGroupOrThrow(userId, groupId, options);
-
-    const period = startDate === undefined && endDate === undefined ? undefined : { startDate, endDate };
-
-    return this.#calendarEventsService.findMany(
-      new CalendarEventFindManyEntity({
-        groupId,
-        eventType,
-        period,
-      }),
-    );
+  getCalendarEvent(...args: Parameters<ICalendarEventsUseCases['getCalendarEvent']>) {
+    return this.#getCalendarEventUseCase.execute(...args);
   }
 
-  async getCalendarEvent({
-    userId,
-    groupId,
-    calendarEventId,
-    logger,
-  }: DefaultProps<{
-    userId: UserId;
-    groupId: GroupId;
-    calendarEventId: CalendarEventId;
-  }>): Promise<CalendarEventEntity> {
-    const options = { logger };
-    await this.#usersService.findOneByUserIdOrThrow(userId, options);
-    await this.#checkUserInGroupOrThrow(userId, groupId, options);
-
-    return this.#findOneCalendarEventOrThrow(new CalendarEventFindOneEntity({ id: calendarEventId, groupId }), options);
+  createCalendarEvent(...args: Parameters<ICalendarEventsUseCases['createCalendarEvent']>) {
+    return this.#createCalendarEventUseCase.execute(...args);
   }
 
-  async patchCalendarEvent({
-    userId,
-    groupId,
-    calendarEventId,
-    calendarEventPatchOneEntity,
-    logger,
-  }: DefaultProps<{
-    userId: UserId;
-    groupId: GroupId;
-    calendarEventId: CalendarEventId;
-    calendarEventPatchOneEntity: CalendarEventPatchOneEntity;
-  }>): Promise<CalendarEventEntity> {
-    const options = { logger };
-    try {
-      if (calendarEventPatchOneEntity.iterationType) {
-        this.#validateRecurrencePatternOrThrow(
-          calendarEventPatchOneEntity.iterationType,
-          calendarEventPatchOneEntity.recurrencePattern,
-          logger,
-        );
-      }
-
-      if (calendarEventPatchOneEntity.startDate && calendarEventPatchOneEntity.endDate) {
-        this.#validateDateRangeOrThrow(calendarEventPatchOneEntity.startDate, calendarEventPatchOneEntity.endDate);
-      }
-    } catch (error: unknown) {
-      if (error instanceof Error) {
-        logger.error(error.message);
-      }
-      throw error;
-    }
-
-    await this.#usersService.findOneByUserIdOrThrow(userId, options);
-    await this.#checkUserInGroupOrThrow(userId, groupId, options);
-
-    const calendarEventFindOneEntity = new CalendarEventFindOneEntity({ id: calendarEventId, groupId });
-
-    await this.#findOneCalendarEventOrThrow(calendarEventFindOneEntity, options);
-    return await this.#calendarEventsService.patchOne(
-      {
-        calendarEventFindOneEntity,
-        calendarEventPatchOneEntity,
-      },
-      options,
-    );
+  patchCalendarEvent(...args: Parameters<ICalendarEventsUseCases['patchCalendarEvent']>) {
+    return this.#patchCalendarEventUseCase.execute(...args);
   }
 
-  async deleteCalendarEvent({
-    userId,
-    groupId,
-    calendarEventId,
-    logger,
-  }: DefaultProps<{
-    userId: UserId;
-    groupId: GroupId;
-    calendarEventId: CalendarEventId;
-  }>): Promise<void> {
-    const options = { logger };
-    await this.#usersService.findOneByUserIdOrThrow(userId, options);
-    await this.#checkUserInGroupOrThrow(userId, groupId, options);
-
-    const calendarEventFindOneEntity = new CalendarEventFindOneEntity({ id: calendarEventId, groupId });
-    await this.#findOneCalendarEventOrThrow(calendarEventFindOneEntity, options);
-    await this.#calendarEventsService.deleteOne(calendarEventFindOneEntity, options);
-  }
-
-  async #findOneCalendarEventOrThrow(
-    calendarEventFindOneEntity: CalendarEventFindOneEntity,
-    options?: { logger?: ILogger },
-  ): Promise<CalendarEventEntity> {
-    const event = await this.#calendarEventsService.findOne(calendarEventFindOneEntity, options);
-
-    if (!event) {
-      throw new ErrorCalendarEventNotExists();
-    }
-
-    return event;
-  }
-
-  async #checkUserInGroupOrThrow(userId: UserId, groupId: GroupId, options?: { logger: ILogger }): Promise<void> {
-    const groupUser = await this.#groupsUsersService.findOne(
-      new GroupsUsersFindOneEntity({
-        groupId,
-        userId,
-      }),
-      options,
-    );
-
-    if (!groupUser) {
-      throw new ErrorGroupNotExists();
-    }
-  }
-
-  #validateRecurrencePatternOrThrow(
-    iterationType: CalendarEventIterationType,
-    recurrencePattern: CalendarEventRecurrencePattern | null | undefined,
-    logger: ILogger,
-  ): void {
-    if (iterationType === 'oneTime' || iterationType === 'yearly') {
-      if (recurrencePattern) {
-        logger.warn({ iterationType, recurrencePattern }, 'recurrencePattern must not be set for this iterationType');
-        throw new ErrorCalendarEventRecurrencePattern();
-      }
-      return;
-    }
-
-    if (!recurrencePattern) {
-      logger.warn({ iterationType }, 'recurrencePattern is required for this iterationType');
-      throw new ErrorCalendarEventRecurrencePattern();
-    }
-
-    if (iterationType === 'weekly') {
-      if (recurrencePattern.type !== 'weekly') {
-        logger.warn(
-          { iterationType, recurrencePatternType: recurrencePattern.type },
-          'recurrencePattern type must be weekly for weekly iterationType',
-        );
-        throw new ErrorCalendarEventRecurrencePattern();
-      }
-      if (recurrencePattern.dayOfWeek < 0 || recurrencePattern.dayOfWeek > 6) {
-        logger.warn(
-          { iterationType, dayOfWeek: recurrencePattern.dayOfWeek },
-          'recurrencePattern dayOfWeek must be between 0 and 6',
-        );
-        throw new ErrorCalendarEventRecurrencePattern();
-      }
-    }
-
-    if (iterationType === 'monthly') {
-      if (recurrencePattern.type !== 'monthly') {
-        logger.warn(
-          { iterationType, recurrencePatternType: recurrencePattern.type },
-          'recurrencePattern type must be monthly for monthly iterationType',
-        );
-        throw new ErrorCalendarEventRecurrencePattern();
-      }
-      if (recurrencePattern.dayOfMonth < 0 || recurrencePattern.dayOfMonth > 30) {
-        logger.warn(
-          { iterationType, dayOfMonth: recurrencePattern.dayOfMonth },
-          'recurrencePattern dayOfMonth must be between 0 and 30',
-        );
-        throw new ErrorCalendarEventRecurrencePattern();
-      }
-    }
-  }
-
-  #validateDateRangeOrThrow(startDate: Date, endDate?: Date | null): void {
-    if (endDate !== null && endDate !== undefined && endDate < startDate) {
-      throw new ErrorCalendarEventInvalidDateRange();
-    }
+  deleteCalendarEvent(...args: Parameters<ICalendarEventsUseCases['deleteCalendarEvent']>) {
+    return this.#deleteCalendarEventUseCase.execute(...args);
   }
 }
